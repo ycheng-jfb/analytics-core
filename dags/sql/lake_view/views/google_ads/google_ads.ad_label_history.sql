@@ -1,0 +1,15 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.GOOGLE_ADS.AD_LABEL_HISTORY(
+    AD_ID,
+	AD_GROUP_ID,
+	LABEL_ID,
+	META_CREATE_DATETIME,
+	META_UPDATE_DATETIME
+) as
+SELECT AD_ID
+            ,AD_GROUP_ID
+            ,LABEL_ID
+            ,convert_timezone('America/Los_Angeles',_FIVETRAN_SYNCED) AS META_CREATE_DATETIME
+            ,convert_timezone('America/Los_Angeles',UPDATED_AT) AS META_UPDATE_DATETIME
+        FROM LAKE_FIVETRAN.MED_GOOGLE_ADS_V1.AD_LABEL_HISTORY qualify row_number() OVER (
+                PARTITION BY AD_GROUP_ID,AD_ID,LABEL_ID ORDER BY UPDATED_AT DESC
+                ) = 1;

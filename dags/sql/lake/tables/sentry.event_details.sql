@@ -1,0 +1,27 @@
+CREATE OR REPLACE TABLE lake.sentry.event_details
+(
+    event_id                    VARCHAR,
+    headers                     VARIANT,
+    email                       VARCHAR,
+    device_family               VARCHAR,
+    device_model                VARCHAR,
+    browser                     VARCHAR,
+    browser_version             VARCHAR,
+    os                          VARCHAR,
+    os_version                  VARCHAR,
+    status_code                 INT,
+    session                     VARCHAR,
+    datereceived                VARCHAR,
+    starttimestamp              VARCHAR,
+    endtimestamp                VARCHAR,
+    date_received_pst           TIMESTAMP_LTZ,
+    start_time_pst              TIMESTAMP_LTZ,
+    end_time_pst                TIMESTAMP_LTZ,
+    type                        VARCHAR,
+    title                       VARCHAR,
+    source_meta_create_datetime TIMESTAMP_LTZ,
+    source_meta_update_datetime TIMESTAMP_LTZ,
+    meta_row_hash               INT,
+    meta_create_datetime        TIMESTAMP_LTZ,
+    meta_update_datetime        TIMESTAMP_LTZ
+);

@@ -1,0 +1,26 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.SHAREPOINT.GFB_DAILY_SALE_STANDUP_ACTIVATING as (
+    select
+        BUSINESS_UNIT,
+        REGION,
+        DATE::DATE as DATE,
+        SOURCE,
+        ORDERS::FLOAT as ORDERS,
+        UPT,
+        UNITS::FLOAT as UNITS,
+        AUR,
+        AUC,
+        GM_ as GM_PERCENT,
+        AIR,
+        AOV,
+        AOV_W_SHIPPING as AOV_WITH_SHIPPING,
+        GAAP_REVENUE::FLOAT as GAAP_REVENUE,
+        GAAP_GM::FLOAT as GAAP_GROSS_MARGIN,
+        GAAP_GM_ as GAAP_GROSS_MARGIN_PERCENT,
+        DISCOUNT as DISCOUNT_RATE,
+        TY_PLANNED_PROMOS as TY_PROMO,
+        LY_PROMOS as LY_PROMO,
+        RETAIL_SALES,
+        _fivetran_synced::TIMESTAMP_LTZ as meta_create_datetime,
+        _fivetran_synced::TIMESTAMP_LTZ as meta_update_datetime
+    from LAKE_FIVETRAN.JFB_CONFIDENTIAL_SHAREPOINT_V1.GFB_DAILY_SALE_STANDUP_ACTIVATING
+);

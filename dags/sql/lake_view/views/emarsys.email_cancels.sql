@@ -1,0 +1,16 @@
+CREATE VIEW IF NOT EXISTS LAKE_VIEW.EMARSYS.EMAIL_CANCELS AS
+SELECT csm.store_group,
+    s.CAMPAIGN_ID,
+	s.CAMPAIGN_TYPE,
+	s.CONTACT_ID,
+	s.CUSTOMER_ID,
+	s.EVENT_TIME,
+	s.LAUNCH_ID,
+	s.LOADED_AT,
+	s.MESSAGE_ID,
+	s.REASON,
+	s.SUITE_EVENT,
+	s.SUITE_TYPE,
+	s.META_CREATE_DATETIME
+FROM LAKE.EMARSYS.EMAIL_CANCELS s
+JOIN lake.emarsys.customer_store_mapping csm on csm.customer_id = s.customer_id;

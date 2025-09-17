@@ -1,0 +1,220 @@
+USE SCHEMA reporting_media_base_prod.public;
+
+
+SET update_datetime = current_timestamp();
+
+-- SET n = 7; --number of days to consider for post recency
+-- SET number_of_influencers_in_hdyh = 5;
+-- SET calibration_date_range = 90;
+-- SET ranking_hours_exponent = 2;
+
+
+
+
+--todo: redo how testing periods are calculated
+-- CREATE OR REPLACE TEMPORARY TABLE _calibrated AS
+--
+-- CREATE OR REPLACE TABLE work media influencers_hdyh_with_impact AS
+--     WITH _t1  AS (SELECT *,
+--                          lead(impact_score) OVER (PARTITION BY mpid, brand ORDER BY date)                            AS tomorrow_impact_score,
+--                          lag(hdyh_leads) OVER (PARTITION BY mpid, brand ORDER BY date)                               AS lag_hdyh_leads,
+--                          sum(hdyh_leads)
+--                              OVER (PARTITION BY mpid, brand ORDER BY date ROWS BETWEEN 4 PRECEDING AND 1 PRECEDING)  AS hdyh_leads_last_3_days,
+--                          sum(hdyh_leads)
+--                              OVER (PARTITION BY mpid, brand ORDER BY date ROWS BETWEEN 1 FOLLOWING AND 4 FOLLOWING ) AS hdyh_leads_next_3_days,
+--                          iff((hdyh_leads > 0) AND (hdyh_leads_last_3_days = 0), date, NULL)                          AS added_to_hdyh,
+--                          iff((hdyh_leads = 0) AND (hdyh_leads_next_3_days = 0) AND (lag_hdyh_leads > 0), date,
+--                              NULL)                                                                                   AS removed_from_hdyh,
+--                          iff(added_to_hdyh IS NOT NULL, 1,
+--                              iff(removed_from_hdyh IS NOT NULL, 0, NULL))                                            AS in_hdyh,
+--                   FROM _combined)
+--        , _t2  AS (SELECT *,
+--                          iff(impact_score IS NULL AND tomorrow_impact_score IS NULL, 0,
+--                              coalesce(in_hdyh, lag(in_hdyh) IGNORE NULLS OVER (PARTITION BY mpid, brand ORDER BY date),
+--                                       0)) AS in_hdyh_and_impact
+--                   FROM _t1)
+--        , _t3  AS (SELECT *,
+--                          CASE WHEN in_hdyh_and_impact = 1 AND
+--                                    (lag(in_hdyh_and_impact) OVER (PARTITION BY mpid, brand ORDER BY date)) = 0
+--                                   THEN date END AS test_start
+--                   FROM _t2)
+--        , _t4  AS (SELECT *,
+--                          CASE WHEN in_hdyh_and_impact = 1 THEN coalesce(test_start,
+--                                                                         lag(test_start) IGNORE NULLS OVER (PARTITION BY mpid, brand ORDER BY date)) END AS period_start
+--                   FROM _t3)
+--        , _c   AS (SELECT brand,
+--                          mpid,
+--                          period_start,
+--                          sum(hdyh_vips)                                                     AS period_vips,
+--                          sum(impact_score)                                                  AS period_impact,
+--                          max(date)                                                          AS period_end,
+--                          iff(period_impact = 0, NULL, period_vips / period_impact)          AS calibration_rate,
+--                          row_number() OVER (PARTITION BY mpid, brand ORDER BY period_start) AS period_number
+--                   FROM _t4
+--                   WHERE in_hdyh_and_impact = 1
+--                   GROUP BY brand, mpid, in_hdyh_and_impact, period_start)
+--        , _std AS (SELECT brand,
+--                          avg(calibration_rate)    AS avg_calibration_rate,
+--                          stddev(calibration_rate) AS std_calibration_rate
+--                   FROM _c
+--                   WHERE period_start >= current_date() - 360
+--                   GROUP BY brand)
+--
+--     SELECT _t4.brand,
+--            _t4.date,
+--            _t4.mpid,
+--            _t4.final_in_hdyh,
+--            _t4.click_through_vips_same_session_not_from_lead_pool,
+--            _t4.click_through_vips_from_leads_30d,
+--            _t4.hdyh_vips,
+--            _t4.click_through_leads,
+--            _t4.hdyh_leads,
+--            _t4.impact_score,
+--            _t4.tomorrow_impact_score,
+--            _t4.modeled_impact_score,
+--            _t4.impressions,
+--            _t4.engagements,
+--            _t4.clicks,
+--            _t4.comments,
+--            _t4.shares,
+--            _t4.saves,
+--            _t4.views,
+--            _t4.replies,
+--            _t4.reach,
+--            _t4.tapsback,
+--            _t4.earnedmedia,
+-- --        _t3.lag_hdyh_vips, _t3.hdyh_vips_last_3_days, _t3.hdyh_vips_next_3_days,
+-- --        _t3.last_added_to_hdyh, _t3.last_removed_from_hdyh,
+-- --        _t3.in_hdyh,
+-- --        _t3.in_hdyh_filled, _t3.added_to_hdyh_cleaned,
+--            _t4.added_to_hdyh,
+--            _t4.removed_from_hdyh,
+--            _t4.in_hdyh_and_impact,
+-- --        _t4.test_start,
+--            _t4.period_start,
+--            _c.period_end,
+--            _c.period_impact,
+--            _c.period_vips,
+--            _c.period_number,
+--            _c.calibration_rate,
+--            _std.std_calibration_rate,
+--            _std.avg_calibration_rate,
+--            _c.calibration_rate >= (_std.avg_calibration_rate - 3 * _std.std_calibration_rate) OR
+--            _c.calibration_rate <= (_std.avg_calibration_rate + 3 * _std.std_calibration_rate) AS valid_calibration
+--     FROM _t4
+--          LEFT JOIN _c ON _c.brand = _t4.brand AND _c.mpid = _t4.mpid AND _c.period_start = _t4.period_start AND
+--                          _t4.in_hdyh_and_impact = 1
+--          LEFT JOIN _std ON _std.brand = _t4.brand AND period_number IS NOT NULL
+--     ORDER BY date DESC;
+--
+--
+-- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- -- ALGO
+-- -- TIER 1: If they are in HDYH currently, and haven't been in there for at least 24 hours, keep them in
+--
+-- -- THESE NEED TO BE EXCLUDED!!!
+-- --     WHERE media_partner_id NOT IN (SELECT DISTINCT media_partner_id
+-- --                                    FROM _mapping
+-- --                                    WHERE lower(exclude_from_hdyh) = 'exclude' OR lower(active) = 'inactive')
+-- --
+--
+-- CREATE OR REPLACE TEMPORARY TABLE _current_ranking_to_keep AS
+--     WITH _current_hdyh AS (SELECT *, datediff("hours", update_datetime, current_timestamp()) AS hours_in_hdyh
+--                            FROM reporting_media_base_prod.public.hdyh_influencer_ranking_sxna
+--                            UNION ALL
+--                            SELECT *, datediff("hours", update_datetime, current_timestamp()) AS hours_in_hdyh
+--                            FROM reporting_media_base_prod.public.hdyh_influencer_ranking_flna)
+--
+--     SELECT to_varchar(media_partner_id)      AS media_partner_id,
+--            engagement_per_influencer,
+--            min_hours_since_last_post_per_influencer,
+--            ranking_score,
+--            rank,
+--            1                                 AS tier,
+--            to_timestamp_ltz(update_datetime) AS update_datetime
+--
+--     FROM _current_hdyh
+--     WHERE hours_in_hdyh < 18;
+--
+--
+--
+-- -- get calibration rate
+-- -- merge with hdyh selections
+-- -- get the mean and 3 std plus/minus
+-- -- select only when calibration rate is within 3 std plus or minus
+--
+-- SELECT p.*--, recently_calibrated
+-- FROM _post_data p
+-- --      LEFT JOIN _recently_calibrated r ON r.brand = p.brand AND r.mpid = p.media_partner_id
+-- WHERE media_partner_id = '2820919'
+-- ORDER BY media_partner_id, datesubmitted DESC, days_after_post DESC;
+--
+--
+--
+-- --if story is more than 24 hours old it doesnt really matter
+-- WITH _posts            AS (SELECT DISTINCT brand,
+--                                            media_partner_id,
+--                                            postid,
+--                                            datesubmitted,
+--                                            posttype,
+--                                            socialnetwork,
+--                                            max(datesubmitted) OVER (PARTITION BY media_partner_id )    AS max_post_date,
+--                                            max(iff(posttype = 'story', datesubmitted, NULL))
+--                                                OVER (PARTITION BY media_partner_id )                   AS max_story_date,
+--                                            max(iff(posttype != 'story', datesubmitted, NULL))
+--                                                OVER (PARTITION BY media_partner_id )                   AS max_nonstory_date,
+--                                            iff(datesubmitted = max_nonstory_date, posttype, NULL)      AS max_nonstory_posttype,
+--                                            iff(datesubmitted = max_nonstory_date, socialnetwork, NULL) AS max_nonstory_socialnetwork
+--                            FROM _post_data p
+--                            ORDER BY datesubmitted DESC),
+--      _by_inf           AS (SELECT DISTINCT brand,
+--                                            media_partner_id,
+--                                            max(max_post_date)              AS last_postdate,
+--                                            max(max_story_date)             AS last_storydate,
+--                                            max(max_nonstory_date)          AS last_nonstorydate,
+--                                            max(max_nonstory_socialnetwork) AS last_nonstory_socialnetwork,
+--                                            max(max_nonstory_posttype)      AS last_nonstory_posttype
+--                            FROM _posts
+--                            GROUP BY brand, media_partner_id
+--                            ORDER BY last_postdate DESC),
+--      _last_calibration AS (SELECT DISTINCT brand, mpid, max(period_start) AS last_calibration_start, valid_calibration
+--                            FROM reporting_media_base_prod.influencers.hdyh_calibrations
+--                            WHERE valid_calibration IS NOT NULL
+--                            GROUP BY brand, mpid, valid_calibration)
+--
+-- SELECT m.influencer_cleaned_name,
+--        i.*,
+--        c.last_calibration_start,
+--        c.valid_calibration,
+--        datediff(HOURS, last_nonstorydate, current_timestamp())                                               AS hours_since_last_post,
+--        datediff(HOURS, last_storydate, current_timestamp())                                                  AS hours_since_last_story,
+--        datediff(DAYS, last_calibration_start, current_date())                                                AS days_since_last_calibration,
+--        CASE WHEN hours_since_last_story <= 2 * 24 THEN 1
+--             WHEN hours_since_last_post <= 7 * 24 AND valid_calibration IS NULL THEN 2
+--             WHEN hours_since_last_post <= 7 * 24 THEN 3
+--             WHEN hours_since_last_post <= 30 * 24 THEN 4
+--             WHEN hours_since_last_post >= 30 * 4 THEN 5 END                                                  AS tier,
+--        CASE WHEN tier = 1 THEN 'story in last 2 days'
+--             WHEN tier = 2 THEN 'post in last 7 days and no valid calibration'
+--             WHEN tier = 3 THEN 'post in last 7 days and valid calibration'
+--             WHEN tier = 4 THEN 'post within last 30 days'
+--             WHEN tier = 5
+--                 THEN 'post earlier than last 30 days' END                                                    AS tier_reason,
+--        CASE WHEN hours_since_last_story <= 2 * 24 THEN hours_since_last_story
+--             ELSE hours_since_last_post END                                                                   AS hours_since_last_relevant_post,
+--        rank() OVER (PARTITION BY i.brand, tier ORDER BY hours_since_last_relevant_post)                      AS rank_within_tier
+-- FROM _by_inf i
+--      LEFT JOIN _last_calibration c ON i.brand = c.brand AND i.media_partner_id = c.mpid
+--      LEFT JOIN _mapping m ON i.brand = m.store_name_abbr AND i.media_partner_id = m.media_partner_id
+-- ORDER BY tier, rank_within_tier
+--
+-- --todo: how to save this data well into snowflake so we have a good record of when things are added and removed from hdyh
+--
+-- -- WHERE media_partner_id = '3639739'
+-- --group by publisher, hours since most recent post, most recent post type, last calibration date, in hardcoded list, most recent post id
+-- -- impact_score on most recent post, currently in HDYH?, if so when added to hdyh
+-- -- min(i.days_since_post) OVER (PARTITION BY publisherid)              AS publisher_min_days_since_post,
+--
+--
+
+-- -- TODO: Remove unauthenticated influencers entirely!!

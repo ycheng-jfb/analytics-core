@@ -1,0 +1,30 @@
+CREATE OR REPLACE VIEW lake_view.oracle_ebs.chargeback_us AS
+SELECT
+    source,
+    gl_period,
+    gl_account,
+    settlement_date,
+    merchant_id,
+    chargeback_amt,
+    order_id,
+    order_date_placed,
+    shipping_country_code,
+    store_id,
+    store_credit_id,
+    membership_token_id,
+    membership_brand,
+    receipt_number,
+    receivables_trx_name,
+    creation_date,
+    activity,
+    reason_code,
+    reason_description,
+    cycle,
+    merchant_grouping_id,
+    issuing_bank,
+    payment_type,
+    meta_row_hash,
+    meta_create_datetime,
+    meta_update_datetime
+FROM
+   lake.oracle_ebs.chargeback_us;

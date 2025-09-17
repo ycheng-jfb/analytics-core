@@ -1,0 +1,42 @@
+from include.airflow.operators.mssql_acquisition import HighWatermarkMaxRowVersion
+from include.utils.acquisition.table_config import TableConfig
+from include.utils.snowflake import Column
+
+table_config = TableConfig(
+    database='um_replicated',
+    schema='dbo',
+    table='ultramerchant__cart__last',
+    watermark_column='repl_timestamp',
+    initial_load_value='0x0',
+    high_watermark_cls=HighWatermarkMaxRowVersion,
+    schema_version_prefix='v2',
+    column_list=[
+        Column('cart_id', 'INT', uniqueness=True),
+        Column('session_id', 'INT'),
+        Column('shipping_address_id', 'INT'),
+        Column('billing_address_id', 'INT'),
+        Column('payment_method', 'VARCHAR(25)'),
+        Column('payment_verification_data', 'VARCHAR(25)'),
+        Column('creditcard_id', 'INT'),
+        Column('echeck_id', 'INT'),
+        Column('store_id', 'INT'),
+        Column('payment_option_id', 'INT'),
+        Column('code', 'VARCHAR(36)'),
+        Column('email', 'VARCHAR(75)'),
+        Column('last_checkout_action', 'VARCHAR(35)'),
+        Column('subtotal', 'NUMBER(19, 4)'),
+        Column('shipping', 'NUMBER(19, 4)'),
+        Column('tax', 'NUMBER(19, 4)'),
+        Column('discount', 'NUMBER(19, 4)'),
+        Column('credit', 'NUMBER(19, 4)'),
+        Column('estimated_weight', 'DOUBLE'),
+        Column('use_store_credit', 'INT'),
+        Column('datetime_added', 'TIMESTAMP_NTZ(3)', delta_column=1),
+        Column('datetime_modified', 'TIMESTAMP_NTZ(3)', delta_column=0),
+        Column('statuscode', 'INT'),
+        Column('customer_id', 'INT'),
+        Column('store_group_id', 'INT'),
+        Column('datetime_activated', 'TIMESTAMP_NTZ(3)'),
+        Column('original_session_id', 'INT'),
+    ],
+)

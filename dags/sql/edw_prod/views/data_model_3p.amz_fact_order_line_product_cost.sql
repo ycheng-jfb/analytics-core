@@ -1,0 +1,48 @@
+CREATE OR REPLACE VIEW data_model_3p.amz_fact_order_line_product_cost(
+    order_line_id,
+    tfg_order_line_id,
+    order_id,
+    tfg_order_id,
+    store_id,
+    product_key,
+    purchase_local_datetime,
+    shipped_local_datetime,
+    seller_sku,
+    order_fulfillment_channel_key,
+    po_cost_type,
+    tfg_reporting_landed_cost,
+    tfg_po_cost,
+    tfg_cmt_cost,
+    tfg_commission_inspection_cost,
+    tfg_duty_tariff_cost,
+    tfg_freight_cost,
+    tfg_cross_border_duty_cost,
+    tfg_cross_border_other_cost,
+    meta_create_datetime,
+    meta_update_datetime
+)
+AS
+(
+SELECT order_line_id,
+       tfg_order_line_id,
+       order_id,
+       tfg_order_id,
+       store_id,
+       product_key,
+       purchase_local_datetime,
+       shipped_local_datetime,
+       seller_sku,
+       order_fulfillment_channel_key,
+       po_cost_type,
+       tfg_reporting_landed_cost,
+       tfg_po_cost,
+       tfg_cmt_cost,
+       tfg_commission_inspection_cost,
+       tfg_duty_tariff_cost,
+       tfg_freight_cost,
+       tfg_cross_border_duty_cost,
+       tfg_cross_border_other_cost,
+       meta_create_datetime,
+       meta_update_datetime
+FROM dbt_edw_prod.stg.amz_fact_order_line_product_cost
+);

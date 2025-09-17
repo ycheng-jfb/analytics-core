@@ -1,0 +1,8 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.SHAREPOINT.MED_SXF_CORE_BASIC_KEY AS
+SELECT COLLECTION
+	,COLOR_SKU
+	,CORE_BASIC
+	,STATUS
+    ,_fivetran_synced::TIMESTAMP_LTZ AS meta_create_datetime
+    ,_fivetran_synced::TIMESTAMP_LTZ AS meta_update_datetime
+FROM LAKE_FIVETRAN.MED_SHAREPOINT_ACQUISITION_V1.style_master_merch_inputs_Core_Basic_Key;

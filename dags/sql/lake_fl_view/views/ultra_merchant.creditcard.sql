@@ -1,0 +1,38 @@
+CREATE OR REPLACE VIEW LAKE_FL_VIEW.ULTRA_MERCHANT.CREDITCARD  (
+    creditcard_id,
+    customer_id,
+    address_id,
+    cnh,
+    tokenized_card_num,
+    card_type,
+    exp_month,
+    exp_year,
+    name_on_card,
+    last_four_digits,
+    method,
+    datetime_added,
+    datetime_last_used,
+    statuscode,
+    datetime_modified,
+    hvr_is_deleted,
+    hvr_change_time
+) AS
+SELECT
+    creditcard_id,
+    customer_id,
+    address_id,
+    cnh,
+    card_num as tokenized_card_num,
+    card_type,
+    exp_month,
+    exp_year,
+    name_on_card,
+    last_four_digits,
+    method,
+    datetime_added,
+    datetime_last_used,
+    statuscode,
+    datetime_modified,
+    hvr_is_deleted,
+    hvr_change_time
+FROM LAKE_FL.ULTRA_MERCHANT.CREDITCARD;

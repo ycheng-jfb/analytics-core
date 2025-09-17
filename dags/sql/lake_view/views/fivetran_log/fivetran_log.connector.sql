@@ -1,0 +1,12 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.FIVETRAN_LOG.CONNECTOR as
+SELECT CONNECTOR_ID,
+        CONNECTING_USER_ID,
+        CONNECTOR_TYPE_ID,
+        CONNECTOR_NAME,
+        SIGNED_UP,
+        PAUSED,
+        SYNC_FREQUENCY,
+        _fivetran_deleted,
+        DESTINATION_ID,
+        _fivetran_synced::TIMESTAMP_LTZ as meta_update_datetime
+    FROM LAKE_FIVETRAN.FIVETRAN_LOG_V1.CONNECTOR;

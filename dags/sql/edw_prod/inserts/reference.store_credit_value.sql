@@ -1,0 +1,33 @@
+TRUNCATE TABLE reference.store_credit_value;
+
+INSERT INTO reference.store_credit_value
+(store_brand,
+ store_country,
+ equivalent_credit_value_local_amount)
+VALUES ('FabKids', 'US', 39.95),
+       ('Fabletics', 'US', 49.95),
+       ('Fabletics', 'CA', 49.95),
+       ('Fabletics', 'ES', 49.95),
+       ('Fabletics', 'FR', 49.95),
+       ('Fabletics', 'UK', 44.95),
+       ('Fabletics', 'NL', 49.95),
+       ('JustFab', 'US', 39.95),
+       ('JustFab', 'CA', 39.95),
+       ('ShoeDazzle', 'US', 39.95),
+       ('JustFab', 'DE', 39.95),
+       ('JustFab', 'ES', 39.95),
+       ('JustFab', 'FR', 39.95),
+       ('JustFab', 'UK', 35.00),
+       ('JustFab', 'NL', 39.95),
+       ('JustFab', 'IT', 39.95),
+       ('JustFab', 'SE', 399.00),
+       ('JustFab', 'DK', 349.00),
+       ('Savage X', 'EUREM', 49.95),
+       ('Savage X', 'DE', 49.95),
+       ('Savage X', 'FR', 49.95),
+       ('Fabletics', 'SE', 599.00),
+       ('Savage X', 'US', 49.95),
+       ('Fabletics', 'DK', 449.00),
+       ('Savage X', 'UK', 49.95),
+       ('Fabletics', 'DE', 49.95),
+       ('Savage X', 'ES', 49.95);

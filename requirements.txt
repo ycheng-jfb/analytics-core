@@ -1,0 +1,9 @@
+apache-airflow
+apache-airflow-providers-snowflake
+snowflake-connector-python
+snowflake-sqlalchemy
+psycopg2-binary
+cryptography
+pyopenssl
+pyodbc
+--constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.10.3/constraints-3.11.txt"

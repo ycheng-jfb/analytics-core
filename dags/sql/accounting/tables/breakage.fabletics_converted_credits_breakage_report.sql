@@ -1,0 +1,28 @@
+CREATE TRANSIENT TABLE IF NOT EXISTS breakage.fabletics_converted_credits_breakage_report (
+	brand VARCHAR(20),
+	region VARCHAR(32),
+	country VARCHAR(50),
+	currency VARCHAR(15),
+	original_credit_tender VARCHAR(7),
+	original_credit_reason VARCHAR(50),
+	original_credit_type VARCHAR(15),
+	original_issued_amount NUMBER(38,4),
+	original_issued_month DATE,
+	activity_month VARCHAR(10),
+	credit_tenure NUMBER(10,0),
+	issued_to_date NUMBER(38,10),
+	redeemed_to_date NUMBER(38,10),
+	cancelled_to_date NUMBER(38,10),
+	expired_to_date NUMBER(38,10),
+	unredeemed_to_date NUMBER(38,10),
+	redeemed_rate_to_date NUMBER(38,10),
+	expected_redeemed_rate FLOAT,
+	expected_unredeemed_rate FLOAT,
+	actual_redeemed_rate_vs_expected FLOAT,
+	expected_breakage_to_record FLOAT,
+	breakage_recorded FLOAT,
+	expected_redeemed_rate_m24 FLOAT,
+	expected_additional_redeemed FLOAT,
+	expected_additional_cancelled FLOAT
+);
+

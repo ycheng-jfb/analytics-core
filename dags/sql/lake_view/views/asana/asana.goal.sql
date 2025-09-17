@@ -1,0 +1,30 @@
+create or replace view LAKE_VIEW.ASANA.GOAL as (
+    select
+        ID,
+        NAME,
+        NOTES,
+        STATUS,
+        START_ON,
+        DUE_ON,
+        LIKED,
+        NUM_LIKES,
+        TIME_PERIOD_DISPLAY_NAME,
+        TIME_PERIOD_PERIOD,
+        TIME_PERIOD_START_ON,
+        TIME_PERIOD_END_ON,
+        METRIC_CURRENCY_CODE,
+        METRIC_CURRENT_DISPLAY_VALUE,
+        METRIC_RESOURCE_TYPE,
+        METRIC_UNIT,
+        METRIC_PRECISION,
+        METRIC_CURRENT_NUMBER_VALUE,
+        METRIC_INITIAL_NUMBER_VALUE,
+        METRIC_TARGET_NUMBER_VALUE,
+        WORKSPACE_ID,
+        TEAM_ID,
+        OWNER_ID,
+        _FIVETRAN_DELETED,
+        _fivetran_synced::TIMESTAMP_LTZ as meta_create_datetime,
+        _fivetran_synced::TIMESTAMP_LTZ as meta_update_datetime
+    from LAKE_FIVETRAN.ASANA_ALL_PROJECTS.GOAL
+);

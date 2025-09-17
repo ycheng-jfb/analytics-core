@@ -1,0 +1,21 @@
+CREATE TRANSIENT TABLE IF NOT EXISTS month_end.nj_mn_accessories_sales_tax_detail (
+	country VARCHAR(6),
+	segment VARCHAR(7),
+	business_unit VARCHAR(71),
+	store_type VARCHAR(20),
+	retail_location VARCHAR(100),
+	activity_month DATE,
+	store_id NUMBER(38,0),
+	order_id NUMBER(38,0),
+	product_id NUMBER(38,0),
+	refund_id NUMBER(38,0),
+	state VARCHAR(25),
+	county VARCHAR(50),
+	city VARCHAR(35),
+	refund_type VARCHAR(25),
+	accessories_subtotal NUMBER(19,4),
+	accessories_discount FLOAT,
+	accessories_tax NUMBER(19,4),
+	shipping_amount NUMBER(20,4),
+	accessories_product_dollars FLOAT
+);

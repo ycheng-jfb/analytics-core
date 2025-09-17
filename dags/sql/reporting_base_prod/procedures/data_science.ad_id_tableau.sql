@@ -1,0 +1,252 @@
+CREATE OR REPLACE TRANSIENT TABLE reporting_base_prod.data_science.ad_id_tableau AS
+(
+WITH tags           AS (SELECT DISTINCT mpid,
+                                        p.product_name,
+                                        p.store_group,
+                                        p.store_brand_abbr,
+                                        p.department,
+                                        p.is_active,
+                                        p.product_status,
+                                        p.sum_available_quantity,
+                                        p.sum_core_size_available_quantity,
+                                        p.impressions,
+                                        dp.image_url,
+                                        replace(dimproduct_full_color, 'classic ', '')                          AS dimproduct_full_color,
+                                        replace(dimproduct_primary_color, 'classic ', '')                       AS dimproduct_primary_color,
+                                        merch_category,
+                                        CASE WHEN p.department = 'Womens' AND merch_subclass = 'casual short'
+                                                 THEN merch_subclass
+                                             ELSE merch_class END                                               AS merch_class,
+                                        CASE WHEN merch_subclass = '7/8' THEN 'legging' ELSE merch_subclass END AS merch_subclass,
+                                        merch_item_status,
+                                        replace(merch_eco_system, 'flw ', '')                                   AS merch_eco_system,
+                                        merch_color_family,
+                                        merch_color_application,
+                                        merch_fabric,
+                                        site_print,
+                                        site_fabric,
+                                        site_print_print,
+                                        merch_current_showroom,
+                                        merch_end_use,
+                                        ifnull(site_color, merch_color_family)                                  AS site_color,
+                                        CASE WHEN ifnull(site_color, merch_color_family) IN
+                                                  ('black', 'grey', 'blue', 'green', 'purple') THEN 'cool'
+                                             WHEN ifnull(site_color, merch_color_family) IN ('red', 'pink', 'orange')
+                                                 THEN 'warm'
+                                             WHEN ifnull(site_color, merch_color_family) IN ('white') THEN 'white'
+                                             ELSE 'other' END                                                   AS color_tone,
+                                        CASE WHEN merch_class = 'capris' THEN 'legging' ELSE merch_class END    AS cleansed_merch_class,
+                                        CASE WHEN contains(lower(dimproduct_product_name), 'velour')
+                                                 THEN 'velour/velvet'
+                                             WHEN contains(lower(dimproduct_product_name), 'velvet')
+                                                 THEN 'velour/velvet'
+                                             WHEN p.department = 'Mens' AND lower(merch_color_application) = 'print'
+                                                 THEN 'print'
+                                             WHEN p.department = 'Mens' AND lower(merch_color_application) = 'graphic'
+                                                 THEN 'graphic'
+                                             WHEN site_print_print = TRUE THEN 'print'
+                                             ELSE 'solid' END                                                   AS color_application,
+                                        CASE WHEN ifnull(site_color, merch_color_family) IN
+                                                  ('black', 'brown', 'grey', 'heather grey') OR
+                                                  dimproduct_full_color IN ('merlot', 'burgundy',
+                                                                            'navy', 'abyss',
+                                                                            'classic navy',
+                                                                            'deep navy', 'everpine') THEN 'neutral'
+                                             ELSE 'not neutral' END                                             AS neutral,
+                                        CASE WHEN contains(merch_end_use, 'lounge') OR
+                                                  contains(merch_end_use, 'lifestyle') THEN 'lifestyle/lounge'
+                                             ELSE 'other' END                                                   AS purpose
+                        FROM reporting_base_prod.data_science.product_recommendation_tags_pivoted p
+                             LEFT JOIN edw_prod.data_model.dim_product dp
+                                       ON edw_prod.stg.udf_unconcat_brand(iff(master_product_id = -1, product_id, master_product_id)) =
+                                          p.mpid)
+   , t              AS (SELECT split_part(ad_id_gender, '_', 1)                              AS ad_id,
+                               left(split_part(ad_id_gender, '_', 2), 2)                     AS store,
+                               right(split_part(ad_id_gender, '_', 2), 1)                    AS gender,
+                               rec_mpid,
+                               score,
+                               ifnull(test_branch, 'prod')                                   AS test_branch,
+                               convert_timezone('UTC', 'America/Los_Angeles', last_modified) AS last_modified_es,
+                               t_min_replacement_rank,
+                               f_min_replacement_rank,
+                               m_min_replacement_rank,
+                               replacement_rank_1,
+                               replacement_rank_2,
+                               replacement_rank_3,
+                               replacement_rank_4,
+                               replacement_rank_5,
+                               replacement_rank_6,
+                               replacement_rank_7,
+                               replacement_rank_8,
+                               replacement_rank_9,
+                               replacement_rank_10
+                        FROM reporting_prod.data_science.tableau_ad_id)
+   , t2             AS (SELECT DISTINCT ad_id,
+                                        rec_mpid,
+                                        store,
+                                        test_branch,
+                                        last_modified_es,
+                                        "'W'" AS es_score_f,
+                                        "'M'" AS es_score_m,
+                                        t_min_replacement_rank,
+                                        f_min_replacement_rank,
+                                        m_min_replacement_rank,
+                                        replacement_rank_1,
+                                        replacement_rank_2,
+                                        replacement_rank_3,
+                                        replacement_rank_4,
+                                        replacement_rank_5,
+                                        replacement_rank_6,
+                                        replacement_rank_7,
+                                        replacement_rank_8,
+                                        replacement_rank_9,
+                                        replacement_rank_10
+                        FROM t PIVOT (min(score) FOR gender IN ('W', 'M')))
+   , agg            AS (SELECT ad_id,
+                               rec_mpid,
+                               date_trunc('WEEK', date::date)                     AS week,
+                               inferred_tagged_product,
+                               ad_sku,
+                               ad_sku_rank,
+                               f_ad_sku_rank,
+                               m_ad_sku_rank,
+                               sum(t_clicked_ad_purchased_product_orders)         AS t_clicked_ad_purchased_product_orders,
+                               sum(f_clicked_ad_purchased_product_orders)         AS f_clicked_ad_purchased_product_orders,
+                               sum(m_clicked_ad_purchased_product_orders)         AS m_clicked_ad_purchased_product_orders,
+                               sum(t_clicked_similar_ad_purchased_product_orders) AS t_clicked_similar_ad_purchased_product_orders,
+                               sum(f_clicked_similar_ad_purchased_product_orders) AS f_clicked_similar_ad_purchased_product_orders,
+                               sum(m_clicked_similar_ad_purchased_product_orders) AS m_clicked_similar_ad_purchased_product_orders
+                        FROM reporting_base_prod.data_science.ad_id_source_data
+                        GROUP BY ad_id, rec_mpid, week, inferred_tagged_product, ad_sku, ad_sku_rank, f_ad_sku_rank,
+                                 m_ad_sku_rank)
+
+   , ad_data        AS (SELECT DISTINCT ad_store,
+                                        sub_brand_prefix,
+                                        ad_id,
+                                        tagged,
+                                        womens,
+                                        mens,
+                                        last_updated,
+                                        dual_gender_ad,
+                                        max_date,
+                                        ad_image
+                        FROM reporting_base_prod.data_science.ad_id_source_data)
+   , source_with_es AS (SELECT coalesce(a.ad_id, t2.ad_id)                            AS ad_id,
+                               coalesce(a.rec_mpid, t2.rec_mpid)                      AS rec_mpid,
+                               ifnull(week, date_trunc('WEEK', current_date()::date)) AS week,
+                               inferred_tagged_product,
+                               ad_sku,
+                               ad_sku_rank,
+                               f_ad_sku_rank,
+                               m_ad_sku_rank,
+                               t_clicked_ad_purchased_product_orders,
+                               f_clicked_ad_purchased_product_orders,
+                               m_clicked_ad_purchased_product_orders,
+                               t_clicked_similar_ad_purchased_product_orders,
+                               f_clicked_similar_ad_purchased_product_orders,
+                               m_clicked_similar_ad_purchased_product_orders,
+                               store,
+                               test_branch,
+                               last_modified_es,
+                               es_score_f,
+                               es_score_m,
+                               t_min_replacement_rank,
+                               f_min_replacement_rank,
+                               m_min_replacement_rank,
+                               replacement_rank_1,
+                               replacement_rank_2,
+                               replacement_rank_3,
+                               replacement_rank_4,
+                               replacement_rank_5,
+                               replacement_rank_6,
+                               replacement_rank_7,
+                               replacement_rank_8,
+                               replacement_rank_9,
+                               replacement_rank_10
+                        FROM agg a
+                             FULL OUTER JOIN t2 ON a.ad_id = t2.ad_id AND a.rec_mpid = t2.rec_mpid)
+SELECT ad_store,
+       sub_brand_prefix,
+       source_with_es.ad_id ,
+       tagged,
+       womens,
+       mens,
+       last_updated,
+       dual_gender_ad,
+       max_date,
+       ad_image,
+       rec_mpid,
+       week,
+       inferred_tagged_product,
+       ad_sku,
+       ad_sku_rank,
+       f_ad_sku_rank,
+       m_ad_sku_rank,
+       t_clicked_ad_purchased_product_orders,
+       f_clicked_ad_purchased_product_orders,
+       m_clicked_ad_purchased_product_orders,
+       sum(t_clicked_ad_purchased_product_orders) over (partition by source_with_es.ad_id, rec_mpid) as t_clicked_ad_purchased_product_orders_over_ad,
+       sum(f_clicked_ad_purchased_product_orders) over (partition by source_with_es.ad_id, rec_mpid) as f_clicked_ad_purchased_product_orders_over_ad,
+       sum(m_clicked_ad_purchased_product_orders) over (partition by source_with_es.ad_id, rec_mpid) as m_clicked_ad_purchased_product_orders_over_ad,
+       t_clicked_similar_ad_purchased_product_orders,
+       f_clicked_similar_ad_purchased_product_orders,
+       m_clicked_similar_ad_purchased_product_orders,
+       sum(t_clicked_similar_ad_purchased_product_orders) over (partition by source_with_es.ad_id, rec_mpid) as t_clicked_similar_ad_purchased_product_orders_over_ad,
+       sum(f_clicked_similar_ad_purchased_product_orders) over (partition by source_with_es.ad_id, rec_mpid) as f_clicked_similar_ad_purchased_product_orders_over_ad,
+       sum(m_clicked_similar_ad_purchased_product_orders) over (partition by source_with_es.ad_id, rec_mpid) as m_clicked_similar_ad_purchased_product_orders_over_ad,
+       week AS date,
+       es_score_f,
+       es_score_m,
+       test_branch,
+       last_modified_es,
+       t_min_replacement_rank,
+       f_min_replacement_rank,
+       m_min_replacement_rank,
+       replacement_rank_1,
+       replacement_rank_2,
+       replacement_rank_3,
+       replacement_rank_4,
+       replacement_rank_5,
+       replacement_rank_6,
+       replacement_rank_7,
+       replacement_rank_8,
+       replacement_rank_9,
+       replacement_rank_10,
+       product_name,
+       store_group,
+       store_brand_abbr,
+       department,
+       is_active,
+       product_status,
+       sum_available_quantity,
+       sum_core_size_available_quantity,
+       impressions,
+       image_url,
+       dimproduct_full_color,
+       dimproduct_primary_color,
+       merch_category,
+       merch_class,
+       merch_subclass,
+       merch_item_status,
+       merch_eco_system,
+       merch_color_family,
+       merch_color_application,
+       merch_fabric,
+       site_print,
+       site_fabric,
+       site_print_print,
+       merch_current_showroom,
+       merch_end_use,
+       site_color,
+       color_tone,
+       cleansed_merch_class,
+       color_application,
+       neutral,
+       purpose
+FROM source_with_es
+     LEFT JOIN ad_data ON source_with_es.ad_id = ad_data.ad_id
+     LEFT JOIN tags ON tags.mpid = source_with_es.rec_mpid
+ORDER BY es_score_f, es_score_m
+ )
+
+

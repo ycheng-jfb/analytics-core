@@ -1,0 +1,75 @@
+CREATE TRANSIENT TABLE IF NOT EXISTS reporting_base.shared.customer_lifetime_value_monthly(
+    customer_id number null,
+	VIP_cohort DATE  NULL,
+	month_date DATE NULL,
+	active_entering_period INT NULL,
+	store_id INT NULL,
+
+    eom_cash_margin_decile NUMBER NULL,
+    eom_product_margin_decile NUMBER NULL,
+
+    product_gross_revenue DECIMAL(18,6) NULL,
+    product_net_revenue DECIMAL(18,6) NULL,
+    pre_return_product_margin DECIMAL(18,6) NULL,
+    product_margin DECIMAL(18,6) NULL,
+    cash_gross_revenue DECIMAL(18,6) NULL,
+    cash_net_revenue DECIMAL(18,6) NULL,
+    pre_return_cash_margin DECIMAL(18,6) NULL,
+    cash_margin DECIMAL(18,6) NULL,
+
+	product_order_count INT NULL,
+	product_order_units INT NULL,
+	product_order_cash_collected INT NULL,
+	product_order_subtotal DECIMAL(18, 6) NULL,
+	product_order_discount DECIMAL(18, 6) NULL,
+	product_order_shipping_revenue DECIMAL(18, 6) NULL,
+	product_order_cash_credit_redeemed DECIMAL(18, 6) NULL,
+	product_order_noncash_credit_redeemed DECIMAL(18, 6) NULL,
+	retail_order_count INT NULL,
+	product_order_product_cost DECIMAL(18, 6) NULL,
+	product_order_shipping_supplies_cost DECIMAL(18, 6) NULL,
+	product_order_shipping_cost DECIMAL(18, 6) NULL,
+
+	credit_billing_count INT NULL,
+	credit_billing_amount DECIMAL(18, 6) NULL,
+	membership_fee_count INT NULL,
+	membership_fee_amount DECIMAL(18, 6) NULL,
+
+	reship_order_count INT NULL,
+	reship_unit_count INT NULL,
+	reship_product_cost DECIMAL(18, 6) NULL,
+	reship_shipping_supplies_cost DECIMAL(18, 6) NULL,
+	reship_shipping_cost DECIMAL(18, 6) NULL,
+
+	exchange_order_count INT NULL,
+	exchange_unit_count INT NULL,
+	exchange_product_cost DECIMAL(18, 6) NULL,
+	exchange_shipping_supplies_cost DECIMAL(18,6) NULL,
+	exchange_shipping_cost DECIMAL(18, 6) NULL,
+
+	product_order_membership_credit_redeemed_count INT NULL,
+	product_order_membership_credit_redeemed_amount DECIMAL(18, 6) NULL,
+
+	refunded_membership_credit_count INT NULL,
+	refunded_cash_amount_credit_billings DECIMAL(18, 6) NULL,
+	refunded_membership_fee_count INT NULL,
+	refunded_cash_amount_membership_fee DECIMAL(18, 6) NULL,
+	refunded_cash_amount_product_orders DECIMAL(18, 6) NULL,
+	refunded_noncash_amount_product_orders DECIMAL(18, 6) NULL,
+
+    chargeback_membership_credit_count INT NULL,
+    chargeback_amount_credit_billings DECIMAL(18, 6) NULL,
+    chargeback_membership_fee_count INT NULL,
+    chargeback_amount_membership_fee DECIMAL(18, 6) NULL,
+    chargeback_amount_product_orders DECIMAL(18, 6) NULL,
+    chargeback_noncash_amount_product_orders DECIMAL(18, 6) NULL,
+
+    returned_unit_count INT NULL,
+    returned_unit_product_cost DECIMAL(18, 6) NULL,
+    cost_product_returned_resaleable DECIMAL(18, 6) NULL,
+    returned_unit_shipping_cost  DECIMAL(18, 6) NULL,
+
+    product_markdown_cost DECIMAL(18, 6) NULL,
+    datetime_added TIMESTAMP_LTZ(9) DEFAULT CURRENT_TIMESTAMP,
+    primary key (customer_id,VIP_cohort,month_date)
+);

@@ -1,0 +1,36 @@
+CREATE OR REPLACE VIEW lake_view.sharepoint.gfb_mm_monthly_invoice
+        (invoice_date,
+         platform,
+         site,
+         store,
+         order_id,
+         tracking_number,
+         sku,
+         style,
+         quantity,
+         product_cost,
+         outbound_freight,
+         warehouse_handling_charge,
+         unit_price,
+         performance_fees,
+         total,
+         meta_update_datetime
+            )
+AS
+SELECT invoice_date,
+       platform,
+       site,
+       store,
+       order_id,
+       tracking_number,
+       sku,
+       style,
+       _quantity_                                                AS quantity,
+       _product_cost_                                            AS product_cost,
+       outbound_freight,
+       warehouse_handling_charge,
+       unit_price,
+       COALESCE(TRY_TO_DOUBLE(_performance_fees_), 0)            AS performance_fees,
+       _total_                                                   AS total,
+       CONVERT_TIMEZONE('America/Los_Angeles', _fivetran_synced) AS meta_update_datetime
+FROM lake_fivetran.jfb_other_sharepoint_v1.gfb_mm_monthly_invoice_sheet_1;

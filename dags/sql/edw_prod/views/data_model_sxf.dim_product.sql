@@ -1,0 +1,116 @@
+CREATE OR REPLACE VIEW data_model_sxf.dim_product
+(
+    product_id,
+    master_product_id,
+    store_id,
+    sku,
+    product_sku,
+    base_sku,
+    product_name,
+    product_alias,
+    product_type,
+    brand,
+    manufacturer,
+    current_showroom_date,
+    product_category_id,
+    product_category,
+    department,
+    category,
+    subcategory,
+    class,
+    color,
+    size,
+    is_plus_size,
+    inseam_type,
+    inseam_size,
+    material,
+    heel_height,
+    occasion,
+    vip_unit_price,
+    retail_unit_price,
+    sale_price,
+    short_description,
+    medium_description,
+    long_description,
+    is_active,
+    is_free,
+    image_url,
+    product_status_code,
+    product_status,
+    wms_class,
+    group_code,
+    product_id_object_type,
+    master_product_last_update_datetime,
+    membership_brand_id,
+    is_endowment_eligible,
+    is_warehouse_product,
+    warehouse_unit_price,
+    meta_create_datetime,
+    meta_update_datetime
+) AS
+    SELECT
+    stg.udf_unconcat_brand(p.product_id) AS product_id,
+    stg.udf_unconcat_brand(p.master_product_id) AS master_product_id,
+    p.store_id,
+    p.sku,
+    p.product_sku,
+    p.base_sku,
+    p.product_name,
+    p.product_alias,
+    p.product_type,
+    p.brand,
+    p.manufacturer,
+    p.current_showroom_date,
+    stg.udf_unconcat_brand(p.product_category_id) AS product_category_id,
+    p.product_category,
+    p.department,
+    p.category,
+    p.subcategory,
+    p.class,
+    p.color,
+    TRIM(p.size) AS size,
+    CASE
+        WHEN LEFT(TRIM(UPPER(p.size)), 2) IN ('1X', '2X', '3X', '4X') THEN TRUE
+        WHEN RIGHT(TRIM(UPPER(p.size)), 2) IN ('1X', '2X', '3X', '4X') THEN TRUE
+        WHEN LEFT(TRIM(UPPER(p.size)), 3) IN ('16W', '18W', '20W', '22W', '24W') THEN TRUE
+        ELSE FALSE END AS is_plus_size,
+    IFF(st.store_brand_abbr = 'FL' AND CHARINDEX('/', p.size) > 0 AND CHARINDEX('|', p.size) > 0,
+        TRIM(SUBSTRING(p.size, CHARINDEX('/', p.size) + 1, CHARINDEX('|', p.size) - CHARINDEX('/', p.size) - 1)), NULL)
+        AS inseam_type,
+    IFF(st.store_brand_abbr = 'FL' AND CHARINDEX('|', p.size) > 0,
+        TRIM(SPLIT_PART(p.size, '|', -1)), NULL) AS inseam_size,
+    p.material,
+    p.heel_height,
+    p.occasion,
+    p.vip_unit_price,
+    p.retail_unit_price,
+    p.sale_price,
+    p.short_description,
+    p.medium_description,
+    p.long_description,
+    p.is_active,
+    p.is_free,
+    COALESCE (url.image_url, surl.image_url, p.image_url) as image_url,
+    p.product_status_code,
+    p.product_status,
+    p.wms_class,
+    p.group_code,
+    p.product_id_object_type,
+    p.master_product_last_update_datetime,
+    p.membership_brand_id,
+    p.is_endowment_eligible,
+    p.is_warehouse_product,
+    p.warehouse_unit_price,
+    p.meta_create_datetime,
+    p.meta_update_datetime
+FROM stg.dim_product AS p
+    JOIN stg.dim_store AS st
+        ON st.store_id = p.store_id
+    LEFT JOIN reference.product_image_url_sxf url
+        ON lower(url.product_sku) = lower(trim(p.product_sku))
+        AND st.store_brand = 'Savage X'
+    LEFT JOIN reference.set_image_url_sxf surl
+        ON lower(surl.product_sku) = lower(trim(p.product_alias))
+        AND p.product_type = 'Bundle'
+        AND st.store_brand = 'Savage X'
+WHERE (substring(p.product_id, -2) = '30' OR p.product_id = -1);

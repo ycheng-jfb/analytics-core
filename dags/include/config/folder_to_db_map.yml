@@ -1,0 +1,16 @@
+---
+"*":
+    lake: lake
+    lake_view: lake_view
+    edw: edw
+    edw_view: edw_view
+"edm/mart":
+    edw: edw_dev
+    edw_view: edw_view_dev
+"edm/acquisition":
+    lake_stg: lake_stg_dev
+    lake: lake_dev
+    lake_view: lake_view_dev
+    lake_archive: lake_archive_dev
+"test":
+    reporting: blah

@@ -1,0 +1,36 @@
+from include.utils.acquisition.table_config import TableConfig
+from include.utils.snowflake import Column
+
+table_config = TableConfig(
+    database='ultracms',
+    schema='dbo',
+    table='navigation_items',
+    schema_version_prefix='v2',
+    column_list=[
+        Column('navigation_item_id', 'INT'),
+        Column('item_key', 'VARCHAR(255)'),
+        Column('config_id', 'INT'),
+        Column('parent_id', 'INT'),
+        Column('is_column', 'BOOLEAN'),
+        Column('label', 'VARCHAR(255)'),
+        Column('rb', 'BOOLEAN'),
+        Column('url', 'VARCHAR(255)'),
+        Column('ga_label', 'VARCHAR(255)'),
+        Column('start_date', 'TIMESTAMP_NTZ(3)'),
+        Column('end_date', 'TIMESTAMP_NTZ(3)'),
+        Column('segmentation_id', 'VARCHAR'),
+        Column('feature_flag_1', 'BOOLEAN'),
+        Column('feature_flag_2', 'BOOLEAN'),
+        Column('feature_flag_3', 'BOOLEAN'),
+        Column('feature_flag_4', 'BOOLEAN'),
+        Column('custom_class', 'VARCHAR(255)'),
+        Column('sortorder', 'INT'),
+        Column('config_version', 'INT'),
+        Column('feature_flag_5', 'BOOLEAN'),
+        Column('feature_flag_6', 'BOOLEAN'),
+        Column('url_rb', 'INT'),
+        Column('feature_flag_7', 'BOOLEAN'),
+        Column('feature_flag_8', 'BOOLEAN'),
+        Column('feature_flag_9', 'BOOLEAN'),
+    ],
+)

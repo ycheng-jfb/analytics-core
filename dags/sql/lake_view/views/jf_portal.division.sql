@@ -1,0 +1,26 @@
+CREATE VIEW IF NOT EXISTS lake_view.jf_portal.division AS
+SELECT
+   division_id,
+   incotermid_def,
+   inter_id,
+   abbr,
+   from_addr,
+   address1,
+   address2,
+   address3,
+   city,
+   state,
+   zipcode,
+   country,
+   phone1,
+   phone2,
+   phone3,
+   faxnumbr,
+   store_group_id,
+   date_create,
+   date_update,
+   legal_entity_name,
+   meta_create_datetime,
+   meta_update_datetime
+FROM
+   lake.jf_portal.division;

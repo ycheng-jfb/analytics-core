@@ -1,0 +1,4 @@
+CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION tableau_ext_acc_int
+    ALLOWED_NETWORK_RULES = (tableau_web_acc_rule)
+    ALLOWED_AUTHENTICATION_SECRETS = (tableau_creds)
+    ENABLED = TRUE;

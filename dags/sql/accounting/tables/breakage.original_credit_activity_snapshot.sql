@@ -1,0 +1,22 @@
+CREATE TRANSIENT TABLE IF NOT EXISTS breakage.original_credit_activity_snapshot (
+	brand VARCHAR(155),
+	original_credit_id NUMBER(38,0),
+	customer_id NUMBER(38,0),
+	country VARCHAR(155),
+	region VARCHAR(155),
+	state VARCHAR(155),
+	activity_type VARCHAR(155),
+	original_credit_tender VARCHAR(155),
+	original_credit_type VARCHAR(155),
+	original_credit_reason VARCHAR(155),
+	original_credit_month DATE,
+	activity_month DATE,
+	deferred_recognition_label VARCHAR(155),
+	activity_amount_local_gross_vat NUMBER(20,4),
+	activity_amount_usd_gross_vat NUMBER(20,4),
+	activity_amount_local_net_vat NUMBER(20,4),
+	activity_amount_usd_net_vat NUMBER(20,4),
+	update_datetime TIMESTAMP_NTZ(9),
+	finance_specialty_store VARCHAR(25),
+    giftco_transfer_status VARCHAR(30)
+);

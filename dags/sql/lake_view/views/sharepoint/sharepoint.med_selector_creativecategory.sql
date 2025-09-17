@@ -1,0 +1,8 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.SHAREPOINT.MED_SELECTOR_CREATIVECATEGORY AS
+select BUSINESS_UNIT_ABBR
+,CREATIVE_CATEGORY
+,CREATIVE_CATEGORY_INSERT
+,ACTIVE_IN_GENERATOR
+,_fivetran_synced::TIMESTAMP_LTZ AS meta_create_datetime
+,_fivetran_synced::TIMESTAMP_LTZ AS meta_update_datetime
+from lake_fivetran.MED_SHAREPOINT_admin_V1.naming_convention_selections_selector_creativecategory;

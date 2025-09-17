@@ -1,0 +1,7 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.SHAREPOINT.MED_SELECTOR_PROMO_CRM_VIP AS
+select BUSINESS_UNIT_ABBR
+,PROMO
+,PROMO_INSERT
+,_fivetran_synced::TIMESTAMP_LTZ AS meta_create_datetime
+,_fivetran_synced::TIMESTAMP_LTZ AS meta_update_datetime
+from lake_fivetran.MED_SHAREPOINT_admin_V1.naming_convention_selections_selector_promo_crm_vip;

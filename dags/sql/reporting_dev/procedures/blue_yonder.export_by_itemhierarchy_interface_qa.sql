@@ -1,0 +1,202 @@
+use reporting_dev;
+create or replace temp table _final (
+PRODUCTGROUPID  varchar,
+PRODUCTGROUPNAME    varchar,
+LEVELID	varchar,
+PARENTACTIONCODE    number(10),
+PARENTGROUPID   varchar,
+PARENTLEVELID   varchar
+);
+
+insert into _final
+(
+PRODUCTGROUPID,
+PRODUCTGROUPNAME,
+LEVELID,
+PARENTACTIONCODE,
+PARENTGROUPID,
+PARENTLEVELID
+)
+select distinct
+style,
+max(STYLE_DESC),
+'STYLE',
+NULL,
+SUB_CLASS,
+'SUBCLASS'
+from reporting_dev.blue_yonder.export_by_ITEM_interface_stg
+where sub_class is not null
+group by style,sub_class
+;
+
+insert into _final
+(
+PRODUCTGROUPID,
+PRODUCTGROUPNAME,
+LEVELID,
+PARENTACTIONCODE,
+PARENTGROUPID,
+PARENTLEVELID
+)
+select distinct
+SUB_CLASS,
+SUB_CLASS_DESC,
+'SUBCLASS',
+NULL,
+CLASS,
+'CLASS'
+from reporting_dev.blue_yonder.export_by_ITEM_interface_stg;
+
+insert into _final
+(
+PRODUCTGROUPID,
+PRODUCTGROUPNAME,
+LEVELID,
+PARENTACTIONCODE,
+PARENTGROUPID,
+PARENTLEVELID
+)
+select distinct
+CLASS,
+CLASS_DESC,
+'CLASS',
+NULL,
+SUB_DEPT,
+'SUBDEPT'
+from reporting_dev.blue_yonder.export_by_ITEM_interface_stg;
+
+insert into _final
+(
+PRODUCTGROUPID,
+PRODUCTGROUPNAME,
+LEVELID,
+PARENTACTIONCODE,
+PARENTGROUPID,
+PARENTLEVELID
+)
+select distinct
+SUB_DEPT,
+SUB_DEPT_DESC,
+'SUBDEPT',
+NULL,
+PRODUCT_SEGMENT,
+'PRODUCT_SEGMENT'
+from reporting_dev.blue_yonder.export_by_ITEM_interface_stg;
+
+insert into _final
+(
+PRODUCTGROUPID,
+PRODUCTGROUPNAME,
+LEVELID,
+PARENTACTIONCODE,
+PARENTGROUPID,
+PARENTLEVELID
+)
+select distinct
+PRODUCT_SEGMENT,
+PRODUCT_SEGMENT_DESC,
+'PRODUCT_SEGMENT',
+NULL,
+DIVISION,
+'DIVISION'
+from reporting_dev.blue_yonder.export_by_ITEM_interface_stg;
+
+
+insert into _final
+(
+PRODUCTGROUPID,
+PRODUCTGROUPNAME,
+LEVELID,
+PARENTACTIONCODE,
+PARENTGROUPID,
+PARENTLEVELID
+)
+select distinct
+DIVISION,
+DIVISION_DESC,
+'DIVISION',
+NULL,
+COMPANY,
+'TOTALCO'
+from reporting_dev.blue_yonder.export_by_ITEM_interface_stg;
+
+insert into _final
+(
+PRODUCTGROUPID,
+PRODUCTGROUPNAME,
+LEVELID,
+PARENTACTIONCODE,
+PARENTGROUPID,
+PARENTLEVELID
+)
+select distinct
+COMPANY,
+COMPANY_DESC,
+'TOTALCO',
+NULL,
+TOTAL_COMPANY,
+'TOTPRD'
+from reporting_dev.blue_yonder.export_by_ITEM_interface_stg;
+
+insert into _final
+(
+PRODUCTGROUPID,
+PRODUCTGROUPNAME,
+LEVELID,
+PARENTACTIONCODE,
+PARENTGROUPID,
+PARENTLEVELID
+)
+select distinct
+TOTAL_COMPANY,
+TOTAL_COMPANY_DESC,
+'TOTPRD',
+NULL,
+NULL,
+NULL
+from reporting_dev.blue_yonder.export_by_ITEM_interface_stg;
+
+DELETE FROM _final WHERE PRODUCTGROUPID is null;
+
+MERGE INTO reporting_dev.blue_yonder.export_by_itemhierarchy_interface_stg t
+USING _final s
+ON t.PRODUCTGROUPID = s.PRODUCTGROUPID
+    AND t.LEVELID = s.LEVELID
+WHEN MATCHED
+    AND t.PARENTGROUPID <> s.PARENTGROUPID
+THEN
+    UPDATE
+        SET t.PARENTGROUPID = s.PARENTGROUPID,
+            t.PARENTLEVELID = s.PARENTLEVELID,
+            t.PARENTACTIONCODE = 2,
+            t.DATE_ADDED = current_timestamp()
+WHEN MATCHED
+    AND t.PARENTGROUPID = s.PARENTGROUPID
+    AND t.PARENTACTIONCODE = 2
+THEN
+    UPDATE
+        SET
+            t.PARENTACTIONCODE = NULL,
+            t.DATE_ADDED = current_timestamp()
+WHEN NOT MATCHED
+THEN INSERT
+(
+PRODUCTGROUPID,
+PRODUCTGROUPNAME,
+LEVELID,
+PARENTACTIONCODE,
+PARENTGROUPID,
+PARENTLEVELID
+)
+VALUES
+(
+PRODUCTGROUPID,
+PRODUCTGROUPNAME,
+LEVELID,
+PARENTACTIONCODE,
+PARENTGROUPID,
+PARENTLEVELID
+);
+
+DELETE FROM reporting_dev.blue_yonder.export_by_itemhierarchy_interface_stg
+WHERE (PRODUCTGROUPID,PRODUCTGROUPNAME,LEVELID) NOT IN (SELECT PRODUCTGROUPID,PRODUCTGROUPNAME,LEVELID FROM _final);

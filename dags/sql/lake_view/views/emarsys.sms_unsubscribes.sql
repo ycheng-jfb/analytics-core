@@ -1,0 +1,11 @@
+CREATE VIEW IF NOT EXISTS LAKE_VIEW.EMARSYS.SMS_UNSUBSCRIBES AS
+SELECT csm.store_group,
+    s.CONTACT_ID,
+	s.UNSUBSCRIBE_TYPE,
+	s.EVENT_TIME,
+	s.CAMPAIGN_ID,
+	s.LOADED_AT,
+	s.CUSTOMER_ID,
+	s.META_CREATE_DATETIME
+FROM LAKE.EMARSYS.SMS_UNSUBSCRIBES s
+JOIN lake.emarsys.customer_store_mapping csm on csm.customer_id = s.customer_id;

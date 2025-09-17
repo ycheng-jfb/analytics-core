@@ -1,0 +1,22 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.SHAREPOINT.GFB_FORECAST_MONTHLY as (
+    select
+        BRAND as BUSINESS_UNIT,
+        REGION,
+        COUNTRY,
+        PURPOSE,
+        VERSION,
+        ORDER_TYPE,
+        DATE::DATE as DATE,
+        PRODUCT_REVENUE::FLOAT as PRODUCT_REVENUE,
+        GM_ as GM_AMOUNT,
+        UNIT_SALES::FLOAT as UNIT_SALES,
+        AUR,
+        AUC,
+        AIR_SLS as AIR_SALES,
+        RECEIPTS_::FLOAT as RECEIPTS_AMOUNT,
+        RECEIPTS::FLOAT as RECEIPTS_UNITS,
+        DISCOUNT as DISCOUNT_RATE,
+    	_fivetran_synced::TIMESTAMP_LTZ as meta_create_datetime,
+        _fivetran_synced::TIMESTAMP_LTZ as meta_update_datetime
+    from LAKE_FIVETRAN.JFB_CONFIDENTIAL_SHAREPOINT_V1.GFB_FORECAST_MONTHLY_DATA_FRIENDLY_BUDGET_MONTHLY
+);

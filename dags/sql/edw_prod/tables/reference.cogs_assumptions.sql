@@ -1,0 +1,26 @@
+create or replace table reference.cogs_assumptions
+(
+	store_id    INT,
+	store_name VARCHAR(100),
+	store_brand_name VARCHAR(50),
+    store_brand VARCHAR(50),
+	store_country VARCHAR(20),
+	store_region VARCHAR(20),
+	store_type VARCHAR(20),
+	currency_code VARCHAR(10),
+	returned_product_resaleable_percent NUMBER(18,4),
+	returned_product_damaged_percent NUMBER(18,4),
+	freight_cost_per_return_shipment NUMBER(18,4),
+	shipping_supplies_cost_per_outbound_order NUMBER(18,4),
+	freight_cost_per_outbound_shipment NUMBER(18,4),
+	product_cost_markdown_adjustment_percent NUMBER(18,4),
+	variable_gms_cost_per_order NUMBER(18,4),
+	variable_warehouse_cost_per_unit NUMBER(18,4),
+	payment_processing_cost_percent NUMBER(18,4),
+	start_date DATE,
+	end_date DATE,
+	meta_row_hash NUMBER,
+	meta_create_datetime TIMESTAMPLTZ(3),
+	meta_update_datetime TIMESTAMPLTZ(3),
+	PRIMARY KEY (store_id, start_date)
+);

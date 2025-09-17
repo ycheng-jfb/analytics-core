@@ -1,0 +1,4 @@
+CREATE FILE FORMAT lake_stg.public.ff_json
+	TYPE = JSON
+	STRIP_NULL_VALUES = TRUE
+;

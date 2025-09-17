@@ -1,0 +1,42 @@
+CREATE OR REPLACE VIEW reporting.amz_product_price_aur(
+    asin,
+    parent_asin,
+    tfg_sku,
+    seller_sku,
+    vip_unit_price,
+    retail_unit_price,
+    vip_cash_online_aur_l7,
+    vip_cash_online_aur_l30,
+    vip_cash_online_aur_ytd,
+    guest_cash_aur_l7,
+    guest_cash_aur_l30,
+    guest_cash_aur_ytd,
+    amazon_list_price_amount,
+    amazon_aur_ytd,
+    item_price_usd_amount_ytd,
+    quantity_ordered_ytd,
+    meta_create_datetime,
+    meta_update_datetime
+)
+AS
+(
+SELECT asin,
+       parent_asin,
+       tfg_sku,
+       seller_sku,
+       vip_unit_price,
+       retail_unit_price,
+       vip_cash_online_aur_l7,
+       vip_cash_online_aur_l30,
+       vip_cash_online_aur_ytd,
+       guest_cash_aur_l7,
+       guest_cash_aur_l30,
+       guest_cash_aur_ytd,
+       amazon_list_price_amount,
+       amazon_aur_ytd,
+       item_price_usd_amount_ytd,
+       quantity_ordered_ytd,
+       meta_create_datetime,
+       meta_update_datetime
+FROM dbt_edw_prod.reporting.amz_product_price_aur
+    );

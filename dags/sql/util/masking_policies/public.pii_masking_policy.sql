@@ -1,0 +1,7 @@
+CREATE OR REPLACE MASKING POLICY UTIL.PUBLIC.PII_MASK_POLICY
+AS (val string) RETURNS string ->
+CASE
+    WHEN current_role() IN ('TFG_ROLE_READ_ONLY', 'AZURE_TFG_ROLE_READ_ONLY', 'EDW_ENGINEER')
+    THEN left(md5(val),len(val))
+    ELSE val
+END;

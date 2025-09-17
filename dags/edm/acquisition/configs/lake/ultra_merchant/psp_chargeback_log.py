@@ -1,0 +1,35 @@
+from include.utils.acquisition.table_config import TableConfig
+from include.utils.snowflake import Column
+
+table_config = TableConfig(
+    database='ultramerchant',
+    schema='dbo',
+    table='psp_chargeback_log',
+    watermark_column='datetime_added',
+    enable_archive=False,
+    schema_version_prefix='v2',
+    column_list=[
+        Column('psp_chargeback_log_id', 'INT', uniqueness=True),
+        Column('payment_transaction_id', 'INT'),
+        Column('response_transaction_id', 'VARCHAR(50)'),
+        Column('merchant_id', 'VARCHAR(25)'),
+        Column('transaction_type', 'VARCHAR(50)'),
+        Column('transaction_method', 'VARCHAR(50)'),
+        Column('payment_method', 'VARCHAR(25)'),
+        Column('payment_amount', 'NUMBER(19, 4)'),
+        Column('chargeback_amount', 'NUMBER(19, 4)'),
+        Column('currency', 'VARCHAR(25)'),
+        Column('reason_text', 'VARCHAR(50)'),
+        Column('customer_email', 'VARCHAR(75)'),
+        Column('customer_reference', 'VARCHAR(25)'),
+        Column('customer_ip', 'VARCHAR(15)'),
+        Column('customer_country', 'VARCHAR(2)'),
+        Column('customer_risk', 'DOUBLE'),
+        Column('issuer_country', 'VARCHAR(2)'),
+        Column('datetime_added', 'TIMESTAMP_NTZ(3)', delta_column=0),
+        Column('datetime_transaction', 'TIMESTAMP_NTZ(3)'),
+        Column('datetime_dispute', 'TIMESTAMP_NTZ(3)'),
+        Column('datetime_chargeback', 'TIMESTAMP_NTZ(3)'),
+        Column('processed', 'BOOLEAN'),
+    ],
+)

@@ -1,0 +1,8 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.SHAREPOINT.MED_SELECTOR_MERCH AS
+select BUSINESS_UNIT_ABBR
+,PRODUCT_CATEGORY_INSERT
+,PRODUCT_CATEGORY
+,ACTIVE_IN_GENERATOR
+,_fivetran_synced::TIMESTAMP_LTZ AS meta_create_datetime
+,_fivetran_synced::TIMESTAMP_LTZ AS meta_update_datetime
+from lake_fivetran.MED_SHAREPOINT_admin_V1.naming_convention_selections_selector_merch;

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Config
+clusters:
+  - name: techstyle-prod-tenant-default
+    cluster:
+      server: >-
+        https://3a3d3e146a20602d2e48c611ccdff8d3.gr7.us-west-2.eks.amazonaws.com
+      insecure-skip-tls-verify: true
+users:
+  - name: techstyle-prod-tenant-default
+    user:
+      token: >-
+        eyJhbGciOiJSUzI1NiIsImtpZCI6Imlrc2g5YmNWUzhEdmJicUY1S05jTTBhWHdXZ05udlRFeEoyU2RKM2EzREUifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkdXBsb3NlcnZpY2VzLWRhLWludCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJkdXBsb3NlcnZpY2VzLWRhLWludC1lZGl0LXVzZXItdG9rZW4iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZHVwbG9zZXJ2aWNlcy1kYS1pbnQtZWRpdC11c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiMWJkNjQ0NmMtMjk2YS00OWRjLTg5MmQtZTlkNjc5YmY3ZWIzIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmR1cGxvc2VydmljZXMtZGEtaW50OmR1cGxvc2VydmljZXMtZGEtaW50LWVkaXQtdXNlciJ9.aqd4N3ighRVAAJ9vZ7WiQr0rnkA9d85HEGIrhIUtzLVVBQb_B5Osb-GSIgjqETrzDUmN0JIOW_m5vwtlgh5wQCTEOATmjTjvBqOEgm4NYQAyKT-q-hG5UOfU1mtPygs_tmj89OXz4o1zUnDmyJk2Vo_WLfn39tWCxwiO-r2bwcfuiHHnWTtIaiAC8xB6U_L5Jdph9UVF0BsthyJ_OG3thN7EJ15XViNV4Wqt0vh7XBS5fmzvA8IeWJvwtOabuFyExF9eULPjIk3PV4UTyyroEQV47yx_iIE5EA4wDhg6BceTUwAlhP_laLQMdnyGKPsn7C_Qk7N1ls-_pM9XNfceoA
+contexts:
+  - name: techstyle-prod-tenant-default
+    context:
+      namespace: kube-system
+      user: techstyle-prod-tenant-default
+      cluster: techstyle-prod-tenant-default
+preferences: {}
+current-context: techstyle-prod-tenant-default

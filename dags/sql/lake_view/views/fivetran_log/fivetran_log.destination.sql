@@ -1,0 +1,8 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.FIVETRAN_LOG.DESTINATION as
+SELECT ID,
+        NAME,
+        ACCOUNT_ID,
+        CREATED_AT,
+        REGION,
+        _fivetran_synced::TIMESTAMP_LTZ as meta_update_datetime
+    FROM LAKE_FIVETRAN.FIVETRAN_LOG_V1.DESTINATION;

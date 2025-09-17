@@ -1,0 +1,13 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.SHAREPOINT.GFB_CUSTOMER_SEGMENT_PROMO_CODE as (
+    select
+        BRAND as BUSINESS_UNIT,
+        REGION,
+        PROMO_CODE,
+        START_DATE::DATE as START_DATE,
+        END_DATE::DATE as END_DATE,
+        CUSTOM_SEGMENT_CATEGORY,
+        CUSTOM_SEGMENT,
+    	_fivetran_synced::TIMESTAMP_LTZ as meta_create_datetime,
+        _fivetran_synced::TIMESTAMP_LTZ as meta_update_datetime
+    from LAKE_FIVETRAN.JFB_OTHER_SHAREPOINT_V1.GFB_CUSTOMER_SEGMENT_PROMO_CODE_SHEET_1
+);

@@ -1,0 +1,21 @@
+CREATE OR REPLACE VIEW lake_view.amazon.selling_partner_asin AS
+SELECT DISTINCT asin,
+                s.value:marketplaceId::VARCHAR           marketplace_id,
+                s.value:adultProduct::VARCHAR            adult_product,
+                s.value:autographed::VARCHAR             autographed,
+                s.value:brand::VARCHAR                   brand,
+                s.value:browseClassification             browse_classification,
+                s.value:color::VARCHAR                   color,
+                s.value:itemClassification::VARCHAR      item_classification,
+                s.value:itemName::VARCHAR                item_name,
+                s.value:memorabilia::VARCHAR             memorabilia,
+                s.value:package_quantity::VARCHAR        package_quantity,
+                s.value:size::VARCHAR                    size,
+                s.value:style::VARCHAR                   style,
+                s.value:tradeInEligible::VARCHAR         trade_in_eligible,
+                s.value:websiteDisplayGroup::VARCHAR     website_display_group,
+                s.value:websiteDisplayGroupName::VARCHAR website_display_group_name,
+                i.meta_create_datetime,
+                i.meta_update_datetime
+FROM lake.amazon.amazon_catalog_items i,
+     LATERAL FLATTEN(INPUT =>i.summaries) s;

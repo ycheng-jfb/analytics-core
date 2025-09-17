@@ -1,0 +1,38 @@
+create or replace view lake_view.sharepoint.fl_retail_store_detail (
+    STORE_NUMBER,
+    STORE_NAME,
+    STORE_STATUS,
+    STORE_ID,
+    WAREHOUSE_ID,
+    REGION_CODE,
+    REGION,
+    DISTRICT,
+    NET_CONVERSION_GOAL,
+    OPEN_DATE,
+    CLOSE_DATE,
+    GENERATION,
+    NET_SQ_FOOTAGE,
+    SELLING_SQ_FOOTAGE,
+    STORE_TYPE,
+    META_CREATE_DATETIME,
+    META_UPDATE_DATETIME
+) as
+SELECT
+    store_number,
+    store_name,
+    store_status,
+    store_id,
+    warehouse_id,
+    region_code,
+    region,
+    district,
+    net_conversion_goal,
+    open_date,
+    close_date,
+    generation,
+    net_sq_footage,
+    selling_sq_footage,
+    store_type,
+    _fivetran_synced::timestamp as meta_create_datetime,
+    _fivetran_synced::timestamp as meta_update_datetime
+FROM lake_fivetran.fabletics_sharepoint_v1.fl_retail_store_detail_sheet_1;

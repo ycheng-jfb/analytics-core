@@ -1,0 +1,20 @@
+CREATE TRANSIENT TABLE IF NOT EXISTS month_end.retail_ship_only_refunds_snapshot (
+	refund_id NUMBER(38,0),
+	sales_retail_store VARCHAR(255),
+	retail_sales_location VARCHAR(16777216),
+	order_id NUMBER(38,0),
+	payment_transaction_id NUMBER(38,0),
+	return_payment_transaction_id NUMBER(38,0),
+	date_shipped DATE,
+	month_shipped DATE,
+	return_location VARCHAR(6),
+	store_credit_refund NUMBER(20,4),
+	creditcard_refund NUMBER(20,4),
+	cash_refund NUMBER(20,4),
+	date_refunded DATE,
+	month_refunded TIMESTAMP_NTZ(9),
+	total_refund NUMBER(20,4),
+	snapshot_timestamp TIMESTAMP_LTZ(9),
+	store_brand VARCHAR(16777216),
+	store_country VARCHAR(16777216)
+);

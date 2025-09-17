@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS lake.builder.hdyh_flattened (
+    id                      VARCHAR,
+    name                    VARCHAR,
+    model_id                VARCHAR,
+    published               VARCHAR,
+    global_code             VARCHAR,
+    label                   VARCHAR,
+    referrer_id             VARCHAR,
+    sub_global_code         VARCHAR,
+    sub_label               VARCHAR,
+    sub_referrer_id         VARCHAR,
+    variations              VARIANT,
+    created_date            TIMESTAMP_LTZ(3),
+    last_updated            TIMESTAMP_LTZ(3),
+    first_published         TIMESTAMP_LTZ(3),
+    created_by              VARCHAR,
+    last_updated_by         VARCHAR,
+    rev                     VARCHAR,
+    meta_row_hash           NUMBER(38, 0),
+    meta_create_datetime    TIMESTAMP_LTZ,
+    meta_update_datetime    TIMESTAMP_LTZ
+);

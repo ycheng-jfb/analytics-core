@@ -1,0 +1,17 @@
+create or replace view lake_view.sharepoint.med_microsoft_conversion_mapping as
+select
+brand,
+country,
+region,
+account_id,
+account_number,
+conversion_event_type,
+conversion_event_name,
+click_window,
+conversion_event_id,
+start_date,
+end_date,
+_fivetran_synced::TIMESTAMP_LTZ AS meta_create_datetime,
+_fivetran_synced::TIMESTAMP_LTZ AS meta_update_datetime
+from
+LAKE_FIVETRAN.MED_SHAREPOINT_ADMIN_V1.MICROSOFT_ADS_CONVERSIONS_MAPPING_MICROSOFT_CONV_CONSOLIDATION

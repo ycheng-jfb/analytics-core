@@ -1,0 +1,21 @@
+CREATE TABLE stg.dim_order_membership_classification (
+    order_membership_classification_key INT IDENTITY (1,1) NOT NULL,
+    is_activating BOOLEAN,
+    is_guest BOOLEAN,
+    membership_order_type_l1 VARCHAR(50) NOT NULL,
+    membership_order_type_l2 VARCHAR(50) NOT NULL,
+    membership_order_type_l3 VARCHAR(50) NOT NULL,
+    membership_order_type_l4 VARCHAR(50) NOT NULL,
+    first_repeat_order_type VARCHAR(50) NOT NULL,
+    is_vip BOOLEAN NOT NULL,
+    is_repeat_customer BOOLEAN NOT NULL,
+    is_reactivated_vip BOOLEAN NOT NULL,
+    is_never_vip BOOLEAN NOT NULL,
+    is_vip_membership_trial BOOLEAN NOT NULL,
+    effective_start_datetime TIMESTAMP_LTZ,
+    effective_end_datetime TIMESTAMP_LTZ,
+    is_current BOOLEAN,
+    meta_create_datetime TIMESTAMP_LTZ,
+    meta_update_datetime TIMESTAMP_LTZ,
+    PRIMARY KEY (order_membership_classification_key)
+);

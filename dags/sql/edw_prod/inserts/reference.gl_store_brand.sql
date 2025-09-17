@@ -1,0 +1,26 @@
+TRUNCATE TABLE reference.gl_store_brand;
+
+INSERT INTO reference.gl_store_brand(gl_company_code, gl_store_brand, reporting_store_brand) VALUES
+(110, 'JustFab', 'JF'),
+(120, 'ShoeDazzle', 'SD'),
+(130, 'FabKids', 'FK'),
+(140, 'TechFab LLC', 'JF'),
+(150, 'JFGC, LLC (Giftco)', 'JF'),
+(160, 'FBLX Holding, LLC', 'FL'),
+(170, 'JF Retail Services', 'FL'),
+(175, 'Fabletics','FL'),
+(180, 'Fabletics', 'FL'),
+(185, 'Yitty', 'YTY'),
+(190, 'Savage X', 'SX'),
+(192, 'Savage X', 'SX'),
+(200, 'Personal Styling Services, LLC', 'PS'),
+(410, 'Fabletics', 'FL'),
+(411, 'Fabletics', 'FL'),
+(412, 'JustFab', 'JF'),
+(415, 'Savage X', 'SX'),
+(420, 'Fabletics', 'FL'),
+(421, 'Fabletics', 'FL'),
+(422, 'JustFab', 'JF'),
+(425, 'Savage X', 'SX'),
+(430, 'Fabletics', 'FL'),
+(432, 'JustFab', 'JF');

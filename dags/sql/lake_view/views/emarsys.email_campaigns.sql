@@ -1,0 +1,18 @@
+CREATE VIEW IF NOT EXISTS LAKE_VIEW.EMARSYS.EMAIL_CAMPAIGNS AS
+SELECT csm.store_group,
+    s.ID,
+	s.NAME,
+	s.VERSION_NAME,
+	s.LANGUAGE,
+	s.CATEGORY_ID,
+	s.PARENT_CAMPAIGN_ID,
+	s.TYPE,
+	s.SUB_TYPE,
+	s.PROGRAM_ID,
+	s.CUSTOMER_ID,
+	s.PARTITIONTIME,
+	s.EVENT_TIME,
+	s.LOADED_AT,
+	s.META_CREATE_DATETIME
+FROM LAKE.EMARSYS.EMAIL_CAMPAIGNS s
+JOIN lake.emarsys.customer_store_mapping csm on csm.customer_id = s.customer_id;

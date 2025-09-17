@@ -1,0 +1,30 @@
+create table if not exists lake.emarsys.customer_store_mapping
+(customer_id int,environment string,store_group string);
+
+insert into lake.emarsys.customer_store_mapping values
+(881442373,'prod','fabletics_se'),
+(881778058,'prod','justfab_es'),
+(884192120,'prod','fabletics_nl'),
+(884802172,'prod','fabletics_fr'),
+(884845599,'prod','fabletics_es'),
+(885643949,'prod','justfab_uk'),
+(886282098,'prod','justfab_dk'),
+(886289714,'prod','fabletics_uk'),
+(886509125,'prod','savagex_es'),
+(886554689,'prod','fabletics_de'),
+(886646213,'prod','savagex_eu'),
+(886845995,'prod','justfab_se'),
+(887057765,'prod','justfab_de'),
+(888237360,'prod','savagex_fr'),
+(888410358,'prod','justfab_nl'),
+(888469794,'prod','savagex_uk'),
+(888734133,'prod','fabletics_dk'),
+(889794144,'prod','justfab_fr'),
+(921567733,'prod','justfab_us'),
+(922088713,'prod','savagex_us'),
+(923314424,'prod','fabkids_us'),
+(923755806,'prod','fabletics_ca'),
+(924310192,'prod','shoedazzle_us'),
+(927840737,'prod','fabletics_us'),
+(929711773,'prod','justfab_ca'),
+(885742026,'prod','savagex_de');

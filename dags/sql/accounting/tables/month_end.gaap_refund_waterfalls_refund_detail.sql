@@ -1,0 +1,16 @@
+CREATE TRANSIENT TABLE IF NOT EXISTS month_end.gaap_refund_waterfalls_refund_detail (
+	membership_store_id NUMBER(38,0),
+	membership_store VARCHAR(101),
+	order_type VARCHAR(34),
+	date_shipped DATE,
+	order_id NUMBER(38,0),
+	rate NUMBER(19,6),
+	gross_rev_after_discount NUMBER(32,10),
+	total_cash_and_cash_credit NUMBER(33,10),
+	refund_id NUMBER(38,0),
+	payment_method VARCHAR(25),
+	refund_month DATE,
+	refund_type VARCHAR(19),
+	monthoffset NUMBER(10,0),
+	refund_total NUMBER(20,6)
+);

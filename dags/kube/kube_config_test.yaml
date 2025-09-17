@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Config
+clusters:
+  - name: duplo-eks-cluster
+    cluster:
+      server: >-
+        https://a0d25bfa8cf51e5d5fee9ae1434b7db9.sk1.us-west-2.eks.amazonaws.com
+      insecure-skip-tls-verify: true
+users:
+  - name: duplo-eks-cluster
+    user:
+      token: >-
+        eyJhbGciOiJSUzI1NiIsImtpZCI6IjA1ODk2NGNhY2M1MWE4OGRkOTAwM2Y5NmNmYWI4MzQ0MTRiZTEzYTEifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjIl0sImV4cCI6MTcxODE2NTI4NCwiaWF0IjoxNzE4MDc4ODg0LCJpc3MiOiJodHRwczovL29pZGMuZWtzLnVzLXdlc3QtMi5hbWF6b25hd3MuY29tL2lkL0EwRDI1QkZBOENGNTFFNUQ1RkVFOUFFMTQzNEI3REI5Iiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJkdXBsb3NlcnZpY2VzLWRhLWludC1kZXYiLCJzZXJ2aWNlYWNjb3VudCI6eyJuYW1lIjoiZHVwbG9zZXJ2aWNlcy1kYS1pbnQtZGV2LWVkaXQtdXNlciIsInVpZCI6IjBjOTY0MWE3LWMzYzItNDQwNy05MjI1LWZjZDQ2Y2RiMDVkYiJ9fSwibmJmIjoxNzE4MDc4ODg0LCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZHVwbG9zZXJ2aWNlcy1kYS1pbnQtZGV2OmR1cGxvc2VydmljZXMtZGEtaW50LWRldi1lZGl0LXVzZXIifQ.SWWmLFnf6UrmuejmjcmGy3uL6YpjhS21XGmkOaTVPy3dCp4WVdnFvqXWvw_KuDo2eNKuUlV8kmwHc2eJLk2XO60wwyC13dBwrZCqG0UxZh1LaTqYJtIcweNQcmG-4-z5jQ5PUUTbSvuFwYQX-dKxU5Hj4kmBaDHOo5_3AdwIUzFvE6_Q-0kSvVgxXJlBQK_71OSoEgPa_lgtnqbHBGpvQGordISw6ZP5MwK9Ru0fnvJACBgT29Zva3BdJ2SgL6tbqNkptK93Oosdl7yXPOZC1QWo9aaTMomSElMknNs3lt-V5OLZsRbDlwGOOoBSE55flc3vzc6ULawete-J2M1WdA
+contexts:
+  - name: duplo-eks-cluster
+    context:
+      namespace: kube-system
+      user: duplo-eks-cluster
+      cluster: duplo-eks-cluster
+preferences: {}
+current-context: duplo-eks-cluster

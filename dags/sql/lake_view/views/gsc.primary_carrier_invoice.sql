@@ -1,0 +1,48 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.GSC.PRIMARY_CARRIER_INVOICE AS
+SELECT
+    'OOCL' AS carrier,
+    invoice_number,
+    invoice_date,
+    post_advice,
+    container,
+    traffic_mode,
+    NULL AS entry_number,
+    bl,
+    size,
+    cbm,weight,po_number,
+    pol,
+    pol_etd,
+    pod,
+    fnd,
+    description,
+    unit,
+    charge_per_unit,
+    exchange_rate,
+    amount_usd,
+    meta_create_datetime,
+    meta_update_datetime
+FROM lake.excel.carrier_invoice_oocl_shipments
+UNION
+SELECT
+    carrier,
+    invoice_number,
+    invoice_date,
+    post_advice,
+    container,
+    traffic_mode,
+    NULL AS entry_number,
+    bl,
+    size,
+    cbm,weight,po_number,
+    pol,
+    pol_etd,
+    pod,
+    fnd,
+    description,
+    unit,
+    charge_per_unit,
+    exchange_rate,
+    amount_usd,
+    meta_create_datetime,
+    meta_update_datetime
+FROM lake.excel.carrier_invoice_carrier;

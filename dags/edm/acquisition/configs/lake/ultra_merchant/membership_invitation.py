@@ -1,0 +1,35 @@
+from include.utils.acquisition.table_config import TableConfig
+from include.utils.snowflake import Column
+
+table_config = TableConfig(
+    database='ultramerchant',
+    schema='dbo',
+    table='membership_invitation',
+    watermark_column='datetime_modified',
+    schema_version_prefix='v2',
+    column_list=[
+        Column('membership_invitation_id', 'INT', uniqueness=True),
+        Column('membership_invitation_link_id', 'INT'),
+        Column('invitee_membership_id', 'INT'),
+        Column('session_id', 'INT'),
+        Column('type', 'VARCHAR(15)'),
+        Column('code', 'VARCHAR(36)'),
+        Column('recipient_email', 'VARCHAR(75)'),
+        Column('recipient_foreign_account_id', 'VARCHAR(50)'),
+        Column('recipient_firstname', 'VARCHAR(25)'),
+        Column('recipient_lastname', 'VARCHAR(25)'),
+        Column('comment', 'VARCHAR(512)'),
+        Column('sends', 'INT'),
+        Column('datetime_added', 'TIMESTAMP_NTZ(3)', delta_column=1),
+        Column('datetime_last_sent', 'TIMESTAMP_NTZ(3)'),
+        Column('statuscode', 'INT'),
+        Column('hide', 'INT'),
+        Column('incentive_object_id', 'INT'),
+        Column('incentive_event_object_id', 'INT'),
+        Column('third_party_invite', 'BOOLEAN'),
+        Column('datetime_modified', 'TIMESTAMP_NTZ(3)', delta_column=0),
+        Column('membership_membership_invitation_campaign_id', 'INT'),
+        Column('membership_invite_source_id', 'INT'),
+        Column('automatic_reminder', 'BOOLEAN'),
+    ],
+)

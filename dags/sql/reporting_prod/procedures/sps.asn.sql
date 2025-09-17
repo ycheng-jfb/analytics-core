@@ -1,0 +1,93 @@
+SET low_watermark_datetime = %(low_watermark)s :: TIMESTAMP_LTZ;
+
+INSERT INTO reporting_prod.sps.asn
+(purpose_code,
+ asn_id,
+ asn_date,
+ asn_time,
+ shipment_carton_quantity,
+ shipment_weight,
+ shipment_volume,
+ bill_of_lading,
+ consolidator_name,
+ vessel_name,
+ voyage_number,
+ scac,
+ port_of_load,
+ port_of_discharge,
+ final_destination,
+ est_delivery_date,
+ departure_date,
+ est_point_of_discharge_date,
+ transport_mode,
+ container_id,
+ container_weight,
+ seal_number,
+ equipment_type,
+ traffic_mode,
+ po_number,
+ shipper,
+ line_number,
+ item_number,
+ po_line_number,
+ shipped_quantity,
+ carton_quantity,
+ volume,
+ weight,
+ file_name,
+ meta_create_datetime)
+    (SELECT
+         //asn
+         XMLGET(asn.value, 'purposeCode'):"$"::VARCHAR                  AS purpose_code,
+         XMLGET(asn.value, 'asnID'):"$":: VARCHAR                       AS asn_id,
+         XMLGET(asn.value, 'asnDate'):"$":: VARCHAR                     AS asn_date,
+         XMLGET(asn.value, 'asnTime'):"$":: VARCHAR                     AS asn_time,
+         //shipment
+         XMLGET(shipment.value, 'shipmentCartonQty'):"$":: VARCHAR      AS shipment_carton_quantity,
+         XMLGET(shipment.value, 'shipmentWeight'):"$":: VARCHAR         AS shipment_weight,
+         XMLGET(shipment.value, 'shipmentVolume'):"$":: VARCHAR         AS shipment_volume,
+         XMLGET(shipment.value, 'billOfLading'):"$":: VARCHAR           AS bill_of_lading,
+         XMLGET(shipment.value, 'consolidatorName'):"$":: VARCHAR       AS consolidator_name,
+         XMLGET(shipment.value, 'vesselName'):"$":: VARCHAR             AS vessel_name,
+         XMLGET(shipment.value, 'voyageNumber'):"$":: VARCHAR           AS voyage_number,
+         XMLGET(shipment.value, 'scac'):"$":: VARCHAR                   AS scac,
+         XMLGET(shipment.value, 'portOfLoad'):"$":: VARCHAR             AS port_of_load,
+         XMLGET(shipment.value, 'portOfDischarge'):"$":: VARCHAR        AS port_of_discharge,
+         XMLGET(shipment.value, 'finalDestination'):"$":: VARCHAR       AS final_destination,
+         XMLGET(shipment.value, 'estDeliveryDate'):"$":: VARCHAR        AS est_delivery_date,
+         XMLGET(shipment.value, 'departureDate'):"$":: VARCHAR          AS departure_date,
+         XMLGET(shipment.value, 'estPointOfDischargeDate'):"$"::VARCHAR AS est_point_of_discharge_date,
+         XMLGET(shipment.value, 'transportMode'):"$":: VARCHAR          AS transport_mode
+         //container
+         ,
+         XMLGET(container.value, 'containerID'):"$":: VARCHAR           AS container_id,
+         XMLGET(container.value, 'containerWeight'):"$"::VARCHAR        AS container_weight,
+         XMLGET(container.value, 'sealNumber'):"$":: VARCHAR            AS seal_number,
+         XMLGET(container.value, 'equipmentType'):"$":: VARCHAR         AS equipment_type,
+         XMLGET(container.value, 'trafficMode'):"$":: VARCHAR           AS traffic_mode
+         //orders
+         ,
+         XMLGET(orde.value, 'poNumber'):"$"::VARCHAR                    AS po_number,
+         XMLGET(orde.value, 'shipper'):"$":: VARCHAR                    AS shipper
+         //items
+         ,
+         XMLGET(item.value, 'lineNumber'):"$"::VARCHAR                  AS line_number,
+         XMLGET(item.value, 'itemNumber'):"$"::VARCHAR                  AS item_number,
+         XMLGET(item.value, 'poLineNumber'):"$"::VARCHAR                AS po_line_number,
+         XMLGET(item.value, 'shippedQty'):"$"::VARCHAR                  AS shipped_quantity,
+         XMLGET(item.value, 'cartonQty'):"$":: VARCHAR                  AS carton_quantity,
+         XMLGET(item.value, 'volume'):"$":: VARCHAR                     AS volume,
+         XMLGET(item.value, 'weight'):"$":: VARCHAR                     AS weight,
+         file_name                                                      AS file_name,
+         CURRENT_TIMESTAMP()                                            AS meta_create_datetime
+     FROM lake.sps.asn AS xml,
+          LATERAL FLATTEN(xml.xml_data:"$") asn,
+          LATERAL FLATTEN(TO_ARRAY(asn.value:"$")) shipment,
+          LATERAL FLATTEN(TO_ARRAY(shipment.value:"$")) containers,
+          LATERAL FLATTEN(TO_ARRAY(containers.value:"$")) container,
+          LATERAL FLATTEN(TO_ARRAY(container.value:"$")) orders,
+          LATERAL FLATTEN(TO_ARRAY(orders.value:"$")) orde,
+          LATERAL FLATTEN(TO_ARRAY(orde.value:"$")) od,
+          LATERAL FLATTEN(TO_ARRAY(od.value:"$")) item
+     WHERE meta_create_datetime > $low_watermark_datetime
+       AND line_number IS NOT NULL)

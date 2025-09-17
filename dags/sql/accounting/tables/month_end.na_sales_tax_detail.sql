@@ -1,0 +1,23 @@
+CREATE TRANSIENT TABLE IF NOT EXISTS month_end.na_sales_tax_detail (
+	country VARCHAR(18),
+	segment VARCHAR(7),
+	business_unit VARCHAR(71),
+	store_type VARCHAR(20),
+	retail_location VARCHAR(100),
+	activity_month DATE,
+	store_id NUMBER(38,0),
+	order_id NUMBER(38,0),
+	credit_type VARCHAR(17),
+	refund_id NUMBER(38,0),
+	state VARCHAR(16777216),
+	county VARCHAR(50),
+	city VARCHAR(50),
+	refund_type VARCHAR(25),
+	transaction_type VARCHAR(50),
+	product_dollars NUMBER(20,4),
+	credit_used NUMBER(19,4),
+	cash_collected NUMBER(21,4),
+	shipping NUMBER(20,4),
+	tax NUMBER(20,4),
+	total NUMBER(22,4)
+);

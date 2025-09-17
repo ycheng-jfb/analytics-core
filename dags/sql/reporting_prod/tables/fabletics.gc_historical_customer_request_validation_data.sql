@@ -1,0 +1,21 @@
+CREATE TRANSIENT TABLE fabletics.gc_historical_customer_request_validation_data (
+	date DATE,
+    store_region VARCHAR(250),
+    brand VARCHAR(250),
+    customer_segment VARCHAR(250),
+    vip_cohort VARCHAR(250),
+    brand_region VARCHAR(250),
+    customer_segment_region VARCHAR(500),
+	snapshot_datetime TIMESTAMP_LTZ(9),
+	snapshot_detail VARCHAR(1000),
+	table_name VARCHAR(250),
+	source1_snapshot VARCHAR(250),
+	source2_snapshot VARCHAR(250),
+	validation_approver VARCHAR(250),
+	validation_name VARCHAR(250),
+	validation_status VARCHAR(250),
+	metric_name VARCHAR(2500),
+	source1_value NUMBER(38,2),
+	source2_value NUMBER(38,2),
+	difference NUMBER(38,2)
+);

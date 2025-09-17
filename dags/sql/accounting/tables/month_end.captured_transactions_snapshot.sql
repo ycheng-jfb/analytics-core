@@ -1,0 +1,21 @@
+CREATE TRANSIENT TABLE IF NOT EXISTS month_end.captured_transactions_snapshot (
+	region VARCHAR(32),
+	order_id NUMBER(38,0),
+	business_unit VARCHAR(50),
+	retail_location VARCHAR(50),
+	store_country VARCHAR(50),
+	ship_to_country VARCHAR(50),
+	order_type VARCHAR(14),
+	transaction_type VARCHAR(10),
+	gateway_name VARCHAR(25),
+	payment_type VARCHAR(50),
+	statuscode VARCHAR(50),
+	full_date DATE,
+	amount NUMBER(19,4),
+	vat NUMBER(38,12),
+	amount_less_vat NUMBER(31,10),
+	tax NUMBER(19,4),
+	amount_less_tax NUMBER(20,4),
+	report_month DATE,
+	snapshot_timestamp TIMESTAMP_LTZ(9)
+);

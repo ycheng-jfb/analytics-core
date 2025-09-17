@@ -1,0 +1,45 @@
+CREATE OR REPLACE TRANSIENT TABLE REPORTING_PROD.GFB.gfb056_showroom_scorecard as
+select
+    mdp.BUSINESS_UNIT
+    ,mdp.SUB_BRAND
+    ,mdp.REGION
+    ,mdp.COUNTRY
+    ,mdp.DATE
+    ,mdp.PRODUCT_SKU
+    ,mdp.DEPARTMENT_DETAIL
+    ,mdp.SUBCATEGORY
+    ,mdp.SUBCLASS
+    ,mdp.CURRENT_SHOWROOM
+    ,mdp.LARGE_IMG_URL as img_url
+    ,mdp.SHOW_ROOM
+    ,mdp.COLOR
+    ,mdp.STYLE_NAME
+    ,mdp.CURRENT_VIP_RETAIL
+
+    ,sum(mdp.TOTAL_QTY_SOLD) as TOTAL_QTY_SOLD
+    ,sum(mdp.ACTIVATING_QTY_SOLD) as ACTIVATING_QTY_SOLD
+    ,sum(mdp.REPEAT_PRODUCT_REVENUE - mdp.REPEAT_COGS) as repeat_gross_margin
+    ,sum(mdp.QTY_AVAILABLE_TO_SELL) as QTY_AVAILABLE_TO_SELL
+    ,sum(mdp.REPEAT_QTY_SOLD) as REPEAT_QTY_SOLD
+    ,sum(mdp.TOTAL_COGS) as TOTAL_COGS
+    ,sum(mdp.ACTIVATING_PRODUCT_REVENUE) as ACTIVATING_PRODUCT_REVENUE
+    ,sum(mdp.REPEAT_PRODUCT_REVENUE) as REPEAT_PRODUCT_REVENUE
+    ,sum(mdp.TOTAL_PRODUCT_REVENUE) as TOTAL_PRODUCT_REVENUE
+    ,sum(mdp.REPEAT_DISCOUNT) as REPEAT_DISCOUNT
+from REPORTING_PROD.GFB.DOS_107_MERCH_DATA_SET_BY_PLACE_DATE mdp
+group by
+    mdp.BUSINESS_UNIT
+    ,mdp.SUB_BRAND
+    ,mdp.REGION
+    ,mdp.COUNTRY
+    ,mdp.DATE
+    ,mdp.PRODUCT_SKU
+    ,mdp.DEPARTMENT_DETAIL
+    ,mdp.SUBCATEGORY
+    ,mdp.SUBCLASS
+    ,mdp.CURRENT_SHOWROOM
+    ,mdp.LARGE_IMG_URL
+    ,mdp.SHOW_ROOM
+    ,mdp.COLOR
+    ,mdp.STYLE_NAME
+    ,mdp.CURRENT_VIP_RETAIL;

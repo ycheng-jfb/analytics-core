@@ -1,0 +1,13 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.FIVETRAN_LOG.RESOURCE_MEMBERSHIP as
+SELECT ID,
+        ROLE_ID,
+        TEAM_ID,
+        USER_ID,
+        ACCOUNT_ID,
+        DESTINATION_ID,
+        INTEGRATION_ID,
+        ORGANIZATION_ID,
+        CREATED_AT,
+        _fivetran_deleted,
+        _fivetran_synced::TIMESTAMP_LTZ as meta_update_datetime
+    FROM LAKE_FIVETRAN.FIVETRAN_LOG_V1.RESOURCE_MEMBERSHIP;

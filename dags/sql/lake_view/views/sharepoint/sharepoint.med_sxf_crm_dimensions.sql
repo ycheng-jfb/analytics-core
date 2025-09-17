@@ -1,0 +1,66 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.SHAREPOINT.MED_SXF_CRM_DIMENSIONS AS
+
+SELECT campaign_name,
+       campaign_id,
+       country,
+       launch_date,
+       email_type,
+       segment,
+       subsegment,
+       version,
+       track,
+       creative_concept,
+       online_or_retail,
+       welcome_drip,
+       offer_1,
+       offer_2,
+       imagery_type,
+       offer_in_subject,
+       emoji_in_subject,
+       cta_above_fold,
+       test,
+       email_length,
+       number_of_pdp_shown,
+       gif_in_hero,
+       email_objective,
+       sub_department,
+       promo_series,
+       event,
+       _fivetran_synced::TIMESTAMP_LTZ AS meta_create_datetime,
+       _fivetran_synced::TIMESTAMP_LTZ AS meta_update_datetime
+FROM lake_fivetran.med_sharepoint_acquisition_v1.sxf_crm_campaign_generator_sxf_crm_campaign_dimensions
+WHERE _line > 1
+
+UNION ALL
+
+SELECT campaign_name,
+       campaign_id,
+       country,
+       launch_date,
+       email_type,
+       segment,
+       subsegment,
+       version,
+       track,
+       creative_concept,
+       online_or_retail,
+       welcome_drip,
+       offer_1,
+       offer_2,
+       imagery_type,
+       offer_in_subject,
+       emoji_in_subject,
+       cta_above_fold,
+       test,
+       email_length,
+       number_of_pdp_shown,
+       gif_in_hero,
+       email_objective,
+       sub_department,
+       promo_series,
+       event,
+       _fivetran_synced::TIMESTAMP_LTZ AS meta_create_datetime,
+       _fivetran_synced::TIMESTAMP_LTZ AS meta_update_datetime
+FROM lake_fivetran.med_sharepoint_acquisition_v1.sxf_crm_campaign_generator_eu_crm_campaign_dimensions
+WHERE _line > 1
+;

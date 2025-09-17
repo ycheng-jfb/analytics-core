@@ -1,0 +1,112 @@
+/*
+Any Table that requires PII Masking MUST be added to "UTIL.PUBLIC.PII_COLUMNS".
+*/
+USE ROLE SYSADMIN;
+
+CREATE OR REPLACE PROCEDURE UTIL.PUBLIC.APPLY_PII_MASKING()
+RETURNS VARCHAR
+LANGUAGE javascript
+EXECUTE AS OWNER
+AS
+$$
+
+// Query to identify Tables that should be tagged for PII Masking but are not tagged.
+var SQLCOMMAND = `
+SELECT DISTINCT
+    REPLACE(CONCAT(
+        'ALTER ', TABLE_TYPE, ' IF EXISTS ', PC.TABLE_NAME,
+        ' ALTER COLUMN ', PC.COLUMN_NAME,
+        ' SET TAG UTIL.PUBLIC.PII_INFO_TAG = PII_PLACEHOLDER; '
+        ),'.ORDER ALTER','."ORDER" ALTER') AS QUERY
+FROM (
+    /* Check if Table exists and grab the Table_Type */
+    SELECT DISTINCT
+        CONCAT(T.TABLE_CATALOG, '.', T.TABLE_SCHEMA, '.', T.TABLE_NAME) AS TABLE_NAME,
+        CASE
+            WHEN T.TABLE_TYPE = 'VIEW' THEN 'VIEW'
+            ELSE 'TABLE' END
+            AS TABLE_TYPE
+    FROM SNOWFLAKE.ACCOUNT_USAGE.TABLES AS T
+    WHERE T.DELETED IS NULL
+       AND T.TABLE_TYPE <> 'VIEW'
+    ) AS T
+JOIN (
+    SELECT DISTINCT
+        TABLE_NAME,
+        COLUMN_NAME
+    FROM UTIL.PUBLIC.PII_COLUMNS AS PC
+    WHERE PC.TABLE_NAME IS NOT NULL
+        AND PC.COLUMN_NAME IS NOT NULL
+        AND PC.IS_MASKING_REQUIRED = 'TRUE'
+
+    /* Handle EDW Databases and Clones */
+    UNION ALL
+    SELECT DISTINCT
+        REPLACE(TABLE_NAME, 'EDW_PROD.', CONCAT(EDW_DB, '.')) AS TABLE_NAME,
+        COLUMN_NAME
+    FROM UTIL.PUBLIC.PII_COLUMNS AS PC
+    FULL OUTER JOIN(
+        SELECT DISTINCT DATABASE_NAME AS EDW_DB
+        FROM SNOWFLAKE.ACCOUNT_USAGE.DATABASES
+        WHERE DATABASE_NAME ILIKE '%EDW%'
+            AND DELETED IS NULL
+    ) AS DB
+    WHERE PC.TABLE_NAME IS NOT NULL
+        AND PC.COLUMN_NAME IS NOT NULL
+        AND PC.TABLE_NAME ILIKE 'EDW.%'
+        AND PC.IS_MASKING_REQUIRED = 'TRUE'
+
+    /* Handle Lake Brand Databases */
+    UNION ALL
+    SELECT DISTINCT
+        REPLACE(TABLE_NAME, 'LAKE.', CONCAT(LAKE_DB, '.')) AS TABLE_NAME,
+        COLUMN_NAME
+    FROM UTIL.PUBLIC.PII_COLUMNS AS PC
+    FULL OUTER JOIN(
+        SELECT DISTINCT DATABASE_NAME AS LAKE_DB
+        FROM SNOWFLAKE.ACCOUNT_USAGE.DATABASES
+        WHERE DATABASE_NAME ILIKE 'LAKE%'
+            AND DELETED IS NULL
+    ) AS DB
+    WHERE PC.TABLE_NAME IS NOT NULL
+        AND PC.COLUMN_NAME IS NOT NULL
+        AND PC.TABLE_NAME ILIKE 'LAKE.%'
+        AND PC.IS_MASKING_REQUIRED = 'TRUE'
+    ) AS PC
+    ON PC.TABLE_NAME = T.TABLE_NAME
+    LEFT JOIN (
+    /* Identify all Tables & Columns with Tags */
+    SELECT DISTINCT
+        CONCAT(OBJECT_DATABASE, '.', OBJECT_SCHEMA, '.', OBJECT_NAME) AS TABLE_NAME,
+        COLUMN_NAME
+    FROM SNOWFLAKE.ACCOUNT_USAGE.TAG_REFERENCES
+    WHERE OBJECT_DELETED IS NULL
+        AND COLUMN_NAME IS NOT NULL
+        AND TAG_VALUE = 'PII'
+    ) AS TR
+    ON PC.TABLE_NAME = TR.TABLE_NAME
+        AND UPPER(PC.COLUMN_NAME) = UPPER(TR.COLUMN_NAME)
+WHERE
+    TR.COLUMN_NAME IS NULL
+ORDER BY QUERY ASC;
+`;
+
+sql_dict = {sqlText: SQLCOMMAND};
+stmt = snowflake.createStatement(sql_dict);
+
+rs = stmt.execute();
+
+var s = '';
+
+while (rs.next())  {
+    sql2_dict = {sqlText: rs.getColumnValue('QUERY').replace("PII_PLACEHOLDER","'PII'")};
+    stmtEx = snowflake.createStatement(sql2_dict);
+    stmtEx.execute();
+    s += rs.getColumnValue(1) + "\n";
+    }
+
+result = "All Tables marked for PII Masking have PII Masking applied.";
+return result;
+
+$$
+;

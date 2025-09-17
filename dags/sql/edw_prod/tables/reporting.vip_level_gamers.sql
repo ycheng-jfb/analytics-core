@@ -1,0 +1,22 @@
+CREATE OR REPLACE TABLE reporting.vip_level_gamers (
+	lookback_window VARCHAR(55),
+	store_name VARCHAR(100),
+	store_full_name VARCHAR(100),
+	store_brand VARCHAR(50),
+	store_region VARCHAR(50),
+	store_type VARCHAR(20),
+	store_country VARCHAR(100),
+	activating_billingaddress_match NUMBER(1,0),
+	activating_cnh_match NUMBER(1,0),
+	activating_defaddress_match NUMBER(1,0),
+	activating_phone_match NUMBER(1,0),
+	repeat_billing_match NUMBER(1,0),
+	repeat_cnh_match NUMBER(1,0),
+	activation_local_datetime DATE,
+	is_reactivated_vip BOOLEAN,
+	is_retail_vip BOOLEAN,
+	customer_gender VARCHAR(1),
+	vips NUMBER(18,0),
+	meta_create_datetime TIMESTAMP_LTZ(9),
+	meta_update_datetime TIMESTAMP_LTZ(9)
+);

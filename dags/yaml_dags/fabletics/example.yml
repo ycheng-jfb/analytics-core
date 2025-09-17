@@ -1,0 +1,14 @@
+---
+
+example_dag:
+  schedule: "0 1 * * *"
+  tasks:
+    - type: sql
+      procedure: reporting_prod.dbo.yaml_dag_test.sql
+      watermark_tables:
+        - table_name: lake.ultra_merchant.customer_detail
+    - type: tableau
+      task_id: my_tableau_refresh
+      data_source_id: bae460e6-cd2d-479a-b227-873ad8a7b37c
+      upstream_tasks:
+        - reporting_prod.dbo.yaml_dag_test.sql

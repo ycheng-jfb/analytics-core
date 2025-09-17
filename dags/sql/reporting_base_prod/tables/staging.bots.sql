@@ -1,0 +1,13 @@
+CREATE TRANSIENT TABLE IF NOT EXISTS staging.bots
+(
+    USER_AGENT VARCHAR,
+    META_CREATE_DATETIME TIMESTAMP_LTZ(9) DEFAULT CURRENT_TIMESTAMP,
+	META_UPDATE_DATETIME TIMESTAMP_LTZ(9) DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO staging.bots(user_agent)
+SELECT DISTINCT a.user_agent
+FROM history.bot_user_agent a
+LEFT JOIN staging.bots b
+    on a.user_agent = b.user_agent
+WHERE b.user_agent IS NULL;

@@ -1,0 +1,21 @@
+CREATE TRANSIENT TABLE IF NOT EXISTS month_end.retail_ship_only_sales (
+	sales_retail_store NUMBER(38,0),
+	store_brand VARCHAR(20),
+	store_country VARCHAR(50),
+	sales_retail_location VARCHAR(50),
+	order_id NUMBER(38,0),
+	payment_transaction_id NUMBER(38,0),
+	date_shipped TIMESTAMP_TZ(9),
+	shipped_month DATE,
+	units NUMBER(38,0),
+	customer_id NUMBER(38,0),
+	cash_collected NUMBER(19,4),
+	subtotal NUMBER(19,4),
+	discount NUMBER(19,4),
+	net_rev NUMBER(20,4),
+	credit_used NUMBER(19,4),
+	shipping_rev NUMBER(19,4),
+	tax_collected NUMBER(19,4),
+	product_cost NUMBER(37,10),
+	shipping_cost NUMBER(26,11)
+);

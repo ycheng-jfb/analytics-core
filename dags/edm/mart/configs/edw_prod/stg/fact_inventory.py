@@ -1,0 +1,51 @@
+from include.airflow.operators.snowflake_mart_base import Column
+from include.airflow.operators.snowflake_mart_fact import SnowflakeMartFactOperator
+
+
+def get_mart_operator():
+    return SnowflakeMartFactOperator(
+        table='fact_inventory',
+        initial_load_value='1900-01-01',
+        transform_proc_list=['stg.transform_fact_inventory.sql'],
+        use_surrogate_key=False,
+        column_list=[
+            Column('item_id', 'NUMBER(38,0)', uniqueness=True),
+            Column('warehouse_id', 'NUMBER(38,0)', uniqueness=True),
+            Column('region_id', 'NUMBER(38,0)'),
+            Column('brand', 'VARCHAR(255)'),
+            Column('sku', 'VARCHAR(30)'),
+            Column('onhand_quantity', 'NUMBER(38,0)'),
+            Column('replen_quantity', 'NUMBER(38,0)'),
+            Column('ghost_quantity', 'NUMBER(38,0)'),
+            Column('reserve_quantity', 'NUMBER(38,0)'),
+            Column('special_pick_quantity', 'NUMBER(38,0)'),
+            Column('manual_stock_reserve_quantity', 'NUMBER(38,0)'),
+            Column('available_to_sell_quantity', 'NUMBER(38,0)'),
+            Column('receipt_inspection_quantity', 'NUMBER(38,0)'),
+            Column('return_quantity', 'NUMBER(38,0)'),
+            Column('damaged_quantity', 'NUMBER(38,0)'),
+            Column('damaged_returns_quantity', 'NUMBER(38,0)'),
+            Column('allocated_quantity', 'NUMBER(38,0)'),
+            Column('intransit_quantity', 'NUMBER(38,0)'),
+            Column('staging_quantity', 'NUMBER(38,0)'),
+            Column('pick_staging_quantity', 'NUMBER(38,0)'),
+            Column('lost_quantity', 'NUMBER(38,0)'),
+            Column('open_to_buy_quantity', 'NUMBER(38,0)'),
+            Column('landed_cost_per_unit', 'NUMBER(38,10)'),
+            Column('dsw_dropship_quantity', 'NUMBER(38,0)'),
+            Column('is_deleted', 'BOOLEAN'),
+        ],
+        watermark_tables=[
+            'edw_prod.reference.gfc_inventory_cost',
+            'lake.ultra_warehouse.company',
+            'lake.ultra_warehouse.item_warehouse',
+            'lake.ultra_warehouse.item',
+            'lake.ultra_warehouse.warehouse',
+            'lake_jfb.ultra_partner.fulfillment_partner_item_warehouse',
+            'lake_consolidated.ultra_merchant.item',
+            'lake.centric.ed_sku',
+            'lake.centric.ed_style',
+            'lake.centric.ed_colorway',
+            'lake.centric.tfg_marketplace_costs',
+        ],
+    )

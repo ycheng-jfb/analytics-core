@@ -1,0 +1,13 @@
+CREATE VIEW IF NOT EXISTS LAKE_VIEW.EMARSYS.SMS_SEND_REPORTS AS
+SELECT csm.store_group,
+    s.BOUNCE_TYPE,
+	s.CAMPAIGN_ID,
+	s.CONTACT_ID,
+	s.CUSTOMER_ID,
+	s.EVENT_TIME,
+	s.LOADED_AT,
+	s.MESSAGE_ID,
+	s.STATUS,
+	s.META_CREATE_DATETIME
+FROM LAKE.EMARSYS.SMS_SEND_REPORTS s
+JOIN lake.emarsys.customer_store_mapping csm on csm.customer_id = s.customer_id;

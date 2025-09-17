@@ -1,0 +1,179 @@
+CREATE TABLE address (
+    address_id INT IDENTITY(119519660,5) NOT NULL,
+    customer_id INT NULL,
+    firstname VARCHAR(25) NULL,
+    lastname VARCHAR(25) NULL,
+    name VARCHAR(50) NULL,
+    company VARCHAR(100) NULL,
+    address1 VARCHAR(50) NOT NULL,
+    address2 VARCHAR(35) NULL,
+    city VARCHAR(35) NOT NULL,
+    state VARCHAR(25) NOT NULL,
+    zip VARCHAR(25) NOT NULL,
+    country_code VARCHAR(2) NOT NULL,
+    phone VARCHAR(25) NULL,
+    us_phone_areacode VARCHAR(3) NULL,
+    us_phone_prefix VARCHAR(3) NULL,
+    us_phone_linenumber VARCHAR(4) NULL,
+    datetime_added TIMESTAMP_NTZ(3),
+    is_validated TINYINT NULL,
+    datetime_modified TIMESTAMP_NTZ(3),
+    phone_digits VARCHAR(25) NULL,
+    address_hash VARBINARY(20) NULL,
+    address3 VARCHAR(255) NULL,
+    address4 VARCHAR(255) NULL,
+    address5 VARCHAR(255) NULL,
+    address6 VARCHAR(255) NULL,
+    address7 VARCHAR(255) NULL,
+    address8 VARCHAR(255) NULL,
+    address_type_id INT NULL,
+    email VARCHAR(75) NULL,
+    is_customer_validated TINYINT NULL
+);
+
+
+
+
+CREATE TABLE billing_retry_schedule_queue (
+    billing_retry_schedule_queue_id INT IDENTITY(135559870,5) NOT FOR REPLICATION NOT NULL,
+    billing_retry_queue_id INT NULL,
+    billing_retry_schedule_id INT NULL,
+    order_id INT NOT NULL,
+    order_type_id INT NULL,
+    payment_number INT NOT NULL,
+    last_cycle INT NOT NULL,
+    last_phone_cycle INT NOT NULL,
+    last_billing_retry_schedule_queue_contact_log_id INT NULL,
+    contact_am_pm VARCHAR(2) NULL,
+    store_group_id INT NULL,
+    administrator_id INT NULL,
+    completed_by VARCHAR(25) NULL,
+    datetime_initial_decline TIMESTAMP_NTZ(3) NULL,
+    datetime_scheduled TIMESTAMP_NTZ(3) NULL,
+    datetime_last_retry TIMESTAMP_NTZ(3) NULL,
+    datetime_assigned TIMESTAMP_NTZ(3) NULL,
+    datetime_added TIMESTAMP_NTZ(3),
+    datetime_modified TIMESTAMP_NTZ(3),
+    statuscode INT NOT NULL,
+    billing_retry_schedule_type_id INT NULL
+);
+
+
+
+CREATE TABLE bounceback_endowment (
+    bounceback_endowment_id INT IDENTITY(10,5) NOT FOR REPLICATION NOT NULL,
+    customer_id INT NOT NULL,
+    bounceback_type_id INT NOT NULL,
+    order_id INT NULL,
+    order_line_id INT NULL,
+    membership_token_id INT NULL,
+    administrator_id INT NULL,
+    amount NUMBER(38, 2) NULL,
+    object VARCHAR(50) NOT NULL,
+    object_id BIGINT NULL,
+    datetime_added TIMESTAMP_NTZ(3),
+    datetime_modified TIMESTAMP_NTZ(3),
+    statuscode INT NOT NULL
+);
+
+
+
+
+
+
+CREATE TABLE box (
+    box_id INT IDENTITY(166840,5) NOT FOR REPLICATION NOT NULL,
+    box_program_id INT NOT NULL,
+    box_subscription_id INT NOT NULL,
+    membership_id INT NOT NULL,
+    box_type_id INT NULL,
+    stylist_id INT NULL,
+    order_id INT NULL,
+    cart_id BIGINT NULL,
+    rma_id INT NULL,
+    return_id INT NULL,
+    apply_fee TINYINT NOT NULL,
+    fee_amount NUMBER(38, 2) NOT NULL,
+    items_liked INT NULL,
+    items_sent INT NULL,
+    items_kept INT NULL,
+    score FLOAT NULL,
+    error_message VARCHAR(255) NULL,
+    preview_sent TINYINT NOT NULL,
+    preview_viewed TINYINT NOT NULL,
+    preview_expired TINYINT NOT NULL,
+    checkout_expired TINYINT NOT NULL,
+    rma_label_scan_expired TINYINT NOT NULL,
+    date_scheduled DATETIME NULL,
+    date_delivered DATETIME NULL,
+    date_checkout_due DATETIME NULL,
+    date_rma_label_scan_due DATETIME NULL,
+    datetime_added TIMESTAMP_NTZ(3),
+    datetime_modified TIMESTAMP_NTZ(3),
+    datetime_preview_expires TIMESTAMP_NTZ(3) NULL,
+    datetime_previewed TIMESTAMP_NTZ(3) NULL,
+    datetime_checkout TIMESTAMP_NTZ(3) NULL,
+    datetime_completed TIMESTAMP_NTZ(3) NULL,
+    datetime_cancelled TIMESTAMP_NTZ(3) NULL,
+    statuscode INT NOT NULL,
+    preview_counter INT NULL,
+    finalize_counter INT NULL,
+    original_date_checkout_due DATETIME NULL,
+    disable_auto_billing TINYINT NULL,
+    keep_discount_id INT NULL,
+    datetime_released_to_queue TIMESTAMP_NTZ(3) NULL,
+    is_autobox TINYINT NOT NULL
+);
+
+
+
+CREATE TABLE box_completion (
+    box_completion_id INT IDENTITY(39650,5) NOT FOR REPLICATION NOT NULL,
+    box_id INT NOT NULL,
+    box_completion_disposition_id INT NOT NULL,
+    administrator_id INT NULL,
+    disposition_comment VARCHAR(255) NULL,
+    datetime_added TIMESTAMP_NTZ(3),
+    datetime_modified TIMESTAMP_NTZ(3)
+);
+
+
+CREATE TABLE carrier_service (
+    carrier_service_id INT NOT NULL,
+    code VARCHAR(25) NULL,
+    label VARCHAR(255) NOT NULL,
+    po_box_is_ok TINYINT NOT NULL,
+    dangerous_goods_is_ok TINYINT NOT NULL,
+    datetime_added TIMESTAMP_NTZ(3)
+);
+
+
+CREATE TABLE carrier_service (
+    carrier_service_id INT NOT NULL,
+    code VARCHAR(25) NULL,
+    label VARCHAR(255) NOT NULL,
+    po_box_is_ok TINYINT NOT NULL,
+    dangerous_goods_is_ok TINYINT NOT NULL,
+    datetime_added TIMESTAMP_NTZ(3)
+);
+
+
+
+-- 假设 case 表的字段如下（未在SQL文件中找到具体结构）
+CREATE TABLE case_table (
+    case_id INT PRIMARY KEY AUTOINCREMENT,
+    description TEXT,
+    status VARCHAR(50),
+    datetime_added TIMESTAMP_NTZ(3),
+    datetime_modified TIMESTAMP_NTZ(3)
+);
+
+
+-- 假设 company 表的字段如下（未在SQL文件中找到具体结构）
+CREATE TABLE company (
+    company_id INT PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(255),
+    address VARCHAR(255),
+    datetime_added TIMESTAMP_NTZ(3),
+    datetime_modified TIMESTAMP_NTZ(3)
+);

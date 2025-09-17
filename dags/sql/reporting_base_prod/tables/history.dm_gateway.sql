@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS history.dm_gateway (
+    dm_gateway_id               NUMBER(38,0),
+    gateway_type                VARCHAR,
+    gateway_sub_type            VARCHAR,
+    gateway_name                VARCHAR,
+    gateway_code                VARCHAR,
+    gateway_statuscode          NUMBER(38,0),
+    gateway_status              VARCHAR,
+    redirect_dm_gateway_id      NUMBER(38,0),
+    store_id                    NUMBER(38,0),
+    store_brand_name            VARCHAR,
+    store_country               VARCHAR,
+    store_region                VARCHAR,
+    tracking_type               VARCHAR,
+    effective_start_datetime    TIMESTAMP_NTZ(3),
+    effective_end_datetime      TIMESTAMP_NTZ(3),
+    meta_is_current             BOOLEAN,
+    meta_original_dm_gateway_id NUMBER(38,0),
+    meta_create_datetime        TIMESTAMP_LTZ DEFAULT CURRENT_TIMESTAMP,
+    meta_update_datetime        TIMESTAMP_LTZ DEFAULT CURRENT_TIMESTAMP
+);

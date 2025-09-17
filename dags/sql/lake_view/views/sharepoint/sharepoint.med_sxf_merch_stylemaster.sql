@@ -1,0 +1,10 @@
+CREATE OR REPLACE VIEW LAKE_VIEW.SHAREPOINT.MED_SXF_MERCH_STYLEMASTER AS
+SELECT COLOR_SKU
+	,BUY_RANK
+	,PERSONA
+	,VIP_BOX
+	,PLANNED_VIP_PRICE
+	,LAUNCH_COLLECTION
+    ,_fivetran_synced::TIMESTAMP_LTZ AS meta_create_datetime
+    ,_fivetran_synced::TIMESTAMP_LTZ AS meta_update_datetime
+FROM LAKE_FIVETRAN.MED_SHAREPOINT_ACQUISITION_V1.style_master_merch_inputs_merch_style_master;

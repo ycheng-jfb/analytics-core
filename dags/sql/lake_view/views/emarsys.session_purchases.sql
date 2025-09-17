@@ -1,0 +1,17 @@
+CREATE VIEW IF NOT EXISTS LAKE_VIEW.EMARSYS.SESSION_PURCHASES AS
+SELECT
+    csm.STORE_GROUP,
+    p.USER_ID,
+    p.USER_ID_TYPE,
+    p.USER_ID_FIELD_ID,
+    p.CONTACT_ID,
+    p.ITEMS_ITEM_ID,
+    p.ITEMS_PRICE,
+    p.ITEMS_QUANTITY,
+    p.ORDER_ID,
+    p.EVENT_TIME,
+    p.CUSTOMER_ID,
+    p.LOADED_AT,
+    p.META_CREATE_DATETIME
+FROM LAKE.EMARSYS.SESSION_PURCHASES p
+JOIN lake.emarsys.customer_store_mapping csm ON csm.customer_id = p.customer_id;
