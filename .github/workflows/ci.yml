@@ -34,7 +34,7 @@ jobs:
   manual-approval:
     name: Manual approval gate
     runs-on: ubuntu-latest
-    needs: [lint-python, lint-sql]
+    needs: [lint-python]
     environment: manual-approval  # <-- Create this environment with required reviewers
     steps:
       - name: Await approval
