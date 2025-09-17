@@ -99,3 +99,16 @@ aws s3 ls s3://my-bucket --recursive --human-readable --summarize
 - If you see `bash: /c/Program: No such file or directory` → copy this to your .bashrc file `alias aws="\"/c/Program Files/Amazon/AWSCLIV2/aws.exe\""`.
 
 ---
+
+## 8. Pre-commit Setup (Ruff + sqlfluff)
+
+### Install pre-commit
+```bash
+pip install pre-commit
+```
+
+### Enable hooks in your repo
+Run this once:
+```bash
+pre-commit install
+```

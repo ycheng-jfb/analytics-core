@@ -11,3 +11,4 @@ pyodbc
 # Formatters / linters
 ruff
 sqlfluff[snowflake]
+pre-commit
