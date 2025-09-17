@@ -21,12 +21,12 @@ class ProcessState(Base):
 
     __tablename__ = "process_state"
 
-    namespace = Column(String(512), primary_key=True, default='default')
+    namespace = Column(String(512), primary_key=True, default="default")
     process_name = Column(String(512), primary_key=True)
     value = Column(String, nullable=True)
     timestamp = Column(UtcDateTime, default=pendulum.DateTime.utcnow())
 
-    __table_args__ = (PrimaryKeyConstraint('namespace', 'process_name'),)
+    __table_args__ = (PrimaryKeyConstraint("namespace", "process_name"),)
 
     def __repr__(self):
         return (

@@ -12,7 +12,9 @@ def clean_col_list(col_list):
     """
     trans_del = str.maketrans(dict.fromkeys("()[]{}"))
     trans_repl = str.maketrans("- /", "___")
-    clean_list = list(map(lambda x: x.lower().translate(trans_repl).translate(trans_del), col_list))
+    clean_list = list(
+        map(lambda x: x.lower().translate(trans_repl).translate(trans_del), col_list)
+    )
     return clean_list
 
 
@@ -49,7 +51,9 @@ def build_bcp_in_command(
     return unindent_auto(cmd)
 
 
-def build_bcp_command(query, queryout, server, login, password, record_delimiter, field_delimiter):
+def build_bcp_command(
+    query, queryout, server, login, password, record_delimiter, field_delimiter
+):
     cmd = r"""
         bcp "{query}" \
             queryout {queryout}  \
@@ -73,7 +77,14 @@ def build_bcp_command(query, queryout, server, login, password, record_delimiter
 
 
 def build_bcp_to_s3_bash_command(
-    login, server, query, bucket, key, record_delimiter, field_delimiter, password='"$BCP_PASS"'
+    login,
+    server,
+    query,
+    bucket,
+    key,
+    record_delimiter,
+    field_delimiter,
+    password='"$BCP_PASS"',
 ):
     bash_command_template = r"""
     #!/bin/bash

@@ -18,7 +18,7 @@ def write_sql_to_parquet(
     fetch_size=10000,
     batches_per_table=5,
 ):
-    with open(filename, 'wb') as f:
+    with open(filename, "wb") as f:
         write_sql_to_parquet_fileobj(
             cnx=cnx,
             sql=sql,
@@ -57,11 +57,19 @@ def write_sql_to_parquet_fileobj(
         cnx.add_output_converter(SQL_VARBINARY, bin_encoder)
     cur = cnx.cursor()
     cur.execute(sql)
-    batch_iterator = yield_record_batches_from_cursor(cur, table_schema, batch_size=fetch_size)
+    batch_iterator = yield_record_batches_from_cursor(
+        cur, table_schema, batch_size=fetch_size
+    )
     with pq.ParquetWriter(
-        where=fileobj, schema=table_schema, flavor="spark", version="2.0", compression="snappy"
+        where=fileobj,
+        schema=table_schema,
+        flavor="spark",
+        version="2.0",
+        compression="snappy",
     ) as writer:
-        for batch_list in chunk_batches(batch_iterator, batches_per_table=batches_per_table):
+        for batch_list in chunk_batches(
+            batch_iterator, batches_per_table=batches_per_table
+        ):
             print("writing batches to file")
             table = pa.Table.from_batches(batch_list)
             writer.write_table(table)
@@ -122,5 +130,5 @@ def write_sql_to_parquet_pandas(cnx, sql, filename, chunk_size):
                 )
             writer.write_table(table=table)
     finally:
-        if hasattr(writer, 'close'):
+        if hasattr(writer, "close"):
             writer.close()

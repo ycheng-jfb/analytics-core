@@ -7,9 +7,9 @@ from include.config import owners
 
 default_args = {
     "start_date": pendulum.datetime(2024, 1, 1, 7, tz="America/Los_Angeles"),
-    'owner': owners.data_science,
-    "email": 'datascience@techstyle.com',
-    "on_failure_callback": SlackFailureCallback('slack_alert_data_science'),
+    "owner": owners.data_science,
+    "email": "datascience@techstyle.com",
+    "on_failure_callback": SlackFailureCallback("slack_alert_data_science"),
 }
 
 dag = DAG(
@@ -23,6 +23,6 @@ dag = DAG(
 
 with dag:
     get_sales_inventory_by_day = SnowflakeProcedureOperator(
-        procedure='data_science.streamlit_size_sales_inventory_by_day.sql',
-        database='reporting_prod',
+        procedure="data_science.streamlit_size_sales_inventory_by_day.sql",
+        database="reporting_prod",
     )

@@ -7,13 +7,13 @@ from include.config import email_lists, owners
 
 default_args = {
     "start_date": pendulum.datetime(2021, 2, 16, tz="America/Los_Angeles"),
-    'owner': owners.data_integrations,
+    "owner": owners.data_integrations,
     "email": email_lists.engineering_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
-    dag_id='edm_analytics_base_order_line_ext',
+    dag_id="edm_analytics_base_order_line_ext",
     default_args=default_args,
     schedule=None,
     catchup=False,
@@ -22,9 +22,8 @@ dag = DAG(
 )
 
 with dag:
-
     ltv_ltd = SnowflakeProcedureOperator(
-        procedure='analytics_base.order_line_ext_stg.sql',
-        database='edw_prod',
-        warehouse='DA_WH_ETL_HEAVY',
+        procedure="analytics_base.order_line_ext_stg.sql",
+        database="edw_prod",
+        warehouse="DA_WH_ETL_HEAVY",
     )

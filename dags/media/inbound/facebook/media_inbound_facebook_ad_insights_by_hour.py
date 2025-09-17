@@ -31,7 +31,9 @@ column_list = [
     Column("spend", "DECIMAL(38, 8)"),
     Column("date_start", "DATE", uniqueness=True),
     Column("date_stop", "DATE", uniqueness=True),
-    Column("hourly_stats_aggregated_by_advertiser_time_zone", "VARCHAR", uniqueness=True),
+    Column(
+        "hourly_stats_aggregated_by_advertiser_time_zone", "VARCHAR", uniqueness=True
+    ),
     Column("api_call_timestamp", "TIMESTAMP_LTZ(3)", delta_column=1),
 ]
 
@@ -39,7 +41,7 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2023, 12, 26, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "execution_timeout": timedelta(hours=4),
@@ -74,23 +76,23 @@ config = {
     "use_unified_attribution_setting": "true",
     "action_breakdowns": "action_type",
     "action_attribution_windows": "['7d_click','1d_view']",
-    'filtering': [
+    "filtering": [
         {
-            'field': 'ad.effective_status',
-            'operator': 'IN',
-            'value': [
-                'ACTIVE',
-                'PAUSED',
-                'DELETED',
-                'PENDING_REVIEW',
-                'DISAPPROVED',
-                'PREAPPROVED',
-                'PENDING_BILLING_INFO',
-                'CAMPAIGN_PAUSED',
-                'ARCHIVED',
-                'ADSET_PAUSED',
-                'IN_PROCESS',
-                'WITH_ISSUES',
+            "field": "ad.effective_status",
+            "operator": "IN",
+            "value": [
+                "ACTIVE",
+                "PAUSED",
+                "DELETED",
+                "PENDING_REVIEW",
+                "DISAPPROVED",
+                "PREAPPROVED",
+                "PENDING_BILLING_INFO",
+                "CAMPAIGN_PAUSED",
+                "ARCHIVED",
+                "ADSET_PAUSED",
+                "IN_PROCESS",
+                "WITH_ISSUES",
             ],
         },
     ],
@@ -98,11 +100,15 @@ config = {
 
 
 def from_date(run_id, dag_run, data_interval_start):
-    curr_time_pacific = pendulum.instance(data_interval_start).in_timezone("America/Los_Angeles")
+    curr_time_pacific = pendulum.instance(data_interval_start).in_timezone(
+        "America/Los_Angeles"
+    )
     log = LoggingMixin().log
-    if run_id.startswith('manual__'):
+    if run_id.startswith("manual__"):
         log.info(f"This is a manual run : {run_id}")
-        since = dag_run.conf.get('since') or curr_time_pacific.add(days=-1).to_date_string()
+        since = (
+            dag_run.conf.get("since") or curr_time_pacific.add(days=-1).to_date_string()
+        )
         log.info(f"Manual start_date is: {since}")
         return since
     log.info(f"curr_time_pacific: {curr_time_pacific}")
@@ -115,8 +121,8 @@ def from_date(run_id, dag_run, data_interval_start):
 
 def to_date(run_id, dag_run, ds):
     log = LoggingMixin().log
-    if run_id.startswith('manual__'):
-        until = dag_run.conf.get('until') or ds
+    if run_id.startswith("manual__"):
+        until = dag_run.conf.get("until") or ds
         log.info(f"Manual end_date is: {until}")
         return until
     log.info(f"end_date: {ds}")
@@ -146,7 +152,7 @@ with dag:
         table=table,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}",
-        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=1),
+        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=1),
         trigger_rule="all_done",
     )
 

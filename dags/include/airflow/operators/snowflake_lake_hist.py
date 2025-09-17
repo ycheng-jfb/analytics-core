@@ -8,22 +8,27 @@ from snowflake.connector import DictCursor
 from edm.acquisition.configs import get_lake_consolidated_table_config, get_table_config
 from include import DAGS_DIR
 from include.airflow.hooks.snowflake import SnowflakeHook
-from include.airflow.operators.snowflake import BaseSnowflakeOperator, get_effective_database
+from include.airflow.operators.snowflake import (
+    BaseSnowflakeOperator,
+    get_effective_database,
+)
 from include.config import snowflake_roles
-from include.utils.acquisition.lake_consolidated_table_config import LakeConsolidatedTableConfig
+from include.utils.acquisition.lake_consolidated_table_config import (
+    LakeConsolidatedTableConfig,
+)
 from include.utils.acquisition.table_config import Column
 from include.utils.string import camel_to_snake, indent, unindent_auto
 from include.utils.snowflake import generate_query_tag_cmd
 
 
 class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
-    DATABASE_CONFIG_VARIABLE_KEY = 'database_config'
+    DATABASE_CONFIG_VARIABLE_KEY = "database_config"
     ROLE = snowflake_roles.etl_service_account
-    EFF_START_TIMESTAMP_COL_TYPE = 'TIMESTAMP_LTZ'
-    DEFAULT_TIMEZONE = 'America/Los_Angeles'
-    STR_INDENT = ''
-    NAMESPACE = 'lake_history'
-    LAKE_HISTORY_DATABASE = 'lake_history'
+    EFF_START_TIMESTAMP_COL_TYPE = "TIMESTAMP_LTZ"
+    DEFAULT_TIMEZONE = "America/Los_Angeles"
+    STR_INDENT = ""
+    NAMESPACE = "lake_history"
+    LAKE_HISTORY_DATABASE = "lake_history"
 
     def __init__(self, table, warehouse=None, **kwargs):
         self.table_config = get_table_config(table_name=table)
@@ -35,12 +40,14 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
         self.column_name_list = self.table_config.column_list.column_name_list
         self.cluster_by = self.table_config.cluster_by
         self.archive_database = self.table_config.archive_database
-        self.source_table = camel_to_snake(self.table_config.table.strip('[').strip(']'))
+        self.source_table = camel_to_snake(
+            self.table_config.table.strip("[").strip("]")
+        )
         self.watermark_column = self.table_config.watermark_column
-        self.snowflake_conn_id = 'snowflake_default'
-        if '.' in self.source_table:
+        self.snowflake_conn_id = "snowflake_default"
+        if "." in self.source_table:
             raise ValueError("table cannot have a '.'")
-        self._command_debug_log = ''
+        self._command_debug_log = ""
 
         if self.is_delete_table_exists:
             delete_log_table_config = get_table_config(self.delete_table_path)
@@ -48,7 +55,9 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
             self.delete_log_schema = delete_log_table_config.target_schema
             self.delete_log_database = delete_log_table_config.target_database
             self.delete_log_column_list = delete_log_table_config.column_list
-            self.delete_log_column_name_list = self.delete_log_column_list.column_name_list
+            self.delete_log_column_name_list = (
+                self.delete_log_column_list.column_name_list
+            )
             self.delete_log_watermark_column = delete_log_table_config.watermark_column
         else:
             self.delete_log_table = None
@@ -67,30 +76,30 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
     def delete_table_path(self):
         if Path(
             DAGS_DIR,
-            'edm',
-            'acquisition',
-            'configs',
-            'lake',
+            "edm",
+            "acquisition",
+            "configs",
+            "lake",
             f"{self.schema}_cdc",
             f"{self.source_table}__all.py",
         ).exists():
             delete_config_file = f"lake.{self.schema}_cdc.{self.source_table}__all"
         elif Path(
             DAGS_DIR,
-            'edm',
-            'acquisition',
-            'configs',
-            'lake',
+            "edm",
+            "acquisition",
+            "configs",
+            "lake",
             f"{self.schema}_cdc",
             f"{self.source_table}__del.py",
         ).exists():
             delete_config_file = f"lake.{self.schema}_cdc.{self.source_table}__del"
         elif Path(
             DAGS_DIR,
-            'edm',
-            'acquisition',
-            'configs',
-            'lake',
+            "edm",
+            "acquisition",
+            "configs",
+            "lake",
             self.schema,
             f"{self.source_table}_delete_log.py",
         ).exists():
@@ -133,9 +142,9 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
 
     def _get_table_name(self, table_type=None):
         if table_type:
-            return self.table.replace('"', '').lower() + f"_{table_type}"
+            return self.table.replace('"', "").lower() + f"_{table_type}"
         else:
-            return self.table.replace('"', '').lower()
+            return self.table.replace('"', "").lower()
 
     @property
     def watermark_param(self):
@@ -155,7 +164,9 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
 
     @staticmethod
     def _get_col_ddls(column_list) -> str:
-        return f',\n{" " * 16}'.join([f"{x.name} {x.type}{x.default_value}" for x in column_list])
+        return f',\n{" " * 16}'.join(
+            [f"{x.name} {x.type}{x.default_value}" for x in column_list]
+        )
 
     @property
     def column_ddls(self):
@@ -163,14 +174,14 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
 
     @staticmethod
     def _is_timestamp_col(data_type) -> bool:
-        return data_type.lower()[0:4] in ('date', 'time')
+        return data_type.lower()[0:4] in ("date", "time")
 
     @property
     def delta_col_list(self):
         delta_cols_list = [x for x in self.column_list if x.delta_column is not False]
         num_cols = len(delta_cols_list)
         if num_cols < 1:
-            raise ValueError('For lake hist you must have one delta column')
+            raise ValueError("For lake hist you must have one delta column")
         if num_cols < 2:
             delta_cols_list.append(delta_cols_list[0])
         return sorted(delta_cols_list, key=lambda x: x.delta_column)
@@ -189,33 +200,43 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
     def type_2_timestamp_col(self):
         col = self.delta_col_list[0]
         if not self._is_timestamp_col(col.type):
-            raise ValueError('For lake hist, delta column must have data type TIMESTAMP_*')
+            raise ValueError(
+                "For lake hist, delta column must have data type TIMESTAMP_*"
+            )
         return col
 
     @property
     def hist_table_meta_cols(self) -> List[Column]:
         hist_table_meta_cols = [
-            Column('effective_start_datetime', 'TIMESTAMP_LTZ(9)', uniqueness=True),
-            Column('effective_end_datetime', 'TIMESTAMP_LTZ(9)'),
-            Column('is_current', 'BOOLEAN'),
-            Column('meta_row_is_deleted', 'BOOLEAN'),
-            Column('meta_row_source', 'VARCHAR'),
-            Column('meta_row_hash', 'INT'),
-            Column('meta_create_datetime', 'TIMESTAMP_LTZ(9)', default_value='CURRENT_TIMESTAMP'),
-            Column('meta_update_datetime', 'TIMESTAMP_LTZ(9)', default_value='CURRENT_TIMESTAMP'),
+            Column("effective_start_datetime", "TIMESTAMP_LTZ(9)", uniqueness=True),
+            Column("effective_end_datetime", "TIMESTAMP_LTZ(9)"),
+            Column("is_current", "BOOLEAN"),
+            Column("meta_row_is_deleted", "BOOLEAN"),
+            Column("meta_row_source", "VARCHAR"),
+            Column("meta_row_hash", "INT"),
+            Column(
+                "meta_create_datetime",
+                "TIMESTAMP_LTZ(9)",
+                default_value="CURRENT_TIMESTAMP",
+            ),
+            Column(
+                "meta_update_datetime",
+                "TIMESTAMP_LTZ(9)",
+                default_value="CURRENT_TIMESTAMP",
+            ),
         ]
         return hist_table_meta_cols
 
     @property
     def delta_table_meta_cols(self) -> List[Column]:
         delta_table_meta_cols = [
-            Column('meta_row_is_deleted', 'BOOLEAN'),
-            Column('meta_row_source', 'VARCHAR'),
-            Column('meta_row_hash', 'INT'),
-            Column('prev_meta_row_hash', 'INT'),
-            Column('rno', 'INT'),
-            Column('effective_start_datetime', 'TIMESTAMP_LTZ(9)'),
-            Column('effective_end_datetime', 'TIMESTAMP_LTZ(9)'),
+            Column("meta_row_is_deleted", "BOOLEAN"),
+            Column("meta_row_source", "VARCHAR"),
+            Column("meta_row_hash", "INT"),
+            Column("prev_meta_row_hash", "INT"),
+            Column("rno", "INT"),
+            Column("effective_start_datetime", "TIMESTAMP_LTZ(9)"),
+            Column("effective_end_datetime", "TIMESTAMP_LTZ(9)"),
         ]
         return delta_table_meta_cols
 
@@ -228,11 +249,11 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
 
     @property
     def pk_names_str(self) -> str:
-        pk_names_str = ', '.join(self.pk_col_names)
+        pk_names_str = ", ".join(self.pk_col_names)
         return pk_names_str
 
-    def pk_names_str_with_alias(self, alias='s') -> str:
-        pk_names_str = ', '.join([f"{alias}.{x}" for x in self.pk_col_names])
+    def pk_names_str_with_alias(self, alias="s") -> str:
+        pk_names_str = ", ".join([f"{alias}.{x}" for x in self.pk_col_names])
         return pk_names_str
 
     @property
@@ -244,8 +265,8 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
         hash_col_list = [
             x for x in self.column_name_list if x != f"{self.type_2_timestamp_col.name}"
         ]
-        hash_col_list.extend(['meta_row_is_deleted'])
-        return ', '.join(hash_col_list)
+        hash_col_list.extend(["meta_row_is_deleted"])
+        return ", ".join(hash_col_list)
 
     def select_list(self, tab_space=1):
         str_indent = "\t" * tab_space
@@ -254,12 +275,14 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
     @property
     def uniqueness_join(self) -> str:
         unique_col_names = [x.name for x in self.column_list if x.uniqueness]
-        return '\n    AND '.join([f"equal_null(t.{x}, s.{x})" for x in unique_col_names])
+        return "\n    AND ".join(
+            [f"equal_null(t.{x}, s.{x})" for x in unique_col_names]
+        )
 
     @property
     def delete_log_table_type(self):
         if self.is_delete_table_exists:
-            delete_table_name = self.delete_table_path.rsplit('.', 1)[1]
+            delete_table_name = self.delete_table_path.rsplit(".", 1)[1]
             if delete_table_name == f"{self.source_table}__all":
                 return f"{self.schema}_cdc__all"
             elif delete_table_name == f"{self.source_table}__del":
@@ -282,7 +305,7 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
     @property
     def delete_update_names_str(self) -> str:
         if self.delete_log_table_type == f"{self.schema}_cdc__all":
-            update_names_str = ',\n\t'.join(
+            update_names_str = ",\n\t".join(
                 [
                     f"t.{x.name} = s.{x.name}"
                     for x in self.column_list
@@ -291,16 +314,18 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
             )
         else:
             column_list = [
-                x.name for x in self.column_list if x.name not in self.delete_log_column_name_list
+                x.name
+                for x in self.column_list
+                if x.name not in self.delete_log_column_name_list
             ]
-            update_names_str = ',\n\t'.join([f"t.{x} = s.{x}" for x in column_list])
+            update_names_str = ",\n\t".join([f"t.{x} = s.{x}" for x in column_list])
         return update_names_str
 
     @property
     def delete_update_lag_str(self) -> str:
         update_names_str = ""
         if self.delete_log_table_type == f"{self.schema}_cdc__all":
-            update_names_str = ',\n\t\t\t\t\t\t'.join(
+            update_names_str = ",\n\t\t\t\t\t\t".join(
                 [
                     f"LAG(s.{x.name}) over(partition by {self.pk_names_str_with_alias('t')} order by s.effective_start_datetime) AS {x.name}"  # noqa: E501
                     for x in self.column_list
@@ -309,10 +334,12 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
             )
         else:
             column_list = [
-                x.name for x in self.column_list if x.name not in self.delete_log_column_name_list
+                x.name
+                for x in self.column_list
+                if x.name not in self.delete_log_column_name_list
             ]
             if len(column_list) > 0:
-                update_names_str = ',\n\t\t\t\t\t\t'.join(
+                update_names_str = ",\n\t\t\t\t\t\t".join(
                     [
                         f"LAG(s.{x}) over(partition by {self.pk_names_str_with_alias('t')} order by s.effective_start_datetime) AS {x}"  # noqa: E501
                         for x in column_list
@@ -355,23 +382,23 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
     def hist_table_surrogate_key_name(self):
         return f"{self.history_table}_hist_id"
 
-    def get_table_meta_col_ddls(self, table_type='hist') -> str:
-        if table_type == 'hist':
+    def get_table_meta_col_ddls(self, table_type="hist") -> str:
+        if table_type == "hist":
             meta_cols_ddls = self.hist_table_meta_cols
         else:
             meta_cols_ddls = self.delta_table_meta_cols
         meta_col_ddls = self._get_col_ddls(meta_cols_ddls)
         if meta_col_ddls:
-            meta_col_ddls = ',\n\t\t\t\t' + meta_col_ddls
-        return meta_col_ddls or ''
+            meta_col_ddls = ",\n\t\t\t\t" + meta_col_ddls
+        return meta_col_ddls or ""
 
     @property
     def ddl_hist_table(self) -> str:
-        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ''
+        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ""
         surr_key_ddl = (
             f"{self.hist_table_surrogate_key_name} INT IDENTITY,\n    "
             if self.hist_table_surrogate_key_name
-            else ''
+            else ""
         )
         cmd = f"""
             CREATE TABLE IF NOT EXISTS {self.history_table_full_name} (
@@ -382,7 +409,7 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
 
     @property
     def ddl_stg_table(self) -> str:
-        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ''
+        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ""
         cmd = f"""
             CREATE OR REPLACE TEMP TABLE _{self.history_table}_stg (
                 {self.column_ddls},
@@ -395,7 +422,7 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
 
     @property
     def ddl_delta_table(self) -> str:
-        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ''
+        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ""
         cmd = f"""
             CREATE OR REPLACE TEMP TABLE _{self.history_table}_delta (
                 {self.column_ddls}{self.get_table_meta_col_ddls('delta')}
@@ -443,7 +470,7 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
                             WHERE s.{self.delete_log_delta_col_list[0].name} > stg.udf_get_watermark('{self.watermark_param}', '{self.delete_log_database}.{self.delete_log_schema}.{self.delete_log_table}')
                         """  # noqa: E501
         else:
-            delete_select = ''
+            delete_select = ""
 
         where_clause = f"""
                         ) AS src
@@ -547,10 +574,10 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
 
     @cached_property
     def is_test(self):
-        return self.table.startswith('test')
+        return self.table.startswith("test")
 
     def print(self, val):
-        self._command_debug_log += val + '\n'
+        self._command_debug_log += val + "\n"
         if not self.is_test:
             print(val)
 
@@ -596,7 +623,7 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
         self.update_high_watermark(dryrun=True)
 
     def get_high_watermark_cmd(self, table_name, watermark_column):
-        database, schema, table = table_name.split('.')
+        database, schema, table = table_name.split(".")
         hwm_command = f"""
         SELECT
             '{table_name}' AS dependent_table_name,
@@ -619,7 +646,8 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
 
     def get_table_high_watermark_cmd(self, initial_load):
         command_list = [
-            self.get_high_watermark_cmd(dep, wc) for dep, wc in self.watermark_tables.items()
+            self.get_high_watermark_cmd(dep, wc)
+            for dep, wc in self.watermark_tables.items()
         ]
         if initial_load:
             self_table_cmd = f"""
@@ -718,14 +746,14 @@ class SnowflakeLakeHistoryOperator(BaseSnowflakeOperator):
         self.execute_cmd(cmd=self.ddl_delta_table, dryrun=dryrun)
 
     def load_hist_table(self, dryrun):
-        self.execute_cmd(cmd='BEGIN;', dryrun=dryrun)
+        self.execute_cmd(cmd="BEGIN;", dryrun=dryrun)
         self.execute_cmd(cmd=self.dml_stg_table, dryrun=dryrun)
         self.execute_cmd(cmd=self.dml_delta_table, dryrun=dryrun)
         if self.is_delete_table_exists and len(self.delete_update_lag_str) > 0:
             self.execute_cmd(cmd=self.dml_update_delete_data, dryrun=dryrun)
         self.execute_cmd(cmd=self.dml_update_hist_close_current_record, dryrun=dryrun)
         self.execute_cmd(cmd=self.insert_into_hist_table, dryrun=dryrun)
-        self.execute_cmd(cmd='COMMIT;', dryrun=dryrun)
+        self.execute_cmd(cmd="COMMIT;", dryrun=dryrun)
 
     def etl_execute(self, initial_load, dryrun):
         if initial_load:
@@ -799,19 +827,21 @@ class SnowflakeLakeHistorytoLakeBrandHistoryOperator(BaseSnowflakeOperator):
 
     @property
     def lake_history_column_list(self) -> str:
-        return ',\n\t'.join(self.column_list + list(self.meta_columns.keys()))
+        return ",\n\t".join(self.column_list + list(self.meta_columns.keys()))
 
     @property
     def lake_brand_history_column_select(self) -> str:
-        meta_column_select = [f"{v} as {k}" if v else k for k, v in self.meta_columns.items()]
-        return ',\n\t'.join([f"A.{v}" for v in self.column_list] + meta_column_select)
+        meta_column_select = [
+            f"{v} as {k}" if v else k for k, v in self.meta_columns.items()
+        ]
+        return ",\n\t".join([f"A.{v}" for v in self.column_list] + meta_column_select)
 
     # @property
     def pkey_str(self, alias1, alias2) -> str:
         pkeys = [i.name for i in self.table_config.column_list if i.uniqueness]
         if not len(pkeys):
             return "1 = 1"
-        return ',\n\t'.join(f"{alias1}.{i} = {alias2}.{i}" for i in pkeys)
+        return ",\n\t".join(f"{alias1}.{i} = {alias2}.{i}" for i in pkeys)
 
     @property
     def dml_insert_query(self) -> str:

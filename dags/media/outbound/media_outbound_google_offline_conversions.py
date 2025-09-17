@@ -13,7 +13,7 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2020, 12, 17, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "email_on_failure": True,
     "email_on_retry": True,
@@ -21,10 +21,12 @@ default_args = {
     "execution_timeout": timedelta(hours=1),
 }
 
-Config = namedtuple('Config', ['customer_id', 'conversion_action_id', 'store', 'country'])
+Config = namedtuple(
+    "Config", ["customer_id", "conversion_action_id", "store", "country"]
+)
 stores = [
-    Config('6680131322', '6513560615', 'FL', 'US'),
-    Config('8923721765', '6513334200', 'FL', 'US'),
+    Config("6680131322", "6513560615", "FL", "US"),
+    Config("8923721765", "6513334200", "FL", "US"),
 ]
 
 dag = DAG(
@@ -47,5 +49,5 @@ with dag:
             store=store.store,
             country=store.country,
             initial_load_value="2025-02-04",
-            watermark_tables=['edw_prod.data_model.fact_order'],
+            watermark_tables=["edw_prod.data_model.fact_order"],
         )

@@ -38,10 +38,12 @@ class BaseWebApiHook(BaseHook):
         session.headers = self.get_base_headers()
         return session
 
-    def make_request(self, method, endpoint, headers=None, params=None, json=None, data=None):
+    def make_request(
+        self, method, endpoint, headers=None, params=None, json=None, data=None
+    ):
         endpoint = endpoint[1:] if endpoint[0] == "/" else endpoint
         base_url = self.base_url[:-1] if self.base_url[-1] == "/" else self.base_url
-        url = f'{base_url}/{endpoint}'
+        url = f"{base_url}/{endpoint}"
 
         r = self.session.request(
             method=method,

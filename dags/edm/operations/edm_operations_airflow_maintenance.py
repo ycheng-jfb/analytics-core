@@ -12,7 +12,14 @@ from airflow.utils.dates import days_ago
 from airflow.utils.session import create_session
 from include.airflow.callbacks.slack import slack_failure_edm
 from include.airflow.operators.snowflake_load import SnowflakeIncrementalLoadOperator
-from include.config import conn_ids, email_lists, owners, s3_buckets, snowflake_roles, stages
+from include.config import (
+    conn_ids,
+    email_lists,
+    owners,
+    s3_buckets,
+    snowflake_roles,
+    stages,
+)
 from include.utils.snowflake import Column, CopyConfigCsv
 from sqlalchemy.sql import delete
 
@@ -27,7 +34,7 @@ default_args = {
 dag = DAG(
     dag_id="edm_operations_airflow_maintenance",
     default_args=default_args,
-    schedule='0 11 * * *',
+    schedule="0 11 * * *",
     catchup=False,
 )
 
@@ -94,8 +101,12 @@ class MWAAToS3Operator(BaseOperator):
                 csv_writer.writeheader()
                 for row in all_rows:
                     csv_writer.writerow(dict(zip(self.column_names, row)))
-                s3_client.put_object(Bucket=self.s3_bucket, Key=self.s3_key, Body=buf.getvalue())
-                self.log.info(f"Uploaded {self.s3_key} to {self.s3_bucket}: {len(all_rows)} rows")
+                s3_client.put_object(
+                    Bucket=self.s3_bucket, Key=self.s3_key, Body=buf.getvalue()
+                )
+                self.log.info(
+                    f"Uploaded {self.s3_key} to {self.s3_bucket}: {len(all_rows)} rows"
+                )
 
 
 class MWAAPruneTableOperator(BaseOperator):
@@ -191,7 +202,7 @@ with dag:
         role=snowflake_roles.etl_service_account,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}/",
-        copy_config=CopyConfigCsv(field_delimiter=',', header_rows=1),
+        copy_config=CopyConfigCsv(field_delimiter=",", header_rows=1),
     )
 
     to_s3 >> to_snowflake

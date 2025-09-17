@@ -5,7 +5,10 @@ import pendulum
 from airflow.models import DAG
 
 from include.airflow.callbacks.slack import slack_failure_gsc
-from include.airflow.operators.snowflake_load import Column, SnowflakeIncrementalLoadOperator
+from include.airflow.operators.snowflake_load import (
+    Column,
+    SnowflakeIncrementalLoadOperator,
+)
 from include.airflow.operators.zendesk import ZendeskToS3Operator
 from include.config import conn_ids, email_lists, owners, s3_buckets, stages
 from include.utils.snowflake import CopyConfigJson
@@ -95,7 +98,7 @@ objects_config = [
             Column("updated_at", "TIMESTAMP_LTZ", delta_column=0),
         ],
         endpoint="users",
-        extra_params={"role[]": ['admin', 'end-user']},
+        extra_params={"role[]": ["admin", "end-user"]},
         is_incremental=True,
     ),
     ZendeskObjects(
@@ -143,7 +146,7 @@ with dag:
             schema=object.SCHEMA,
             database="lake",
             staging_database="lake_stg",
-            view_database='lake_view',
+            view_database="lake_view",
             snowflake_conn_id=conn_ids.Snowflake.default,
             column_list=object.column_list,
             files_path=f"{stages.tsos_da_int_inbound}/{object.s3_prefix}",
@@ -157,13 +160,13 @@ with dag:
             endpoint=object.endpoint,
             extra_params=object.extra_params,
             use_cursor=object.use_cursor,
-            initial_load_value='2018-01-01T00:00:00',
+            initial_load_value="2018-01-01T00:00:00",
             is_incremental=object.is_incremental,
             column_list=[x.name for x in object.column_list],
             bucket=s3_buckets.tsos_da_int_inbound,
             key=f"{object.s3_prefix}/{object.table_name}_{date_param}.csv.gz",
-            process_name=f'{object.table_name}',
-            namespace='zendesk',
+            process_name=f"{object.table_name}",
+            namespace="zendesk",
         )
 
         get_data >> to_snowflake

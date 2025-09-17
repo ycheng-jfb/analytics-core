@@ -28,11 +28,16 @@ class Config:
 
 report_config = [
     Config(
-        report_type='GET_FBA_INVENTORY_PLANNING_DATA',
+        report_type="GET_FBA_INVENTORY_PLANNING_DATA",
         is_request=True,
-        market_place_ids=["A2EUQ1WTGCTBG2", "ATVPDKIKX0DER", "A1AM78C64UM0Y8", "A2Q3Y263D00KWC"],
-        table_name='selling_partner_fba_inventory_planning_data',
-        file_extension='gz',
+        market_place_ids=[
+            "A2EUQ1WTGCTBG2",
+            "ATVPDKIKX0DER",
+            "A1AM78C64UM0Y8",
+            "A2Q3Y263D00KWC",
+        ],
+        table_name="selling_partner_fba_inventory_planning_data",
+        file_extension="gz",
         priority_weight=50,
         column_list=[
             Column("snapshot_date", "DATE"),
@@ -119,8 +124,8 @@ report_config = [
         report_type="GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE_V2",
         is_request=False,
         market_place_ids=[],
-        table_name='selling_partner_settlement_report_data',
-        file_extension='tsv',
+        table_name="selling_partner_settlement_report_data",
+        file_extension="tsv",
         priority_weight=10,
         column_list=[
             Column("settlement_id", "INT"),
@@ -152,9 +157,14 @@ report_config = [
     Config(
         report_type="GET_AFN_INVENTORY_DATA",
         is_request=True,
-        market_place_ids=["A2EUQ1WTGCTBG2", "ATVPDKIKX0DER", "A1AM78C64UM0Y8", "A2Q3Y263D00KWC"],
-        table_name='selling_partner_inventory_data',
-        file_extension='tsv',
+        market_place_ids=[
+            "A2EUQ1WTGCTBG2",
+            "ATVPDKIKX0DER",
+            "A1AM78C64UM0Y8",
+            "A2Q3Y263D00KWC",
+        ],
+        table_name="selling_partner_inventory_data",
+        file_extension="tsv",
         priority_weight=100,
         column_list=[
             Column("SELLER_SKU", "VARCHAR", uniqueness=True),
@@ -168,9 +178,14 @@ report_config = [
     Config(
         report_type="GET_MERCHANT_LISTINGS_ALL_DATA",
         is_request=True,
-        market_place_ids=["A2EUQ1WTGCTBG2", "ATVPDKIKX0DER", "A1AM78C64UM0Y8", "A2Q3Y263D00KWC"],
+        market_place_ids=[
+            "A2EUQ1WTGCTBG2",
+            "ATVPDKIKX0DER",
+            "A1AM78C64UM0Y8",
+            "A2Q3Y263D00KWC",
+        ],
         table_name="selling_partner_merchant_listings",
-        file_extension='tsv',
+        file_extension="tsv",
         priority_weight=10,
         column_list=[],
     ),
@@ -180,7 +195,7 @@ report_config = [
 default_args = {
     "start_date": pendulum.datetime(2021, 8, 23, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.data_integrations,
+    "owner": owners.data_integrations,
     "email": email_lists.data_integration_support,
     "on_failure_callback": slack_failure_edm,
     "execution_timeout": timedelta(hours=1),
@@ -201,8 +216,8 @@ with dag:
     schema = "amazon"
     start_time = "{{ (prev_data_interval_start_success or data_interval_start).strftime('%Y-%m-%dT%H:%M:%S%z') }}"
     settlement_report_data = SnowflakeProcedureOperator(
-        procedure='amazon.settlement_report_data.sql',
-        database='lake',
+        procedure="amazon.settlement_report_data.sql",
+        database="lake",
         autocommit=False,
     )
     for report in report_config:
@@ -210,8 +225,8 @@ with dag:
 
         if report.table_name == "selling_partner_merchant_listings":
             merchant_data_to_snowflake = SnowflakeProcedureOperator(
-                procedure='amazon.selling_partner_merchant_listings.sql',
-                database='lake',
+                procedure="amazon.selling_partner_merchant_listings.sql",
+                database="lake",
                 autocommit=False,
             )
             for market_place_id in report.market_place_ids:
@@ -249,7 +264,9 @@ with dag:
                     table=report.table_name,
                     column_list=report.column_list,
                     files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}",
-                    copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=1, skip_pct=3),
+                    copy_config=CopyConfigCsv(
+                        field_delimiter="\t", header_rows=1, skip_pct=3
+                    ),
                 )
                 get_data >> load_to_snowflake
             else:

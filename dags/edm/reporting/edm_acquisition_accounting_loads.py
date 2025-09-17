@@ -20,7 +20,7 @@ date_param = "{{ data_interval_start.strftime('%Y%m%dT%H%M%S%f')[0:-3] }}"
 default_args = {
     "start_date": pendulum.datetime(2022, 1, 28, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.central_analytics,
+    "owner": owners.central_analytics,
     "email": data_integration_support,
     "on_failure_callback": slack_failure_edm,
 }
@@ -35,29 +35,29 @@ dag = DAG(
 
 table_config = [
     TableConfig(
-        database='ultramerchant',
-        schema='dbo',
-        table='vw_membership_token_snapshot',
+        database="ultramerchant",
+        schema="dbo",
+        table="vw_membership_token_snapshot",
         column_list=[
-            Column('date', 'DATE'),
-            Column('membership_token_id', 'INT'),
-            Column('amount', 'NUMBER(19, 4)'),
-            Column('balance', 'NUMBER(19, 4)'),
-            Column('accounting_balance', 'NUMBER(19, 4)'),
-            Column('statuscode', 'INT'),
+            Column("date", "DATE"),
+            Column("membership_token_id", "INT"),
+            Column("amount", "NUMBER(19, 4)"),
+            Column("balance", "NUMBER(19, 4)"),
+            Column("accounting_balance", "NUMBER(19, 4)"),
+            Column("statuscode", "INT"),
         ],
     ),
     TableConfig(
-        database='ultramerchant',
-        schema='dbo',
-        table='vw_store_credit_snapshot',
+        database="ultramerchant",
+        schema="dbo",
+        table="vw_store_credit_snapshot",
         column_list=[
-            Column('date', 'DATE'),
-            Column('store_credit_id', 'INT'),
-            Column('amount', 'NUMBER(19, 4)'),
-            Column('balance', 'NUMBER(19, 4)'),
-            Column('accounting_balance', 'NUMBER(19, 4)'),
-            Column('statuscode', 'INT'),
+            Column("date", "DATE"),
+            Column("store_credit_id", "INT"),
+            Column("amount", "NUMBER(19, 4)"),
+            Column("balance", "NUMBER(19, 4)"),
+            Column("accounting_balance", "NUMBER(19, 4)"),
+            Column("statuscode", "INT"),
         ],
     ),
 ]
@@ -69,29 +69,27 @@ brand_database_conn_mapping = {
 }
 
 with dag:
-
     cash_and_non_cash_credit_recon = SnowflakeProcedureOperator(
-        procedure='shared.oracle_edw_reconciliation.sql',
-        database='reporting_base_prod',
+        procedure="shared.oracle_edw_reconciliation.sql",
+        database="reporting_base_prod",
     )
 
     oracle_files_ingestion = SnowflakeProcedureOperator(
-        procedure='shared.oracle_files_ingestion.sql',
-        database='reporting_base_prod',
+        procedure="shared.oracle_files_ingestion.sql",
+        database="reporting_base_prod",
     )
 
     oracle_files_ingestion >> cash_and_non_cash_credit_recon
 
     for cfg in table_config:
-
         to_snowflake = SnowflakeTruncateAndLoadOperator(
             task_id=f"{cfg.table}_to_snowflake",
-            database='reporting_prod',
+            database="reporting_prod",
             schema=cfg.schema,
             table=cfg.table.replace("vw_", ""),
             files_path=f"{stage_name}/lake/{cfg.schema}.{cfg.table}/v3",
             column_list=cfg.column_list,
-            copy_config=CopyConfigCsv(field_delimiter='\t'),
+            copy_config=CopyConfigCsv(field_delimiter="\t"),
         )
 
         for brand, database_connection_map in brand_database_conn_mapping.items():

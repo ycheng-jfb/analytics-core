@@ -29,7 +29,7 @@ class Pivot88InspectionsOperator(BaseRowsToS3JsonWatermarkOperator):
 
         endpoint = endpoint[1:] if endpoint[0] == "/" else endpoint
         base_url = base_url[:-1] if base_url[-1] == "/" else base_url
-        url = f'{base_url}/{endpoint}'
+        url = f"{base_url}/{endpoint}"
         r = session.request(
             method=method,
             url=url,
@@ -54,7 +54,7 @@ class Pivot88InspectionsOperator(BaseRowsToS3JsonWatermarkOperator):
                 f'to_updated={str(to_updated.add(seconds=1)).split("+")[0]}&details=true'
             )
             try:
-                r = self.make_request('GET', endpoint)
+                r = self.make_request("GET", endpoint)
                 r.raise_for_status()
             except requests.exceptions.HTTPError as err:
                 if err.response.status_code == 500:
@@ -71,8 +71,11 @@ class Pivot88InspectionsOperator(BaseRowsToS3JsonWatermarkOperator):
                 continue
 
             for inspection in inspections:
-                if inspection.get('date_modified') and inspection['date_modified'] > max_datetime:
-                    max_datetime = inspection['date_modified']
+                if (
+                    inspection.get("date_modified")
+                    and inspection["date_modified"] > max_datetime
+                ):
+                    max_datetime = inspection["date_modified"]
                 yield {**inspection, **updated_at}
 
             from_updated = to_updated
@@ -97,9 +100,7 @@ class Pivot88AdvancedDetails(BaseRowsToS3CsvWatermarkOperator):
         with ConnClosing(self.snowflake_hook.get_conn()) as conn, conn.cursor() as cur:
             query_tag = generate_query_tag_cmd(self.dag_id, self.task_id)
             cur.execute(query_tag)
-            sql = (
-                "SELECT DATEADD(day, -7, max(DATE_MODIFIED)) FROM LAKE_VIEW.GSC.PIVOT88_INSPECTIONS"
-            )
+            sql = "SELECT DATEADD(day, -7, max(DATE_MODIFIED)) FROM LAKE_VIEW.GSC.PIVOT88_INSPECTIONS"
             df = pd.read_sql(sql, con=conn)
             return str(df.iat[0, 0])
 
@@ -112,63 +113,70 @@ class Pivot88AdvancedDetails(BaseRowsToS3CsvWatermarkOperator):
             sql = f"SELECT DISTINCT id FROM LAKE_VIEW.GSC.PIVOT88_INSPECTIONS WHERE DATE_MODIFIED > '{self.low_watermark}'"
             df = pd.read_sql(sql, con=conn)
 
-        for inspection_id in df['ID']:
+        for inspection_id in df["ID"]:
             resp_adv_details = self.project_88_hook.make_request(
-                'GET', f'/inspections/{inspection_id}?advanced_details=true'
+                "GET", f"/inspections/{inspection_id}?advanced_details=true"
             )
             adv_details = resp_adv_details.json()
 
             lookup_list = [
-                'assignment_group:id',
-                'date_inspection',
-                'inspector:name',
-                'report_type:name',
-                'factory_name',
+                "assignment_group:id",
+                "date_inspection",
+                "inspector:name",
+                "report_type:name",
+                "factory_name",
             ]
             d = flatten_json_lookup_list(adv_details, lookup_list)
 
-            for assignments_item in adv_details['assignments_items']:
+            for assignments_item in adv_details["assignments_items"]:
                 lookup_list = [
-                    'inspection_status_text',
-                    'inspection_result_text',
-                    'qty_inspected',
-                    'po_line:style',
-                    'po_line:banner',
-                    'po_line:po:suppliers:name',
-                    'po_line:po:factory:erp_business_id',
-                    'po_line:po:factory:country',
-                    'po_line:sku:item_name',
-                    'po_line:sku:product_family',
-                    'po_line:department',
-                    'po_line:region',
-                    'inspection_report:sections',
-                    'inspection_report:total_critical_defects',
-                    'inspection_report:total_major_defects',
-                    'inspection_report:total_minor_defects',
-                    'inspection_report:defective_parts',
-                    'inspection_completed_date',
-                    'id',
-                    'po_line:po:suppliers:erp_business_id',
-                    'po_line:po:id',
+                    "inspection_status_text",
+                    "inspection_result_text",
+                    "qty_inspected",
+                    "po_line:style",
+                    "po_line:banner",
+                    "po_line:po:suppliers:name",
+                    "po_line:po:factory:erp_business_id",
+                    "po_line:po:factory:country",
+                    "po_line:sku:item_name",
+                    "po_line:sku:product_family",
+                    "po_line:department",
+                    "po_line:region",
+                    "inspection_report:sections",
+                    "inspection_report:total_critical_defects",
+                    "inspection_report:total_major_defects",
+                    "inspection_report:total_minor_defects",
+                    "inspection_report:defective_parts",
+                    "inspection_completed_date",
+                    "id",
+                    "po_line:po:suppliers:erp_business_id",
+                    "po_line:po:id",
                 ]
                 assignments_item_d = flatten_json_lookup_list(
-                    assignments_item, lookup_list, 'assignments_items'
+                    assignments_item, lookup_list, "assignments_items"
                 )
 
-                for section in assignments_item_d['assignments_items_inspection_report_sections']:
-                    if section.get('title') == 'product':
-                        if defects := section.get('defects'):
+                for section in assignments_item_d[
+                    "assignments_items_inspection_report_sections"
+                ]:
+                    if section.get("title") == "product":
+                        if defects := section.get("defects"):
                             for defect in defects:
                                 lookup_list = [
-                                    'label',
-                                    'level_label',
-                                    'subsection',
-                                    'code',
-                                    'level_value',
+                                    "label",
+                                    "level_label",
+                                    "subsection",
+                                    "code",
+                                    "level_value",
                                 ]
                                 defect_d = flatten_json_lookup_list(
                                     defect,
                                     lookup_list,
-                                    'assignments_items_inspection_report_sections_defects',
+                                    "assignments_items_inspection_report_sections_defects",
                                 )
-                                yield {**d, **assignments_item_d, **defect_d, 'updated_at': now}
+                                yield {
+                                    **d,
+                                    **assignments_item_d,
+                                    **defect_d,
+                                    "updated_at": now,
+                                }

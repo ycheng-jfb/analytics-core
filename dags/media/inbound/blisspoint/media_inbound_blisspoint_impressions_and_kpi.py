@@ -112,7 +112,7 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2019, 6, 10, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": email_lists.airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }
@@ -136,6 +136,6 @@ with dag:
             table=item.table,
             column_list=item.column_list,
             files_path=item.files_path,
-            copy_config=CopyConfigCsv(field_delimiter=',', header_rows=1, skip_pct=1),
+            copy_config=CopyConfigCsv(field_delimiter=",", header_rows=1, skip_pct=1),
             pre_merge_command=item.pre_merge_cmd,
         )

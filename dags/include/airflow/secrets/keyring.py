@@ -11,7 +11,10 @@ logger = logging.getLogger()
 
 class KeyringSecretsBackend(BaseSecretsBackend):
     def __init__(
-        self, connections_prefix='airflow.conn.', variables_prefix='airflow.var.', **kwargs
+        self,
+        connections_prefix="airflow.conn.",
+        variables_prefix="airflow.var.",
+        **kwargs,
     ):
         self.connections_prefix = connections_prefix
         self.variables_prefix = variables_prefix
@@ -27,7 +30,9 @@ class KeyringSecretsBackend(BaseSecretsBackend):
 
     def get_conn_value(self, conn_id):
         """Retrieve conn uri from keyring"""
-        return keyring.get_password(service_name=self._conn_service_name(conn_id), username=None)
+        return keyring.get_password(
+            service_name=self._conn_service_name(conn_id), username=None
+        )
 
     def get_conn_uri(self, conn_id):
         """Deprecated in favor of get_conn_value"""
@@ -35,12 +40,16 @@ class KeyringSecretsBackend(BaseSecretsBackend):
 
     def get_variable(self, key):
         """Retrieve variable from keyring"""
-        return keyring.get_password(service_name=self._var_service_name(key), username=None)
+        return keyring.get_password(
+            service_name=self._var_service_name(key), username=None
+        )
 
     def set_conn_uri(self, conn_id, conn_uri):
         """Given airflow conn uri, store with keyring"""
         keyring.set_password(
-            service_name=self._conn_service_name(conn_id), username=None, password=conn_uri
+            service_name=self._conn_service_name(conn_id),
+            username=None,
+            password=conn_uri,
         )
 
     def set_connection(self, connection: Connection):
@@ -57,9 +66,9 @@ class KeyringSecretsBackend(BaseSecretsBackend):
         for env_var_name, conn_uri in os.environ.items():
             if CONN_ENV_PREFIX not in env_var_name:
                 continue
-            conn_id = env_var_name.replace(CONN_ENV_PREFIX, '').lower()
+            conn_id = env_var_name.replace(CONN_ENV_PREFIX, "").lower()
             logger.info(f"setting conn id {conn_id}")
             self.set_conn_uri(conn_id=conn_id, conn_uri=conn_uri)
 
 
-keyring.get_password('airflow.conn.', None)
+keyring.get_password("airflow.conn.", None)

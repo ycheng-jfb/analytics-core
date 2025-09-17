@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='membership_passive_cancels',
+    table="membership_passive_cancels",
     company_join_sql="""
      SELECT DISTINCT
          L.membership_passive_cancels_id,
@@ -15,24 +15,24 @@ table_config = TableConfig(
      INNER JOIN {database}.{source_schema}.membership_passive_cancels AS L
      ON L.MEMBERSHIP_ID=M.MEMBERSHIP_ID""",
     column_list=[
-        Column('membership_passive_cancels_id', 'INT', uniqueness=True, key=True),
-        Column('membership_id', 'INT', key=True),
-        Column('membership_type_id', 'INT'),
-        Column('membership_plan_id', 'INT', key=True),
-        Column('membership_level_id', 'INT'),
-        Column('membership_statuscode', 'INT'),
-        Column('curr_period_id', 'INT'),
-        Column('prev_period_id', 'INT'),
-        Column('source_table', 'VARCHAR(255)'),
-        Column('downgrade_status', 'VARCHAR(20)'),
+        Column("membership_passive_cancels_id", "INT", uniqueness=True, key=True),
+        Column("membership_id", "INT", key=True),
+        Column("membership_type_id", "INT"),
+        Column("membership_plan_id", "INT", key=True),
+        Column("membership_level_id", "INT"),
+        Column("membership_statuscode", "INT"),
+        Column("curr_period_id", "INT"),
+        Column("prev_period_id", "INT"),
+        Column("source_table", "VARCHAR(255)"),
+        Column("downgrade_status", "VARCHAR(20)"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
         Column(
-            'datetime_modified',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_modified",
+            "TIMESTAMP_NTZ(3)",
         ),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

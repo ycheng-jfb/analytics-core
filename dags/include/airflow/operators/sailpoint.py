@@ -20,13 +20,17 @@ class SailpointGetAccounts(BaseRowsToS3CsvOperator):
     def get_rows(self):
         updated_at = {"updated_at": pendulum.DateTime.utcnow()}
         params = {
-            'limit': 50,
-            'offset': 0,
-            'count': 'false',
-            'filters': f'sourceId in ({self.source_ids})' if self.source_ids != '' else '',
+            "limit": 50,
+            "offset": 0,
+            "count": "false",
+            "filters": f"sourceId in ({self.source_ids})"
+            if self.source_ids != ""
+            else "",
         }
 
-        accounts = self.sailpoint_hook.make_get_request_all(f'/{self.url_endpoint}', params=params)
+        accounts = self.sailpoint_hook.make_get_request_all(
+            f"/{self.url_endpoint}", params=params
+        )
         for account in accounts:
             yield {**flatten_json(account, flatten_list=False), **updated_at}
 
@@ -44,13 +48,15 @@ class SailpointGetAccessProfilesByIdentity(BaseRowsToS3CsvOperator):
     def get_rows(self):
         updated_at = {"updated_at": pendulum.DateTime.utcnow()}
         params = {
-            'limit': 50,
-            'offset': 0,
-            'count': 'false',
-            'filters': f'sourceId in ({self.source_ids})',
+            "limit": 50,
+            "offset": 0,
+            "count": "false",
+            "filters": f"sourceId in ({self.source_ids})",
         }
 
-        accounts = self.sailpoint_hook.make_get_request_all(f'/{self.url_endpoint}', params=params)
+        accounts = self.sailpoint_hook.make_get_request_all(
+            f"/{self.url_endpoint}", params=params
+        )
         identity_ids = set()
         for account in accounts:
             identity_ids.add(account.get("identityId"))
@@ -58,9 +64,9 @@ class SailpointGetAccessProfilesByIdentity(BaseRowsToS3CsvOperator):
         for identity_id in identity_ids:
             try:
                 access_profiles = self.sailpoint_hook.make_request(
-                    'GET',
-                    f'/historical-identities/{identity_id}/access-items',
-                    params={'type': 'accessProfile'},
+                    "GET",
+                    f"/historical-identities/{identity_id}/access-items",
+                    params={"type": "accessProfile"},
                 ).json()
             except requests.exceptions.HTTPError as err:
                 if (
@@ -73,7 +79,7 @@ class SailpointGetAccessProfilesByIdentity(BaseRowsToS3CsvOperator):
                     raise
             for profile in access_profiles:
                 yield {
-                    'identity_id': identity_id,
+                    "identity_id": identity_id,
                     **profile,
                     **updated_at,
                 }

@@ -51,7 +51,9 @@ class LithiumToS3Operator(BaseRowsToS3JsonOperator):
     def report_date_list(self):
         report_date_start = self.report_params["startTime"]
         report_date_end = self.report_params["endTime"]
-        date_dt_list = pd.date_range(start=report_date_start, end=report_date_end, freq="D")
+        date_dt_list = pd.date_range(
+            start=report_date_start, end=report_date_end, freq="D"
+        )
         date_list = [x.isoformat()[0:10] for x in date_dt_list]
         return date_list
 
@@ -65,9 +67,9 @@ class LithiumToS3Operator(BaseRowsToS3JsonOperator):
         )
         while True:
             s = self.hook.make_request(status_url)
-            status_response = s.json().get('result')
-            status = status_response.get('result').get('detail')
-            if status == 'COMPLETED':
+            status_response = s.json().get("result")
+            status = status_response.get("result").get("detail")
+            if status == "COMPLETED":
                 return status_response
             else:
                 wait_seconds = next(waiter)
@@ -78,16 +80,16 @@ class LithiumToS3Operator(BaseRowsToS3JsonOperator):
         r = self.hook.make_request(self.url, params=self.report_params)
         data = r.json()
 
-        status_url = data.get('result').get("statusUrl")
+        status_url = data.get("result").get("statusUrl")
 
         s = self.hook.make_request(status_url)
-        status_response = s.json().get('result')
-        status = status_response.get('result').get('detail')
+        status_response = s.json().get("result")
+        status = status_response.get("result").get("detail")
 
-        if status != 'COMPLETED':
+        if status != "COMPLETED":
             status_response = self.await_report(status_url)
 
-        report_url = status_response.get('jobInfo').get('downloadUrl')
+        report_url = status_response.get("jobInfo").get("downloadUrl")
         return report_url
 
     def get_rows(self) -> Iterable[Dict]:
@@ -106,12 +108,14 @@ class LithiumToS3Operator(BaseRowsToS3JsonOperator):
             start_time, end_time = self.time_range(date)
             self.report_params = self.build_params(start_time, end_time)
 
-            if '*' not in self.key:
+            if "*" not in self.key:
                 raise ValueError("key must contain '*' to split report per each day")
-            key = self.key.replace('*', date)
+            key = self.key.replace("*", date)
 
             with tempfile.TemporaryDirectory() as td:
                 full_local_path = Path(td, date)
                 rows = self.get_rows()
                 self.write_dict_rows_to_file(rows=rows, filename=full_local_path)
-                self.upload_to_s3(full_local_path.as_posix(), bucket=self.bucket, key=key)
+                self.upload_to_s3(
+                    full_local_path.as_posix(), bucket=self.bucket, key=key
+                )

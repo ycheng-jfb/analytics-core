@@ -17,20 +17,20 @@ table_config = TableConfig(
       ON S.SESSION_ID = C.SESSION_ID
       INNER JOIN {database}.{source_schema}.cart_product_source AS L
       ON L.CART_ID=C.CART_ID""",
-    table='cart_product_source',
+    table="cart_product_source",
     column_list=[
-        Column('cart_product_source_id', 'INT', uniqueness=True, key=True),
-        Column('cart_id', 'INT', key=True),
-        Column('product_id', 'INT', key=True),
-        Column('value', 'VARCHAR(200)'),
+        Column("cart_product_source_id", "INT", uniqueness=True, key=True),
+        Column("cart_id", "INT", key=True),
+        Column("product_id", "INT", key=True),
+        Column("value", "VARCHAR(200)"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
         Column(
-            'datetime_modified',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_modified",
+            "TIMESTAMP_NTZ(3)",
         ),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

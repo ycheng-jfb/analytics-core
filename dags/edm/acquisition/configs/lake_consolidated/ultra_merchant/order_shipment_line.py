@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='order_shipment_line',
+    table="order_shipment_line",
     company_join_sql="""
         SELECT DISTINCT
             L.ORDER_SHIPMENT_ID,
@@ -18,17 +18,17 @@ table_config = TableConfig(
         INNER JOIN {database}.{source_schema}.order_shipment_line AS L
             ON L.ORDER_LINE_ID = OL.ORDER_LINE_ID """,
     column_list=[
-        Column('order_shipment_id', 'INT', uniqueness=True, key=True),
-        Column('order_line_id', 'INT', uniqueness=True, key=True),
-        Column('item_id', 'INT'),
+        Column("order_shipment_id", "INT", uniqueness=True, key=True),
+        Column("order_line_id", "INT", uniqueness=True, key=True),
+        Column("item_id", "INT"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
         Column(
-            'datetime_modified',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_modified",
+            "TIMESTAMP_NTZ(3)",
         ),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

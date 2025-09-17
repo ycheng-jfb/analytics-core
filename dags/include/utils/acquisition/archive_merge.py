@@ -24,15 +24,15 @@ class ArchiveSourceTable:
     """
 
     SCHEMA_MAP = {
-        'ultracms': 'ultra_cms',
-        'ultrarollup': 'ultra_rollup',
-        'um': 'ultra_merchant',
-        'uw': 'ultra_warehouse',
-        'dbo': 'ultra_merchant',
+        "ultracms": "ultra_cms",
+        "ultrarollup": "ultra_rollup",
+        "um": "ultra_merchant",
+        "uw": "ultra_warehouse",
+        "dbo": "ultra_merchant",
     }
 
     def __init__(self, full_name):
-        self.database, self.schema, self.table = full_name.split('.')
+        self.database, self.schema, self.table = full_name.split(".")
         self.full_name = f'{self.database}.{self.schema}."{self.table.upper()}"'
 
     def __repr__(self):
@@ -40,7 +40,9 @@ class ArchiveSourceTable:
 
     @cached_property
     def snowflake_hook(self):
-        return SnowflakeHook(role=snowflake_roles.etl_service_account, warehouse='DA_WH_ETL_LIGHT')
+        return SnowflakeHook(
+            role=snowflake_roles.etl_service_account, warehouse="DA_WH_ETL_LIGHT"
+        )
 
     @cached_property
     def source_columns(self):
@@ -73,7 +75,7 @@ class ArchiveSourceTable:
         Current TableConfig class instance for the lake table that corresponds to this archive table.
 
         """
-        return get_table_config(self.lake_table_name.lower().replace('"', ''))
+        return get_table_config(self.lake_table_name.lower().replace('"', ""))
 
     @cached_property
     def lake_column_list(self):
@@ -105,15 +107,15 @@ class ArchiveSourceTable:
         This property provides that table name.
 
         """
-        if 'staging_history' in self.database:
-            suffix = 'delta__staging_history'
-        elif 'staging' in self.database:
-            suffix = 'delta__staging'
-        elif 'um_archive' in self.database:
-            suffix = 'delta__um_archive'
+        if "staging_history" in self.database:
+            suffix = "delta__staging_history"
+        elif "staging" in self.database:
+            suffix = "delta__staging"
+        elif "um_archive" in self.database:
+            suffix = "delta__um_archive"
         else:
             print(self.database)
-            raise Exception('invalid option')
+            raise Exception("invalid option")
         return f"lake_archive.{self.lake_config.target_schema}.{self.table}__{suffix}"
 
     @property
@@ -123,24 +125,24 @@ class ArchiveSourceTable:
         the corresponding lake_archive table.
 
         """
-        tgt_database = 'lake_archive'
-        if self.database == 'archive_dbp70_um_archive_20200127':
-            tgt_schema = 'ultra_merchant'
-            tgt_table = self.table.replace('_archive', '')
-        elif self.database == 'archive_edw01_staging_20200127':
+        tgt_database = "lake_archive"
+        if self.database == "archive_dbp70_um_archive_20200127":
+            tgt_schema = "ultra_merchant"
+            tgt_table = self.table.replace("_archive", "")
+        elif self.database == "archive_edw01_staging_20200127":
             if self.schema not in self.SCHEMA_MAP:
                 print(f"skipping {self}")
                 return
             tgt_schema = self.SCHEMA_MAP[self.schema]
             tgt_table = self.table
-        elif self.database == 'archive_edw01_staging_history_20200127':
+        elif self.database == "archive_edw01_staging_history_20200127":
             if self.schema not in self.SCHEMA_MAP:
                 print(f"skipping {self}")
                 return
             tgt_schema = self.SCHEMA_MAP[self.schema]
-            tgt_table = self.table.replace('_history', '')
+            tgt_table = self.table.replace("_history", "")
         else:
-            raise Exception('case not covered')
+            raise Exception("case not covered")
         return f'{tgt_database}.{tgt_schema}."{tgt_table.upper()}"'
 
     @property
@@ -150,7 +152,7 @@ class ArchiveSourceTable:
 
         """
         return (
-            self.lake_archive_table_name.replace('lake_archive', 'lake')
+            self.lake_archive_table_name.replace("lake_archive", "lake")
             if self.lake_archive_table_name
             else None
         )
@@ -182,18 +184,21 @@ class ArchiveSourceTable:
     def _get_delta_insert_query(self, count_only=True):
         uniqueness_list = [x.lower() for x in self.lake_column_list.uniqueness_cols_str]
         delta_col = self.lake_column_list.delta_column_list[0].name
-        uniqueness_join = '\n            AND '.join(
+        uniqueness_join = "\n            AND ".join(
             [f"s.{x} = t.{x}" for x in uniqueness_list + [delta_col]]
         )
 
         if count_only:
             select_list = "count(*)"
-            insert_clause = ''
+            insert_clause = ""
         else:
-            select_list = ',\n        '.join(
-                [x if x in self.source_columns else f'NULL as {x}' for x in self.lake_columns]
+            select_list = ",\n        ".join(
+                [
+                    x if x in self.source_columns else f"NULL as {x}"
+                    for x in self.lake_columns
+                ]
             )
-            insert_list = ',\n        '.join([x for x in self.lake_columns])
+            insert_list = ",\n        ".join([x for x in self.lake_columns])
             insert_clause = f"INSERT INTO {self.delta_table_name} ({insert_list})"
             if delta_col not in self.source_columns:
                 raise MissingDeltaColException(
@@ -214,11 +219,11 @@ class ArchiveSourceTable:
 
     @property
     def dml_lake_archive_append_query(self):
-        insert_list = ', '.join([x for x in self.lake_columns])
+        insert_list = ", ".join([x for x in self.lake_columns])
         uniqueness_list = [x.lower() for x in self.lake_column_list.uniqueness_cols_str]
         delta_col = self.lake_column_list.delta_column_list[0].name
         uniqueness_list.append(delta_col)
-        partition_clause = ', '.join([f"s.{x}" for x in uniqueness_list])
+        partition_clause = ", ".join([f"s.{x}" for x in uniqueness_list])
         insert_clause = f"INSERT INTO {self.lake_archive_table_name}"
         cmd = f"""{insert_clause}
         SELECT {insert_list}
@@ -246,7 +251,7 @@ class ArchiveSourceTable:
         else:
             print(f"running table '{self.delta_table_name}'")
             self.snowflake_hook.execute_multiple(
-                ''.join(
+                "".join(
                     (
                         self.ddl_delta_table,
                         self.dml_delta_insert,
@@ -356,11 +361,11 @@ class ArchiveSourceMerge:
     """
 
     STATS_HEADER_ROW = [
-        'table_name',
-        'source',
-        'lake',
-        'lake_archive',
-        'delta',
+        "table_name",
+        "source",
+        "lake",
+        "lake_archive",
+        "delta",
     ]
 
     def __init__(self, table_name_list):
@@ -378,7 +383,7 @@ class ArchiveSourceMerge:
             l.row_count
         """
         rows = SnowflakeHook(
-            role=snowflake_roles.etl_service_account, warehouse='DA_WH_ETL_LIGHT'
+            role=snowflake_roles.etl_service_account, warehouse="DA_WH_ETL_LIGHT"
         ).get_records(query)
         return [x[0] for x in rows]
 
@@ -393,7 +398,7 @@ class ArchiveSourceMerge:
             dry_run: just print out the commands but don't execute anything
 
         """
-        self._run_all(step='populate_delta_table', dry_run=dry_run)
+        self._run_all(step="populate_delta_table", dry_run=dry_run)
 
     def append_to_all_lake_archive_tables(self, dry_run=False):
         """
@@ -410,7 +415,7 @@ class ArchiveSourceMerge:
             dry_run: just print out the commands but don't execute anything
 
         """
-        self._run_all(step='append_to_lake_archive_table', dry_run=dry_run)
+        self._run_all(step="append_to_lake_archive_table", dry_run=dry_run)
 
     def _run_all(self, step, dry_run=False):
         """
@@ -423,8 +428,8 @@ class ArchiveSourceMerge:
 
         """
 
-        if step not in ('populate_delta_table', 'append_to_lake_archive_table'):
-            raise ValueError('invalid step provided')
+        if step not in ("populate_delta_table", "append_to_lake_archive_table"):
+            raise ValueError("invalid step provided")
 
         for table_name in self.table_name_list:
             archive_table = ArchiveSourceTable(table_name)
@@ -433,31 +438,37 @@ class ArchiveSourceMerge:
                 # if no lake table, then the mapping between this source archive database and lake
                 # is not defined in ArchiveSourceTable.  See the definition of the
                 # ``lake_archive_table_name`` property
-                warnings.warn(f"table {archive_table} not mapped in lake_archive_table_name")
+                warnings.warn(
+                    f"table {archive_table} not mapped in lake_archive_table_name"
+                )
                 not_mapped.append(archive_table)
                 continue
 
             try:
-                if archive_table.watermark_column != 'datetime_modified':
+                if archive_table.watermark_column != "datetime_modified":
                     warnings.warn(
                         f"table {archive_table.lake_table_name} watermark is {archive_table.watermark_column}"
                     )
                     bad_watermark.append(archive_table)
                     continue
             except ModuleNotFoundError:
-                warnings.warn(f"config not found for table {archive_table.lake_table_name}")
+                warnings.warn(
+                    f"config not found for table {archive_table.lake_table_name}"
+                )
                 not_in_lake.append(archive_table)
                 continue
             try:
                 print(table_name)
-                if step == 'populate_delta_table':
+                if step == "populate_delta_table":
                     archive_table.populate_delta_table(dry_run=dry_run)
                     stats_dict[archive_table.full_name] = archive_table.get_counts()
-                elif step == 'append_to_lake_archive_table':
+                elif step == "append_to_lake_archive_table":
                     try:
                         archive_table.append_to_lake_archive_table(dry_run=dry_run)
                     except ProgrammingError:
-                        warnings.warn(f"delta table no exist: {archive_table.delta_table_name}")
+                        warnings.warn(
+                            f"delta table no exist: {archive_table.delta_table_name}"
+                        )
 
             except MissingDeltaColException:
                 warnings.warn(
@@ -474,9 +485,9 @@ class ArchiveSourceMerge:
             filename: where you want the file to be written
 
         """
-        with open(filename, 'wt') as f:
-            f.write('\t'.join([str(x) for x in cls.STATS_HEADER_ROW]))
-            f.write('\n')
+        with open(filename, "wt") as f:
+            f.write("\t".join([str(x) for x in cls.STATS_HEADER_ROW]))
+            f.write("\n")
             for table_name, data in stats_dict.items():
-                f.write('\t'.join([str(x) for x in data]))
-                f.write('\n')
+                f.write("\t".join([str(x) for x in data]))
+                f.write("\n")

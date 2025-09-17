@@ -35,8 +35,8 @@ from include.utils.snowflake import (
 from include.utils.string import indent, unindent_auto
 from tabulate import tabulate
 
-DATABASE_CONFIG_KEY = 'database_config'
-ENV_ENABLED_KEY = 'env_config_enabled'
+DATABASE_CONFIG_KEY = "database_config"
+ENV_ENABLED_KEY = "env_config_enabled"
 DAG_TO_DB_CONFIG_FILE = CONFIG_DIR / "dag_to_db_map.yml"
 FOLDER_TO_DB_CONFIG_FILE = CONFIG_DIR / "folder_to_db_map.yml"
 dag_locs: Dict[str, str] = {}
@@ -69,7 +69,9 @@ def get_database_config(dag_id: str, dag_folder: Optional[str]):
     """
     dag_config: Dict[str, Any] = {}
     folder_config: Dict[str, Any] = {}
-    variable_config = Variable.get(DATABASE_CONFIG_KEY, deserialize_json=True, default_var={})
+    variable_config = Variable.get(
+        DATABASE_CONFIG_KEY, deserialize_json=True, default_var={}
+    )
     if dag_id:
         with open(DAG_TO_DB_CONFIG_FILE, "r") as file:
             dag_yaml = yaml.load(stream=file, Loader=yaml.FullLoader)
@@ -79,8 +81,10 @@ def get_database_config(dag_id: str, dag_folder: Optional[str]):
             warnings.warn("no valid dag folder supplied to `get_database_config`")
             dag_folder = get_dag_location(dag_id)
         with open(FOLDER_TO_DB_CONFIG_FILE, "r") as file:
-            for rel_path, config in yaml.load(stream=file, Loader=yaml.FullLoader).items():
-                if rel_path == '*':
+            for rel_path, config in yaml.load(
+                stream=file, Loader=yaml.FullLoader
+            ).items():
+                if rel_path == "*":
                     folder_config.update(**config)
                 elif not dag_folder:
                     continue
@@ -94,12 +98,16 @@ def get_database_config(dag_id: str, dag_folder: Optional[str]):
 
 
 def _get_effective_database(database, dag_file_path, dag_id):
-    env_enabled = str(Variable.get(key=ENV_ENABLED_KEY, default_var='true')).lower() == 'true'
+    env_enabled = (
+        str(Variable.get(key=ENV_ENABLED_KEY, default_var="true")).lower() == "true"
+    )
     if env_enabled:
         if not dag_file_path:
             dag_folder = None
         else:
-            dag_folder = os.path.exists(dag_file_path) and os.path.dirname(dag_file_path) or None
+            dag_folder = (
+                os.path.exists(dag_file_path) and os.path.dirname(dag_file_path) or None
+            )
         config = get_database_config(dag_id, dag_folder)
         return config.get(database, f"{database}")
     else:
@@ -123,7 +131,9 @@ def get_effective_database(database, task):
     if task.has_dag():
         dag_id = task.dag_id
         dag_file_path = task.dag.fileloc
-    return _get_effective_database(database=database, dag_file_path=dag_file_path, dag_id=dag_id)
+    return _get_effective_database(
+        database=database, dag_file_path=dag_file_path, dag_id=dag_id
+    )
 
 
 class BaseSnowflakeOperator(BaseOperator):
@@ -200,14 +210,16 @@ class BaseSnowflakeOperator(BaseOperator):
         query_tag = generate_query_tag_cmd(dag_id=self.dag_id, task_id=self.task_id)
         sql = self.get_sql_cmd(sql_or_path=sql_or_path)
         sql = query_tag + sql
-        self.log.info('Executing: %s', sql)
+        self.log.info("Executing: %s", sql)
         self.snowflake_hook.execute_multiple_with_cnx(
             cnx=cnx, sql=sql, parameters=parameters or self.parameters
         )
 
     def on_kill(self):
         if self.cnx:
-            self.cnx.execute_string(f"SELECT SYSTEM$CANCEL_ALL_QUERIES({self.cnx.session_id})")
+            self.cnx.execute_string(
+                f"SELECT SYSTEM$CANCEL_ALL_QUERIES({self.cnx.session_id})"
+            )
             self.cnx.execute_string("ROLLBACK")
 
     def execute(self, context=None):
@@ -303,13 +315,17 @@ class SnowflakeAlertOperator(BaseSnowflakeOperator):
         elif isinstance(operator_alert_type, str):
             return required_alert_type == operator_alert_type
         else:
-            raise TypeError(f"{operator_alert_type} is not a instance of 'str' or 'list'")
+            raise TypeError(
+                f"{operator_alert_type} is not a instance of 'str' or 'list'"
+            )
 
     def check_for_downstream_action(self):
         if self.downstream_action == "fail":
             raise AirflowFailException("Alert sent failing task")
         elif self.downstream_action == "skip":
-            raise AirflowSkipException("Alert sent skipping current and downstream tasks")
+            raise AirflowSkipException(
+                "Alert sent skipping current and downstream tasks"
+            )
         else:
             print("Alert sent continuing downstream tasks")
 
@@ -335,41 +351,47 @@ class SnowflakeAlertOperator(BaseSnowflakeOperator):
                 html_content = f"{self.body}<br><br>{df.to_html(index=False)}"
                 if self._includes("mail", self.alert_type):
                     send_email(
-                        to=self.distribution_list, subject=self.subject, html_content=html_content
+                        to=self.distribution_list,
+                        subject=self.subject,
+                        html_content=html_content,
                     )
                 if self._includes("user_notification", self.alert_type):
                     list_of_emails = []
                     for index, row in df.iterrows():
-                        email = str(row['USER_NAME'])
+                        email = str(row["USER_NAME"])
                         if email not in list_of_emails:
                             list_of_emails.append(email)
                     for email in list_of_emails:
                         to_email = email
-                        subject = self.subject.replace('USERNAME', to_email)
+                        subject = self.subject.replace("USERNAME", to_email)
                         html_content = f"{self.body.replace('USERNAME', to_email)}"
-                        user_df = df.loc[df['USER_NAME'] == to_email]
-                        html_content += f'<br><br>{user_df.to_html(index=False)}'
+                        user_df = df.loc[df["USER_NAME"] == to_email]
+                        html_content += f"<br><br>{user_df.to_html(index=False)}"
                         to_email = to_email.lower()
                         print(to_email)
                         print(subject)
                         print(html_content)
-                        send_email(to=to_email, subject=subject, html_content=html_content)
+                        send_email(
+                            to=to_email, subject=subject, html_content=html_content
+                        )
                 if self._includes("slack", self.alert_type):
                     sql_result = tabulate(
                         df.iloc[:10],
                         headers=[i[0] for i in cur.description],
-                        tablefmt='orgtbl',
+                        tablefmt="orgtbl",
                         showindex=False,
                     )
                     if not self.pass_sql_to_message:
-                        sql = ''
+                        sql = ""
                     message = f"""
                             :no_entry: Task *{self.task_id}* <!here>
 *DAG*: {self.dag_id}
 *{self.subject}*
 _{self.body} : {len(last_rows)}_\n```{sql}\n{sql_result}```
                         """
-                    send_slack_message(message=cleandoc(message), conn_id=self.slack_conn_id)
+                    send_slack_message(
+                        message=cleandoc(message), conn_id=self.slack_conn_id
+                    )
 
                 self.check_for_downstream_action()
             else:
@@ -406,14 +428,20 @@ class SnowflakeAlertComplexEmailOperator(BaseSnowflakeOperator):
             df_list.append(df)
             self.log.info(df.to_string)
 
-        html_content = ''
+        html_content = ""
         for i in range(len(df_list)):
             if not df_list[i].empty:
                 self.log.info(f"found rows in table {i}; sending alert.")
-            html_content += f"{self.body[i]}<br><br>{df_list[i].to_html(index=False)}<br><br><br>"
+            html_content += (
+                f"{self.body[i]}<br><br>{df_list[i].to_html(index=False)}<br><br><br>"
+            )
 
-        if html_content != '':
-            send_email(to=self.distribution_list, subject=self.subject, html_content=html_content)
+        if html_content != "":
+            send_email(
+                to=self.distribution_list,
+                subject=self.subject,
+                html_content=html_content,
+            )
         else:
             self.log.info("no rows retrieved; skipping alert.")
 
@@ -446,7 +474,10 @@ class TableDependencyTzLtz(BaseDependency):
         return unindent_auto(hwm_command)
 
     def __eq__(self, other):
-        return self.table_name == other.table_name and self.column_name == other.column_name
+        return (
+            self.table_name == other.table_name
+            and self.column_name == other.column_name
+        )
 
 
 class TableDependencyNtz(BaseDependency):
@@ -454,7 +485,9 @@ class TableDependencyNtz(BaseDependency):
     Use when source table has data type TIMESTAMP_NTZ
     """
 
-    def __init__(self, table_name: str, timezone: str, column_name: str = "meta_update_datetime"):
+    def __init__(
+        self, table_name: str, timezone: str, column_name: str = "meta_update_datetime"
+    ):
         self.table_name = table_name
         self.column_name = column_name
         self.timezone = timezone
@@ -506,7 +539,9 @@ class SnowflakeWatermarkSqlOperator(BaseTaskWatermarkOperator, SnowflakeSqlOpera
         schema=None,
         role=None,
         max_active_tis_per_dag=1,
-        watermark_tables: List[Union[str, dict, TableDependencyTzLtz, TableDependencyNtz]] = None,
+        watermark_tables: List[
+            Union[str, dict, TableDependencyTzLtz, TableDependencyNtz]
+        ] = None,
         snapshot_enabled: bool = False,
         snapshot_period: int = None,
         initial_load_value: str = "1900-01-01 00:00:00+00:00",
@@ -529,7 +564,9 @@ class SnowflakeWatermarkSqlOperator(BaseTaskWatermarkOperator, SnowflakeSqlOpera
         self.snapshot_enabled = snapshot_enabled
         self.snapshot_period = snapshot_period
         if self.snapshot_enabled is False and self.snapshot_period is not None:
-            raise ValueError("'snapshot_period' only works when 'snapshot_enabled' is True ")
+            raise ValueError(
+                "'snapshot_period' only works when 'snapshot_enabled' is True "
+            )
 
     @cached_property
     def watermark_tables(self):
@@ -540,7 +577,7 @@ class SnowflakeWatermarkSqlOperator(BaseTaskWatermarkOperator, SnowflakeSqlOpera
             if isinstance(dep, str):
                 dep_list.append(TableDependencyTzLtz(dep))
             elif isinstance(dep, dict):
-                if 'timezone' in dep:
+                if "timezone" in dep:
                     dep_list.append(TableDependencyNtz(**dep))
                 else:
                     dep_list.append(TableDependencyTzLtz(**dep))
@@ -559,7 +596,7 @@ class SnowflakeWatermarkSqlOperator(BaseTaskWatermarkOperator, SnowflakeSqlOpera
     def build_high_watermark_command(self):
         command_list = []
         for dep in deepcopy(self.watermark_tables):
-            database, schema, table_name = dep.table_name.split('.')
+            database, schema, table_name = dep.table_name.split(".")
             effective_database = get_effective_database(database, self)
             dep.table_name = f"{effective_database}.{schema}.{table_name}"
             command_list.append(dep.high_watermark_command)
@@ -591,8 +628,8 @@ class SnowflakeWatermarkSqlOperator(BaseTaskWatermarkOperator, SnowflakeSqlOpera
             )
 
     def generate_sql_for_snapshot(self) -> str:
-        schema_name = self.procedure.split('.')[0]
-        table_name = self.procedure.split('.')[1]
+        schema_name = self.procedure.split(".")[0]
+        table_name = self.procedure.split(".")[1]
         cmd = rf"""
         CREATE TRANSIENT TABLE IF NOT EXISTS {self.database}.{schema_name}.{table_name}_snapshot
             LIKE {self.database}.{schema_name}.{table_name};
@@ -638,7 +675,9 @@ class SnowflakeWatermarkSqlOperator(BaseTaskWatermarkOperator, SnowflakeSqlOpera
             self.watermark_post_execute()
 
 
-class SnowflakeProcedureOperator(BaseProcessWatermarkOperator, SnowflakeWatermarkSqlOperator):
+class SnowflakeProcedureOperator(
+    BaseProcessWatermarkOperator, SnowflakeWatermarkSqlOperator
+):
     """
 
     In our airflow implementation, we store "procedures" in scripts located as follows:
@@ -685,22 +724,24 @@ class SnowflakeProcedureOperator(BaseProcessWatermarkOperator, SnowflakeWatermar
 
     """
 
-    ui_fgcolor = '#000000'
-    ui_color = '#F6D6BF'
+    ui_fgcolor = "#000000"
+    ui_color = "#F6D6BF"
 
     def __init__(
         self,
         procedure,
         database,
         warehouse=None,
-        schema='public',
-        watermark_tables: List[Union[str, dict, TableDependencyTzLtz, TableDependencyNtz]] = None,
+        schema="public",
+        watermark_tables: List[
+            Union[str, dict, TableDependencyTzLtz, TableDependencyNtz]
+        ] = None,
         role=snowflake_roles.etl_service_account,
         **kwargs,
     ):
         process_name = f"{database}.{procedure}"
         namespace = "snowflake-procedure"
-        script_filename = Path(SQL_DIR, database, 'procedures', procedure)
+        script_filename = Path(SQL_DIR, database, "procedures", procedure)
         self.procedure = procedure
         super().__init__(
             task_id=f"{database}.{script_filename.name}".lower(),
@@ -748,7 +789,7 @@ class SnowflakeBackupTableToS3(BaseSnowflakeOperator):
     """
 
     template_fields = ["where_clause", "snowflake_conn_id"]
-    TRANS_DELIM = str.maketrans({'\t': r'\t', '\n': r'\n', '\r': r'\r'})
+    TRANS_DELIM = str.maketrans({"\t": r"\t", "\n": r"\n", "\r": r"\r"})
 
     def __init__(
         self,
@@ -756,13 +797,13 @@ class SnowflakeBackupTableToS3(BaseSnowflakeOperator):
         schema,
         table,
         delete_after_backup=False,
-        file_type='CSV',
-        field_delimiter='\t',
-        record_delimiter='\n',
+        file_type="CSV",
+        field_delimiter="\t",
+        record_delimiter="\n",
         overwrite=False,
         header=True,
         column_list: List = None,
-        where_clause: str = '',
+        where_clause: str = "",
         custom_file_format: Dict = None,
         custom_copy_params: Dict = None,
         *args,
@@ -804,7 +845,7 @@ class SnowflakeBackupTableToS3(BaseSnowflakeOperator):
             }
 
         params_list = [f"{k} = {v}" for k, v in params.items()]
-        params_str = ',\n            '.join(params_list)
+        params_str = ",\n            ".join(params_list)
         return params_str
 
     @property
@@ -815,7 +856,7 @@ class SnowflakeBackupTableToS3(BaseSnowflakeOperator):
             params = {"OVERWRITE": True, "HEADER": True, "MAX_FILE_SIZE": 5000000000}
 
         params_list = [f"{k} = {v}" for k, v in params.items()]
-        params_str = ',\n'.join(params_list)
+        params_str = ",\n".join(params_list)
         return params_str
 
     @property
@@ -826,10 +867,10 @@ class SnowflakeBackupTableToS3(BaseSnowflakeOperator):
     def copy_into_sql(self) -> str:
         date_formated = datetime.datetime.now().strftime("%Y%m%d")
         file_path = (
-            f'{stages.tsos_da_int_backup_archive}/backup/'
-            f'{self.database}.{self.schema}.{self.table}/{date_formated}/'
-            f'{self.table}_{date_formated}.'
-            f'{self.file_type.lower()}'
+            f"{stages.tsos_da_int_backup_archive}/backup/"
+            f"{self.database}.{self.schema}.{self.table}/{date_formated}/"
+            f"{self.table}_{date_formated}."
+            f"{self.file_type.lower()}"
         )
 
         cmd = rf"""
@@ -850,7 +891,7 @@ class SnowflakeBackupTableToS3(BaseSnowflakeOperator):
 
     @property
     def delete_sql(self):
-        return rf'DELETE FROM {self.database}.{self.schema}.{self.table} {self.where_clause};'
+        return rf"DELETE FROM {self.database}.{self.schema}.{self.table} {self.where_clause};"
 
     def execute(self, context=None):
         self.run_sql_or_path(self.copy_into_sql)

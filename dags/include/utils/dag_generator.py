@@ -24,7 +24,7 @@ class YamlTask:
 
 
 def sql_kwargs_map(procedure: str, **kwargs):
-    database, proc_name = procedure.split('.', maxsplit=1)
+    database, proc_name = procedure.split(".", maxsplit=1)
     return dict(database=database, procedure=proc_name, **kwargs)
 
 
@@ -38,7 +38,9 @@ class DagBuilder:
         owner: owner of the dag
     """
 
-    def __init__(self, dag_name: str, dag_yaml_dict: Dict[str, Any], owner: str) -> None:
+    def __init__(
+        self, dag_name: str, dag_yaml_dict: Dict[str, Any], owner: str
+    ) -> None:
         self.dag_name: str = dag_name
         self.dag_yaml_dict: Dict[str, Any] = dag_yaml_dict
         self.owner: str = owner
@@ -64,13 +66,13 @@ class DagBuilder:
 
     @property
     def default_args(self) -> Dict[str, Any]:
-        timezone = self.dag_yaml_dict.get('timezone', 'America/Los_Angeles')
+        timezone = self.dag_yaml_dict.get("timezone", "America/Los_Angeles")
         return {
-            'start_date': pendulum.datetime(2020, 1, 1, tz=timezone),
-            'owner': self.owner,
-            'email': self.email_list,
-            'retries': 0,
-            'on_failure_callback': self.on_failure_callback,
+            "start_date": pendulum.datetime(2020, 1, 1, tz=timezone),
+            "owner": self.owner,
+            "email": self.email_list,
+            "retries": 0,
+            "on_failure_callback": self.on_failure_callback,
         }
 
     @property
@@ -92,15 +94,15 @@ class DagBuilder:
         Args:
             task_conf: dict of task params in a tasks of a DAG
         """
-        task_type = task_conf['type'].lower()
+        task_type = task_conf["type"].lower()
 
         task_type_map = {
-            'sql': SnowflakeProcedureOperator,
-            'tableau': TableauRefreshOperator,
+            "sql": SnowflakeProcedureOperator,
+            "tableau": TableauRefreshOperator,
         }
 
         def map_kwargs(task_type, kwargs):
-            kwargs_map_dict = {'sql': sql_kwargs_map}
+            kwargs_map_dict = {"sql": sql_kwargs_map}
             kwargs_map = kwargs_map_dict.get(task_type)
             return kwargs_map(**kwargs) if kwargs_map else kwargs
 
@@ -109,7 +111,7 @@ class DagBuilder:
         if not op_cls:
             raise Exception(f"unsupported task type provided: {task_type}")
 
-        excluded_kwargs = {'upstream_tasks', 'type'}
+        excluded_kwargs = {"upstream_tasks", "type"}
         op_kwargs = {k: v for k, v in task_conf.items() if k not in excluded_kwargs}
         return op_cls(**map_kwargs(task_type, op_kwargs))  # type: ignore
 
@@ -157,7 +159,7 @@ class YamlFile:
     def owner(self):
         yaml_dir = YAML_DAGS_DIR
         rel_path = self.path.relative_to(yaml_dir)
-        base_folder = rel_path.as_posix().split('/', 1)[0]
+        base_folder = rel_path.as_posix().split("/", 1)[0]
         try:
             return getattr(owners, base_folder)
         except AttributeError:
@@ -177,6 +179,8 @@ class YamlFile:
         """
 
         for dag_name, dag_config in self.yaml_dict.items():
-            dag_builder = DagBuilder(dag_name=dag_name, dag_yaml_dict=dag_config, owner=self.owner)
+            dag_builder = DagBuilder(
+                dag_name=dag_name, dag_yaml_dict=dag_config, owner=self.owner
+            )
             dag = dag_builder.build_dag()
             dag_globals[f"{dag.dag_id}_dag"] = dag

@@ -24,7 +24,7 @@ class MsSqlCDCToS3Operator(BaseTaskWatermarkOperator):
         bucket: str,
         key: str,
         row_filter_option: str = "all",
-        initial_load_value: str = '1900-01-01T00:00:00+00:00',
+        initial_load_value: str = "1900-01-01T00:00:00+00:00",
         mssql_conn_id: str = conn_ids.MsSql.default,
         s3_conn_id: str = conn_ids.AWS.tfg_default,
         s3_replace: bool = True,
@@ -67,7 +67,9 @@ class MsSqlCDCToS3Operator(BaseTaskWatermarkOperator):
     def get_mssql_hook(self):
         if not self._mssql_hook:
             self._mssql_hook = MsSqlOdbcHook(
-                mssql_conn_id=self.mssql_conn_id, database=self.database, schema=self.schema
+                mssql_conn_id=self.mssql_conn_id,
+                database=self.database,
+                schema=self.schema,
             )
         return self._mssql_hook
 
@@ -75,13 +77,17 @@ class MsSqlCDCToS3Operator(BaseTaskWatermarkOperator):
         # imported locally so turbodbc can be optional
         from include.utils.deprecated_parquet import write_sql_to_parquet_pandas
 
-        return write_sql_to_parquet_pandas(cnx=cnx, sql=sql, filename=filename, chunk_size=100000)
+        return write_sql_to_parquet_pandas(
+            cnx=cnx, sql=sql, filename=filename, chunk_size=100000
+        )
 
     def copy_to_s3(self, filename, key, bucket, replace):
         s3_hook = S3Hook(self.s3_conn_id)
         if Path(filename).exists():
             self.log.info(f"uploading to {self.key}")
-            s3_hook.load_file(filename=filename, key=key, bucket_name=bucket, replace=replace)
+            s3_hook.load_file(
+                filename=filename, key=key, bucket_name=bucket, replace=replace
+            )
         else:
             self.log.info(f"filename {filename} does not exist; nothing to do.")
 
@@ -93,7 +99,10 @@ class MsSqlCDCToS3Operator(BaseTaskWatermarkOperator):
             filename = Path(td, "tempfile").as_posix()
             self.get_sql_to_local_file(cnx=cnx, sql=cmd, filename=filename)
             self.copy_to_s3(
-                filename=filename, key=self.key, bucket=self.bucket, replace=self.s3_replace
+                filename=filename,
+                key=self.key,
+                bucket=self.bucket,
+                replace=self.s3_replace,
             )
 
     def get_high_watermark(self) -> str:

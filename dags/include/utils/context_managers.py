@@ -47,7 +47,7 @@ class ConnClosing(AbstractContextManager):
         return self.thing
 
     def __exit__(self, *exc_info):
-        if hasattr(self.thing, 'autocommit') and not self.thing.autocommit:
+        if hasattr(self.thing, "autocommit") and not self.thing.autocommit:
             self.thing.commit()
         self.thing.close()
 
@@ -60,7 +60,7 @@ class LateWriter(AbstractContextManager):
         return self
 
     def __exit__(self, *args):
-        if hasattr(self.writer, 'close'):
+        if hasattr(self.writer, "close"):
             self.writer.close()
 
 

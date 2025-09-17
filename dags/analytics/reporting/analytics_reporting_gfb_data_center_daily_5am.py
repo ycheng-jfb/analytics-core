@@ -7,11 +7,11 @@ from include.airflow.operators.snowflake import SnowflakeProcedureOperator
 from include.airflow.operators.tableau import TableauRefreshOperator
 
 default_args = {
-    'depends_on_past': False,
-    'start_date': pendulum.datetime(2019, 1, 1, 7, tz='America/Los_Angeles'),
-    'retries': 1,
-    'owner': owners.jfb_analytics,
-    'email': analytics_support,
+    "depends_on_past": False,
+    "start_date": pendulum.datetime(2019, 1, 1, 7, tz="America/Los_Angeles"),
+    "retries": 1,
+    "owner": owners.jfb_analytics,
+    "email": analytics_support,
 }
 
 dag = DAG(
@@ -24,63 +24,63 @@ dag = DAG(
 
 with dag:
     gfb_order_line_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_order_line_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_order_line_data_set.sql",
+        database="reporting_prod",
         # warehouse='DA_WH_ETL_HEAVY',
         autocommit=False,
     )
 
     gfb_inventory_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_inventory_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_inventory_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb_po_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_po_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_po_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     merch_dim_product = SnowflakeProcedureOperator(
-        procedure='gfb.merch_dim_product.sql',
-        database='reporting_prod',
+        procedure="gfb.merch_dim_product.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     dim_promo = SnowflakeProcedureOperator(
-        procedure='gfb.dim_promo.sql',
-        database='reporting_prod',
+        procedure="gfb.dim_promo.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb_crossover_customers_behaviour = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_crossover_customers_behaviour.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_crossover_customers_behaviour.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     sd_merge_acquisition_reporting = SnowflakeProcedureOperator(
-        procedure='gfb.sd_merge_acquisition_reporting.sql',
-        database='reporting_prod',
+        procedure="gfb.sd_merge_acquisition_reporting.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb_segment_pageviews = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_segment_pageviews.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_segment_pageviews.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb_product_review_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_product_review_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_product_review_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     dos_107_merch_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.dos_107_merch_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.dos_107_merch_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -107,14 +107,14 @@ with dag:
     # )
 
     gfb011_promo_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb011_promo_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb011_promo_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb011_promo_data_set_exchanges_reships = SnowflakeProcedureOperator(
-        procedure='gfb.gfb011_promo_data_set_exchanges_reships.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb011_promo_data_set_exchanges_reships.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -129,32 +129,32 @@ with dag:
     # )
 
     dos_104_merch_basket_analysis = SnowflakeProcedureOperator(
-        procedure='gfb.dos_104_merch_basket_analysis.sql',
-        database='reporting_prod',
+        procedure="gfb.dos_104_merch_basket_analysis.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb006_vips_to_watch = SnowflakeProcedureOperator(
-        procedure='gfb.gfb006_vips_to_watch.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb006_vips_to_watch.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb014_01_bop_vip = SnowflakeProcedureOperator(
-        procedure='gfb.gfb014_01_bop_vip.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb014_01_bop_vip.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb057_passive_cancel_with_future_potential = SnowflakeProcedureOperator(
-        procedure='gfb.gfb057_passive_cancel_with_future_potential.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb057_passive_cancel_with_future_potential.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb014_attrition_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb014_attrition_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb014_attrition_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -174,8 +174,8 @@ with dag:
     # )
 
     dos_083_clearance_reporting = SnowflakeProcedureOperator(
-        procedure='gfb.dos_083_clearance_reporting.sql',
-        database='reporting_prod',
+        procedure="gfb.dos_083_clearance_reporting.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -185,14 +185,14 @@ with dag:
     # )
 
     dos_083_01_clearance_reporting_shipped_date = SnowflakeProcedureOperator(
-        procedure='gfb.dos_083_01_clearance_reporting_shipped_date.sql',
-        database='reporting_prod',
+        procedure="gfb.dos_083_01_clearance_reporting_shipped_date.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     dos_114_ladder_plan = SnowflakeProcedureOperator(
-        procedure='gfb.dos_114_ladder_plan.sql',
-        database='reporting_prod',
+        procedure="gfb.dos_114_ladder_plan.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -202,8 +202,8 @@ with dag:
     # )
 
     gfb009_chargeback_report = SnowflakeProcedureOperator(
-        procedure='gfb.gfb009_chargeback_report.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb009_chargeback_report.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -213,8 +213,8 @@ with dag:
     # )
 
     dos_096_selling_by_size = SnowflakeProcedureOperator(
-        procedure='gfb.dos_096_selling_by_size.sql',
-        database='reporting_prod',
+        procedure="gfb.dos_096_selling_by_size.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -224,8 +224,8 @@ with dag:
     # )
 
     gfb015_out_of_stock_by_size = SnowflakeProcedureOperator(
-        procedure='gfb.gfb015_out_of_stock_by_size.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb015_out_of_stock_by_size.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -235,14 +235,14 @@ with dag:
     # )
 
     gfb016_vip_universe = SnowflakeProcedureOperator(
-        procedure='gfb.gfb016_vip_universe.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb016_vip_universe.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb017_lead_universe = SnowflakeProcedureOperator(
-        procedure='gfb.gfb017_lead_universe.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb017_lead_universe.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -257,8 +257,8 @@ with dag:
     # )
 
     gfb018_waitlist_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb018_waitlist_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb018_waitlist_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -268,14 +268,14 @@ with dag:
     # )
 
     dos_080_open_to_buy = SnowflakeProcedureOperator(
-        procedure='gfb.dos_080_open_to_buy.sql',
-        database='reporting_prod',
+        procedure="gfb.dos_080_open_to_buy.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     dos_080_01_open_to_buy_pending_inventory = SnowflakeProcedureOperator(
-        procedure='gfb.dos_080_01_open_to_buy_pending_inventory.sql',
-        database='reporting_prod',
+        procedure="gfb.dos_080_01_open_to_buy_pending_inventory.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -285,22 +285,22 @@ with dag:
     # )
 
     gfb001_customer_seg = SnowflakeProcedureOperator(
-        procedure='gfb.gfb001_customer_seg.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb001_customer_seg.sql",
+        database="reporting_prod",
         # warehouse='DA_WH_ETL_HEAVY',
         autocommit=False,
     )
 
     gfb001_customer_lifetime_value = SnowflakeProcedureOperator(
-        procedure='gfb.gfb001_customer_lifetime_value.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb001_customer_lifetime_value.sql",
+        database="reporting_prod",
         # warehouse='DA_WH_ETL_HEAVY',
         autocommit=False,
     )
 
     gfb001_01_basket_analysis_with_customer_seg = SnowflakeProcedureOperator(
-        procedure='gfb.gfb001_01_basket_analysis_with_customer_seg.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb001_01_basket_analysis_with_customer_seg.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -315,8 +315,8 @@ with dag:
     # )
 
     gfb019_product_review = SnowflakeProcedureOperator(
-        procedure='gfb.gfb019_product_review.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb019_product_review.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -336,8 +336,8 @@ with dag:
     # )
 
     gfb074_token_breakdown = SnowflakeProcedureOperator(
-        procedure='gfb.gfb074_token_breakdown.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb074_token_breakdown.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -347,14 +347,14 @@ with dag:
     # )
 
     gfb012_payment_method = SnowflakeProcedureOperator(
-        procedure='gfb.gfb012_payment_method.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb012_payment_method.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb012_01_failed_payment_method = SnowflakeProcedureOperator(
-        procedure='gfb.gfb012_01_failed_payment_method.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb012_01_failed_payment_method.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -369,8 +369,8 @@ with dag:
     # )
 
     gfb021_po_status_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb021_po_status_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb021_po_status_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -380,14 +380,14 @@ with dag:
     # )
 
     gfb_asknicely_response_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_asknicely_response_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_asknicely_response_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb024_activating_promo_ltv = SnowflakeProcedureOperator(
-        procedure='gfb.gfb024_activating_promo_ltv.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb024_activating_promo_ltv.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -397,8 +397,8 @@ with dag:
     # )
 
     dos_090_credit_billing_retries = SnowflakeProcedureOperator(
-        procedure='gfb.dos_090_credit_billing_retries.sql',
-        database='reporting_prod',
+        procedure="gfb.dos_090_credit_billing_retries.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -408,8 +408,8 @@ with dag:
     # )
 
     dos_097_unredeemed_credits = SnowflakeProcedureOperator(
-        procedure='gfb.dos_097_unredeemed_credits.sql',
-        database='reporting_prod',
+        procedure="gfb.dos_097_unredeemed_credits.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -419,27 +419,27 @@ with dag:
     # )
 
     gfb007_billing_circle_outcome = SnowflakeProcedureOperator(
-        procedure='gfb.gfb007_billing_circle_outcome.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb007_billing_circle_outcome.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb_dim_vip = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_dim_vip.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_dim_vip.sql",
+        database="reporting_prod",
         # warehouse='DA_WH_ETL_HEAVY',
         autocommit=False,
     )
 
     gfb011_01_promo_code_order_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb011_01_promo_code_order_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb011_01_promo_code_order_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb026_product_bundle_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb026_product_bundle_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb026_product_bundle_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -459,8 +459,8 @@ with dag:
     # )
 
     gfb025_merch_master_style_log_alert = SnowflakeProcedureOperator(
-        procedure='gfb.gfb025_merch_master_style_log_alert.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb025_merch_master_style_log_alert.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -470,8 +470,8 @@ with dag:
     # )
 
     gfb028_merch_basket_analysis = SnowflakeProcedureOperator(
-        procedure='gfb.gfb028_merch_basket_analysis.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb028_merch_basket_analysis.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -481,8 +481,8 @@ with dag:
     # )
 
     gfb029_customer_skip_analysis = SnowflakeProcedureOperator(
-        procedure='gfb.gfb029_customer_skip_analysis.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb029_customer_skip_analysis.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -492,8 +492,8 @@ with dag:
     # )
 
     gfb030_orders_in_bucket_analysis = SnowflakeProcedureOperator(
-        procedure='gfb.gfb030_orders_in_bucket_analysis.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb030_orders_in_bucket_analysis.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -503,26 +503,26 @@ with dag:
     # )
 
     dim_web_merch_product = SnowflakeProcedureOperator(
-        procedure='gfb.dim_web_merch_product.sql',
-        database='reporting_prod',
+        procedure="gfb.dim_web_merch_product.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb031_product_promo_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb031_product_promo_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb031_product_promo_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb031_02_bundle_promo_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb031_02_bundle_promo_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb031_02_bundle_promo_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb031_01_product_promo_summary = SnowflakeProcedureOperator(
-        procedure='gfb.gfb031_01_product_promo_summary.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb031_01_product_promo_summary.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -547,14 +547,14 @@ with dag:
     # )
 
     gfb_promo_campaign_product_meta = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_promo_campaign_product_meta.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_promo_campaign_product_meta.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb_loyalty_points_activity = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_loyalty_points_activity.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_loyalty_points_activity.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -564,8 +564,8 @@ with dag:
     # )
 
     gfb034_jf_sd_bundle_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb034_jf_sd_bundle_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb034_jf_sd_bundle_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -580,8 +580,8 @@ with dag:
     # )
 
     gfb038_vip_reactivation = SnowflakeProcedureOperator(
-        procedure='gfb.gfb038_vip_reactivation.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb038_vip_reactivation.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -591,14 +591,14 @@ with dag:
     # )
 
     gfb_dim_bundle = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_dim_bundle.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_dim_bundle.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb023_active_vip_credit_data = SnowflakeProcedureOperator(
-        procedure='gfb.gfb023_active_vip_credit_data.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb023_active_vip_credit_data.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -608,14 +608,14 @@ with dag:
     # )
 
     gfb044_holiday_data_set_hist_snow = SnowflakeProcedureOperator(
-        procedure='gfb.gfb044_holiday_data_set_hist_snow.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb044_holiday_data_set_hist_snow.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb015_01_out_of_stock_by_size_hist = SnowflakeProcedureOperator(
-        procedure='gfb.gfb015_01_out_of_stock_by_size_hist.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb015_01_out_of_stock_by_size_hist.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -625,8 +625,8 @@ with dag:
     # )
 
     gfb047_product_return_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb047_product_return_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb047_product_return_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -636,8 +636,8 @@ with dag:
     # )
 
     gfb042_product_attribute_analysis = SnowflakeProcedureOperator(
-        procedure='gfb.gfb042_product_attribute_analysis.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb042_product_attribute_analysis.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -647,44 +647,44 @@ with dag:
     # )
 
     gfb049_fk_site_jabber = SnowflakeProcedureOperator(
-        procedure='gfb.gfb049_fk_site_jabber.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb049_fk_site_jabber.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb_membership_credit_activity = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_membership_credit_activity.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_membership_credit_activity.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb_sku_product_status = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_sku_product_status.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_sku_product_status.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb051_02_finance_forecast_credit_redemption = SnowflakeProcedureOperator(
-        procedure='gfb.gfb051_02_finance_forecast_credit_redemption.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb051_02_finance_forecast_credit_redemption.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb051_03_finance_forecast_credit_cancellation = SnowflakeProcedureOperator(
-        procedure='gfb.gfb051_03_finance_forecast_credit_cancellation.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb051_03_finance_forecast_credit_cancellation.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb051_04_finance_forecast_daily_rate = SnowflakeProcedureOperator(
-        procedure='gfb.gfb051_04_finance_forecast_daily_rate.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb051_04_finance_forecast_daily_rate.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb053_merch_purchase_by_tenure = SnowflakeProcedureOperator(
-        procedure='gfb.gfb053_merch_purchase_by_tenure.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb053_merch_purchase_by_tenure.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -694,8 +694,8 @@ with dag:
     # )
 
     gfb056_showroom_scorecard = SnowflakeProcedureOperator(
-        procedure='gfb.gfb056_showroom_scorecard.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb056_showroom_scorecard.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -705,20 +705,20 @@ with dag:
     # )
 
     gfb001_03_tenure_block_lifetime_value = SnowflakeProcedureOperator(
-        procedure='gfb.gfb001_03_tenure_block_lifetime_value.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb001_03_tenure_block_lifetime_value.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb001_03_tenure_block_lifetime_value_qa = SnowflakeProcedureOperator(
-        procedure='gfb.gfb001_03_tenure_block_lifetime_value_qa.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb001_03_tenure_block_lifetime_value_qa.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb048_ghosting_proposal_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gfb048_ghosting_proposal_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb048_ghosting_proposal_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -733,8 +733,8 @@ with dag:
     # )
 
     gfb060_jfb_quarterly_tracker = SnowflakeProcedureOperator(
-        procedure='gfb.gfb060_jfb_quarterly_tracker.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb060_jfb_quarterly_tracker.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -744,14 +744,14 @@ with dag:
     # )
 
     gfb001_customer_seg_all_time = SnowflakeProcedureOperator(
-        procedure='gfb.gfb001_customer_seg_all_time.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb001_customer_seg_all_time.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb062_fk_showroom_recap = SnowflakeProcedureOperator(
-        procedure='gfb.gfb062_fk_showroom_recap.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb062_fk_showroom_recap.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -761,8 +761,8 @@ with dag:
     # )
 
     gfb070_daily_cash = SnowflakeProcedureOperator(
-        procedure='gfb.gfb070_daily_cash.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb070_daily_cash.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -772,8 +772,8 @@ with dag:
     # )
 
     gfb069_fk_social_report = SnowflakeProcedureOperator(
-        procedure='gfb.gfb069_fk_social_report.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb069_fk_social_report.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -783,20 +783,20 @@ with dag:
     # )
 
     gift_with_purchase_data_set = SnowflakeProcedureOperator(
-        procedure='gfb.gift_with_purchase_data_set.sql',
-        database='reporting_prod',
+        procedure="gfb.gift_with_purchase_data_set.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gwp_sub_brand_detail = SnowflakeProcedureOperator(
-        procedure='gfb.gwp_sub_brand_detail.sql',
-        database='reporting_prod',
+        procedure="gfb.gwp_sub_brand_detail.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb_quiz_activity = SnowflakeProcedureOperator(
-        procedure='gfb.gfb_quiz_activity.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb_quiz_activity.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -811,20 +811,20 @@ with dag:
     # )
 
     pcvr_session_historical = SnowflakeProcedureOperator(
-        procedure='gfb.pcvr_session_historical.sql',
-        database='reporting_prod',
+        procedure="gfb.pcvr_session_historical.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     pcvr_product_psource = SnowflakeProcedureOperator(
-        procedure='gfb.pcvr_product_psource.sql',
-        database='reporting_prod',
+        procedure="gfb.pcvr_product_psource.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb072_sales_by_credit = SnowflakeProcedureOperator(
-        procedure='gfb.gfb072_sales_by_credit.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb072_sales_by_credit.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -834,14 +834,14 @@ with dag:
     # )
 
     gfb077_bundle_sales = SnowflakeProcedureOperator(
-        procedure='gfb.gfb077_bundle_sales.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb077_bundle_sales.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb075_jfb_online_cancellations = SnowflakeProcedureOperator(
-        procedure='gfb.gfb075_jfb_online_cancellations.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb075_jfb_online_cancellations.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -851,8 +851,8 @@ with dag:
     # )
 
     gfb078_shipping_return_cost_details = SnowflakeProcedureOperator(
-        procedure='gfb.gfb078_shipping_return_cost_details.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb078_shipping_return_cost_details.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -862,8 +862,8 @@ with dag:
     # )
 
     gfb081_active_skus = SnowflakeProcedureOperator(
-        procedure='gfb.gfb081_active_skus.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb081_active_skus.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -873,8 +873,8 @@ with dag:
     # )
 
     gfb079_dp_order_combinations = SnowflakeProcedureOperator(
-        procedure='gfb.gfb079_dp_order_combinations.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb079_dp_order_combinations.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -884,14 +884,14 @@ with dag:
     # )
 
     gfb082_mm_returns_data = SnowflakeProcedureOperator(
-        procedure='gfb.gfb082_mm_returns_data.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb082_mm_returns_data.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     gfb082_01_mm_return_rate = SnowflakeProcedureOperator(
-        procedure='gfb.gfb082_01_mm_return_rate.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb082_01_mm_return_rate.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -906,8 +906,8 @@ with dag:
     # )
 
     gfb083_mm_invoice_reconciliation_dataset = SnowflakeProcedureOperator(
-        procedure='gfb.gfb083_mm_invoice_reconciliation_dataset.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb083_mm_invoice_reconciliation_dataset.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
@@ -917,19 +917,19 @@ with dag:
     # )
 
     gfb084_sales_by_credit_type_dataset = SnowflakeProcedureOperator(
-        procedure='gfb.gfb084_sales_by_credit_type_dataset.sql',
-        database='reporting_prod',
+        procedure="gfb.gfb084_sales_by_credit_type_dataset.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 
     tableau_refresh_gfb084_sales_by_credit_type_dataset = TableauRefreshOperator(
-        task_id='tableau_refresh_gfb084_sales_by_credit_type_dataset',
-        data_source_name='GFB084_SALES_BY_CREDIT_TYPE_DATASET',
+        task_id="tableau_refresh_gfb084_sales_by_credit_type_dataset",
+        data_source_name="GFB084_SALES_BY_CREDIT_TYPE_DATASET",
     )
 
     third_party_brands_sales = SnowflakeProcedureOperator(
-        procedure='gfb.third_party_brands_sales.sql',
-        database='reporting_prod',
+        procedure="gfb.third_party_brands_sales.sql",
+        database="reporting_prod",
         autocommit=False,
     )
 

@@ -27,7 +27,7 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id='edm_lake_hvr_migrated_objects',
+    dag_id="edm_lake_hvr_migrated_objects",
     default_args=default_args,
     schedule="0 8 * * *",
     catchup=False,
@@ -37,44 +37,47 @@ dag = DAG(
 )
 
 lake_history_list = {
-    'lake.ultra_merchant.product_category',
-    'lake.ultra_merchant.promo',
-    'lake.ultra_merchant.pricing_option',
-    'lake.ultra_merchant.discount',
-    'lake.ultra_merchant.product_bundle_component',
-    'lake.ultra_merchant.customer',
-    'lake.ultra_merchant.product',
-    'lake.ultra_merchant.payment_transaction_creditcard',
-    'lake.ultra_merchant.refund',
-    'lake.ultra_merchant.membership_token_transaction',
-    'lake.ultra_merchant.membership',
-    'lake.ultra_merchant.order',
-    'lake.ultra_merchant.payment_transaction_psp',
-    'lake.ultra_merchant.payment_transaction_cash',
+    "lake.ultra_merchant.product_category",
+    "lake.ultra_merchant.promo",
+    "lake.ultra_merchant.pricing_option",
+    "lake.ultra_merchant.discount",
+    "lake.ultra_merchant.product_bundle_component",
+    "lake.ultra_merchant.customer",
+    "lake.ultra_merchant.product",
+    "lake.ultra_merchant.payment_transaction_creditcard",
+    "lake.ultra_merchant.refund",
+    "lake.ultra_merchant.membership_token_transaction",
+    "lake.ultra_merchant.membership",
+    "lake.ultra_merchant.order",
+    "lake.ultra_merchant.payment_transaction_psp",
+    "lake.ultra_merchant.payment_transaction_cash",
 }
 
 with dag:
     database_list = ["ultramerchant", "ultracms", "ultrarollup", "ultracart", "gdpr"]
-    db_task_groups = {database: TaskGroup(group_id=database) for database in database_list}
-    acquisition_complete = EmptyOperator(task_id='lake_completion')
+    db_task_groups = {
+        database: TaskGroup(group_id=database) for database in database_list
+    }
+    acquisition_complete = EmptyOperator(task_id="lake_completion")
 
     for cfg in get_all_configs():
         if (
             cfg.database.lower() in database_list
-            and cfg.full_target_table_name not in exclusion_list.lake_exclusion_table_list
+            and cfg.full_target_table_name
+            not in exclusion_list.lake_exclusion_table_list
         ):
             with db_task_groups[cfg.database.lower()] as tg:
                 to_s3 = cfg.to_s3_operator
                 to_snowflake = cfg.to_snowflake_operator
                 to_s3 >> to_snowflake >> acquisition_complete
 
-    history_complete = EmptyOperator(task_id='lake_history_completion')
+    history_complete = EmptyOperator(task_id="lake_history_completion")
 
     for table_name in lake_history_list:
         to_lake_history = SnowflakeLakeHistoryOperator(
             snowflake_conn_id=conn_ids.Snowflake.edw,
-            database='lake',
-            table=table_name.replace('"', '').lower(),
+            database="lake",
+            table=table_name.replace('"', "").lower(),
         )
 
         acquisition_complete >> to_lake_history >> history_complete

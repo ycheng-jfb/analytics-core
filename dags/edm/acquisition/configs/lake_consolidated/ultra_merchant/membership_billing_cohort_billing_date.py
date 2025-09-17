@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='membership_billing_cohort_billing_date',
+    table="membership_billing_cohort_billing_date",
     company_join_sql="""
         SELECT DISTINCT
             L.MEMBERSHIP_BILLING_COHORT_BILLING_DATE_ID,
@@ -17,12 +17,17 @@ table_config = TableConfig(
         INNER JOIN {database}.{source_schema}.membership_billing_cohort_billing_date AS L
             ON MBC.MEMBERSHIP_BILLING_COHORT_ID = L.MEMBERSHIP_BILLING_COHORT_ID """,
     column_list=[
-        Column('membership_billing_cohort_billing_date_id', 'INT', uniqueness=True, key=True),
-        Column('membership_billing_cohort_id', 'INT', key=True),
-        Column('percentage', 'DOUBLE'),
-        Column('date_due', 'TIMESTAMP_NTZ(0)'),
-        Column('datetime_added', 'TIMESTAMP_NTZ(3)'),
-        Column('administrator_id', 'INT'),
+        Column(
+            "membership_billing_cohort_billing_date_id",
+            "INT",
+            uniqueness=True,
+            key=True,
+        ),
+        Column("membership_billing_cohort_id", "INT", key=True),
+        Column("percentage", "DOUBLE"),
+        Column("date_due", "TIMESTAMP_NTZ(0)"),
+        Column("datetime_added", "TIMESTAMP_NTZ(3)"),
+        Column("administrator_id", "INT"),
     ],
-    watermark_column='datetime_added',
+    watermark_column="datetime_added",
 )

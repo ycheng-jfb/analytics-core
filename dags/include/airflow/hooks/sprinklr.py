@@ -27,7 +27,7 @@ def get_password_state_backend(list_name):
     for psb in cpssb.password_state_backend_list:
         if psb.list_name == list_name:
             return psb
-    raise Exception('list not found')
+    raise Exception("list not found")
 
 
 class SprinklrHook(BaseHook):
@@ -40,29 +40,29 @@ class SprinklrHook(BaseHook):
         return {
             "Authorization": f"Bearer {creds.extra_dejson['access_token']}",
             "key": creds.login,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
+            "Content-Type": "application/json",
+            "Accept": "application/json",
         }
 
     def refresh_token(self):
         """Refreshes token and updates the tokens in PasswordState"""
         creds = BaseHook.get_connection(self.sprinklr_conn_id)
-        refresh_url = 'https://api2.sprinklr.com/oauth/token'
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        refresh_url = "https://api2.sprinklr.com/oauth/token"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
         params = {
             "client_id": creds.login,
             "client_secret": creds.password,
-            "redirect_uri": creds.extra_dejson['redirect_uri'],
+            "redirect_uri": creds.extra_dejson["redirect_uri"],
             "grant_type": "refresh_token",
-            "refresh_token": creds.extra_dejson['refresh_token'],
+            "refresh_token": creds.extra_dejson["refresh_token"],
         }
         response = requests.post(refresh_url, params=params, headers=headers)
         rj = response.json()
-        self.headers['Authorization'] = f"Bearer {rj['access_token']}"
+        self.headers["Authorization"] = f"Bearer {rj['access_token']}"
 
         # Update password state
-        sb = get_password_state_backend('developer')
-        new_uri = creds.get_uri().split('?')[0] + (
+        sb = get_password_state_backend("developer")
+        new_uri = creds.get_uri().split("?")[0] + (
             f'?redirect_uri={creds.extra_dejson["redirect_uri"]}'
             f'&access_token={urllib.parse.quote(rj["access_token"])}'
             f'&refresh_token={urllib.parse.quote(rj["refresh_token"])}'
@@ -72,7 +72,9 @@ class SprinklrHook(BaseHook):
     @retry_wrapper(3, RetryException, sleep_time=10)
     def make_request(self, method, url, params=None, payload=None):
         try:
-            r = requests.request(method, url, headers=self.headers, params=params, json=payload)
+            r = requests.request(
+                method, url, headers=self.headers, params=params, json=payload
+            )
             r.raise_for_status()
         except requests.exceptions.HTTPError as e:
             print(r.status_code, r.reason, r.text)
@@ -81,21 +83,23 @@ class SprinklrHook(BaseHook):
                 raise RetryException
             elif r.status_code == 504:  # Gateway time out
                 raise RetryException
-            elif 'Developer Over Rate' in r.text:
+            elif "Developer Over Rate" in r.text:
                 print("Hit API rate limit.")
                 raise RateLimitException
-            elif 'Developer Over Qps' in r.text:
+            elif "Developer Over Qps" in r.text:
                 print("Hit throttling limit. Waiting 1 minute.")
                 sleep(60)
                 raise RetryException
             elif r.status_code == 400:
                 rj = r.json()
-                error_message = rj.get('errors', [{}])[0].get('message') or rj.get('message')
+                error_message = rj.get("errors", [{}])[0].get("message") or rj.get(
+                    "message"
+                )
                 if error_message == "Please try again":
                     raise RetryException
                 elif error_message == "Cannot fetch more than 10000 messages overall":
                     raise TooMuchDataException
-                elif 'Invalid request/response' in error_message:
+                elif "Invalid request/response" in error_message:
                     print(payload)
                 raise e
             else:

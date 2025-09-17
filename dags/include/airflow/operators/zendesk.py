@@ -33,8 +33,8 @@ class ZendeskToS3Operator(BaseRowsToS3JsonWatermarkOperator):
         self.column_list = column_list
         self.zendesk_conn_id = zendesk_conn_id
         self.use_cursor = use_cursor
-        self.endpoint_prefix = 'incremental/' if self.is_incremental else ''
-        self.endpoint_suffix = '/cursor.json' if self.use_cursor else '.json'
+        self.endpoint_prefix = "incremental/" if self.is_incremental else ""
+        self.endpoint_suffix = "/cursor.json" if self.use_cursor else ".json"
         api_url = "https://techstyletap.zendesk.com"
         self.base_url = (
             f"{api_url}/api/{self.api_version}/"
@@ -57,7 +57,7 @@ class ZendeskToS3Operator(BaseRowsToS3JsonWatermarkOperator):
     def request_params(self):
         if self.is_incremental:
             low_watermark = pendulum.parse(self.low_watermark).int_timestamp
-            self._request_params['start_time'] = low_watermark
+            self._request_params["start_time"] = low_watermark
         return self._request_params
 
     @cached_property
@@ -72,7 +72,7 @@ class ZendeskToS3Operator(BaseRowsToS3JsonWatermarkOperator):
         response = self.session.get(url, params=params)
         self.raise_for_status(response)
         if response.status_code == 429:
-            retry_after = response.headers['Retry-After']
+            retry_after = response.headers["Retry-After"]
             print(
                 f"No. of hits exceeded for the endpoint: {self.endpoint}. "
                 f"Wait for {retry_after} seconds..."
@@ -95,7 +95,8 @@ class ZendeskToS3Operator(BaseRowsToS3JsonWatermarkOperator):
         return (
             self.is_incremental
             and not self.use_cursor
-            and int(data['end_time']) > pendulum.parse(self.new_high_watermark).int_timestamp
+            and int(data["end_time"])
+            > pendulum.parse(self.new_high_watermark).int_timestamp
         )
 
     def get_rows(self) -> Iterator[dict]:

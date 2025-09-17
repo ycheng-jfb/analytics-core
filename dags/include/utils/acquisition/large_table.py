@@ -56,12 +56,14 @@ class LargeTableInitialLoad:
         self.database, self.schema, self.table = database, schema, table
         self.friendly_server_name = friendly_server_name or server_name
         self.prefix = f"archive/{self.friendly_server_name}_bcp_tsv/{self.database}/{self.schema}.{self.table}"
-        self.bucket = 'tsos-da-int-backup-archive'
+        self.bucket = "tsos-da-int-backup-archive"
         self.stage = stages.tsos_da_int_backup_archive
         self.tmp_table = f"lake_stg.tmp.{self.schema}_{self.table}"
-        self.target_database = 'lake'
+        self.target_database = "lake"
         self.target_schema = database_schema_mapping.get(self.database, self.database)
-        self.full_target_table_name = f"{self.target_database}.{self.target_schema}.{self.table}"
+        self.full_target_table_name = (
+            f"{self.target_database}.{self.target_schema}.{self.table}"
+        )
 
     @property
     def bash_cmd(self):
@@ -156,7 +158,10 @@ class LargeTableInitialLoad:
             cur = cnx.cursor()
             column_list = list(
                 get_column_list_definition(
-                    cur=cur, database=self.database, schema=self.schema, table=self.table
+                    cur=cur,
+                    database=self.database,
+                    schema=self.schema,
+                    table=self.table,
                 )
             )
         return column_list
@@ -167,7 +172,9 @@ class LargeTableInitialLoad:
 
     @property
     def ddl_create_tmp_table(self):
-        col_ddl = ',\n    '.join([f"{x.name} {x.type}" for x in self.source_column_list])
+        col_ddl = ",\n    ".join(
+            [f"{x.name} {x.type}" for x in self.source_column_list]
+        )
         cmd = f"""
         CREATE TEMP TABLE {self.tmp_table} (
             {col_ddl}
@@ -178,12 +185,14 @@ class LargeTableInitialLoad:
     @property
     def dml_copy_into_tmp_table(self):
         params = {
-            'TYPE': 'CSV',
-            'FIELD_DELIMITER': r"'\t'",
-            'ESCAPE': r"'\\'",
-            'NULL_IF': "('')",
+            "TYPE": "CSV",
+            "FIELD_DELIMITER": r"'\t'",
+            "ESCAPE": r"'\\'",
+            "NULL_IF": "('')",
         }
-        params_str = ',\n                '.join([f"{k} = {v}" for k, v in params.items()])
+        params_str = ",\n                ".join(
+            [f"{k} = {v}" for k, v in params.items()]
+        )
         cmd = f"""
         COPY INTO {self.tmp_table}
             FROM '{self.stage}/{self.prefix}/'
@@ -196,16 +205,18 @@ class LargeTableInitialLoad:
     @property
     def dml_copy_into_s3_inbound_path(self):
         params = {
-            'TYPE': 'CSV',
-            'FIELD_DELIMITER': r"'\t'",
-            'RECORD_DELIMITER': r"'\n'",
-            'FIELD_OPTIONALLY_ENCLOSED_BY': "'\"'",
-            'ESCAPE_UNENCLOSED_FIELD': "NONE",
-            'NULL_IF': "('')",
+            "TYPE": "CSV",
+            "FIELD_DELIMITER": r"'\t'",
+            "RECORD_DELIMITER": r"'\n'",
+            "FIELD_OPTIONALLY_ENCLOSED_BY": "'\"'",
+            "ESCAPE_UNENCLOSED_FIELD": "NONE",
+            "NULL_IF": "('')",
             "COMPRESSION": "gzip",
         }
-        params_str = ',\n                '.join([f"{k} = {v}" for k, v in params.items()])
-        today = pendulum.today().to_date_string().replace('-', '')
+        params_str = ",\n                ".join(
+            [f"{k} = {v}" for k, v in params.items()]
+        )
+        today = pendulum.today().to_date_string().replace("-", "")
         s3_prefix = self.table_config.s3_prefix
         max_size = int(500e6)
         cmd = f"""
@@ -229,7 +240,7 @@ class LargeTableInitialLoad:
         3. export to the production s3 inbound path for ecom acquisition in the right file format
 
         """
-        cmd = ''.join(
+        cmd = "".join(
             (
                 self.ddl_create_tmp_table,
                 self.dml_copy_into_tmp_table,

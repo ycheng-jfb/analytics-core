@@ -16,4 +16,4 @@ class MySqlHook(BaseMySqlHook, BaseDbHook):
         )
 
     def hook_copy_to_file(self, sql, conn, file_obj):
-        self.pandas_copy_to_file(sql.replace('\n', ''), conn, file_obj)
+        self.pandas_copy_to_file(sql.replace("\n", ""), conn, file_obj)

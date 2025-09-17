@@ -5,7 +5,9 @@ from airflow.utils.module_loading import import_string
 from include import DAGS_DIR
 from include.airflow.hooks.snowflake import SnowflakeHook
 from include.config import snowflake_roles
-from include.utils.acquisition.lake_consolidated_table_config import LakeConsolidatedTableConfig
+from include.utils.acquisition.lake_consolidated_table_config import (
+    LakeConsolidatedTableConfig,
+)
 from include.utils.acquisition.table_config import TableConfig
 from include.utils.context_managers import ConnClosing
 from include.utils.string import camel_to_snake
@@ -24,7 +26,7 @@ def get_table_config(table_name) -> TableConfig:
 
 def get_lake_consolidated_table_config(table_name) -> LakeConsolidatedTableConfig:
     try:
-        lake_consolidated_table_name = table_name[table_name.find('.') :]
+        lake_consolidated_table_name = table_name[table_name.find(".") :]
         return import_string(  # type: ignore
             f"edm.acquisition.configs.lake_consolidated{lake_consolidated_table_name}.table_config"
         )
@@ -33,8 +35,8 @@ def get_lake_consolidated_table_config(table_name) -> LakeConsolidatedTableConfi
 
 
 def get_all_configs(schema=None, table=None):
-    for elem in Path(f'{DAGS_DIR}/edm/acquisition/configs/lake').rglob('*.py'):
-        if elem.name == '__init__.py':
+    for elem in Path(f"{DAGS_DIR}/edm/acquisition/configs/lake").rglob("*.py"):
+        if elem.name == "__init__.py":
             continue
 
         table_name = path_to_table_name(elem)
@@ -50,8 +52,10 @@ def get_all_configs(schema=None, table=None):
 
 
 def get_all_lake_consolidated_configs(schema=None, table=None):
-    for elem in Path(f'{DAGS_DIR}/edm/acquisition/configs/lake_consolidated').rglob('*.py'):
-        if elem.name == '__init__.py':
+    for elem in Path(f"{DAGS_DIR}/edm/acquisition/configs/lake_consolidated").rglob(
+        "*.py"
+    ):
+        if elem.name == "__init__.py":
             continue
 
         table_name = path_to_table_name(elem)
@@ -67,15 +71,15 @@ def get_all_lake_consolidated_configs(schema=None, table=None):
 
 
 def to_import_path(file_path):
-    return file_path.as_posix().replace('/', '.').replace('.py', '')
+    return file_path.as_posix().replace("/", ".").replace(".py", "")
 
 
 def path_to_table_name(file_path):
     table_name = (
         file_path.as_posix()
-        .replace(f'{DAGS_DIR}/edm/acquisition/configs/', '')
-        .replace('/', '.')
-        .replace('.py', '')
+        .replace(f"{DAGS_DIR}/edm/acquisition/configs/", "")
+        .replace("/", ".")
+        .replace(".py", "")
     )
     return table_name
 
@@ -93,18 +97,17 @@ def create_all_views(schema=None, table=None):
 
 
 def get_lake_history_tables(schema=None, table=None):
-
     table_list = []
     for x in get_all_configs(schema, table):
         if (
             x.append_to_archive_table
-            and x.cdc_type not in ('all', 'del')
-            and x.target_table[-11:].lower() != '_delete_log'
+            and x.cdc_type not in ("all", "del")
+            and x.target_table[-11:].lower() != "_delete_log"
         ):
-            if x.cdc_type == 'last':
+            if x.cdc_type == "last":
                 table = x.target_table.strip('"').lower()
             else:
-                table = camel_to_snake(x.table.strip('[').strip(']'))
+                table = camel_to_snake(x.table.strip("[").strip("]"))
 
             table_list.append(f"lake.{x.target_schema}.{table}")
 
@@ -112,18 +115,17 @@ def get_lake_history_tables(schema=None, table=None):
 
 
 def get_lake_history_tables_with_one_delta_column(schema=None, table=None):
-
     table_list = []
     for x in get_all_configs(schema, table):
         if (
             x.append_to_archive_table
-            and x.cdc_type not in ('all', 'del')
-            and x.target_table[-11:].lower() != '_delete_log'
+            and x.cdc_type not in ("all", "del")
+            and x.target_table[-11:].lower() != "_delete_log"
         ):
-            if x.cdc_type == 'last':
+            if x.cdc_type == "last":
                 table = x.target_table.strip('"').lower()
             else:
-                table = camel_to_snake(x.table.strip('[').strip(']'))
+                table = camel_to_snake(x.table.strip("[").strip("]"))
 
             if len(x.column_list.delta_column_list) < 2:
                 table_list.append(f"lake.{x.target_schema}.{table}")

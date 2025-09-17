@@ -31,17 +31,19 @@ class HistTable:
         self.database = self.table_config.target_database
         self.schema = self.table_config.target_schema
         self.table = self.table_config.target_table
-        self.table_hist = self.table_config.table.strip('[').strip(']')
+        self.table_hist = self.table_config.table.strip("[").strip("]")
 
         if not self.archive_database:
             raise Exception(f"table name {table_name} not found in archive database")
 
         try:
             delete_log_table_config = get_table_config(
-                table_name=f'{self.database}.{self.schema}.{self.table_hist}_delete_log'
+                table_name=f"{self.database}.{self.schema}.{self.table_hist}_delete_log"
             )
             delete_log_table_name = delete_log_table_config.target_table
-            delete_log_column_name_list = delete_log_table_config.column_list.column_name_list
+            delete_log_column_name_list = (
+                delete_log_table_config.column_list.column_name_list
+            )
         except TableNotFoundError:
             delete_log_table_name = None
             delete_log_column_name_list = []
@@ -51,10 +53,10 @@ class HistTable:
 
     @property
     def datetime_deleted(self):
-        if 'datetime_deleted' in self.delete_log_column_name_list:
-            return 'datetime_deleted'
-        elif 'datetime_added' in self.delete_log_column_name_list:
-            return 'datetime_added'
+        if "datetime_deleted" in self.delete_log_column_name_list:
+            return "datetime_deleted"
+        elif "datetime_added" in self.delete_log_column_name_list:
+            return "datetime_added"
         else:
             return None
 
@@ -64,19 +66,21 @@ class HistTable:
             nullable_delete_log_column_list = []
             for col in self.column_name_list:
                 if col.lower() == self.delta_column.lower():
-                    nullable_delete_log_column_list.append(self.datetime_deleted + ' AS ' + col)
+                    nullable_delete_log_column_list.append(
+                        self.datetime_deleted + " AS " + col
+                    )
                 elif col in self.delete_log_column_name_list:
                     nullable_delete_log_column_list.append(col)
                 else:
-                    nullable_delete_log_column_list.append('NULL AS ' + col)
-            return '        ' + ',\n        '.join(nullable_delete_log_column_list)
+                    nullable_delete_log_column_list.append("NULL AS " + col)
+            return "        " + ",\n        ".join(nullable_delete_log_column_list)
         else:
             return None
 
     @property
     def ddl_hist_table(self):
-        unique_col_list = ', '.join(self.uniqueness_cols_str)
-        archive_select_list = '        ' + ',\n        '.join(self.column_name_list)
+        unique_col_list = ", ".join(self.uniqueness_cols_str)
+        archive_select_list = "        " + ",\n        ".join(self.column_name_list)
 
         create_table = f"""
             CREATE OR REPLACE TRANSIENT TABLE {self.archive_database}.{self.schema}.{self.table_hist}__hist
@@ -104,7 +108,7 @@ class HistTable:
                 FROM {self.database}.{self.schema}.{self.delete_log_table_name}
                 """
         else:
-            delete_select = ''
+            delete_select = ""
         where_clause = """) AS d
             WHERE d.row_dup_num = 1;
             """

@@ -14,10 +14,10 @@ from include.utils.context_managers import ConnClosing
 
 def is_hex(val: str):
     val = val.strip('"')
-    if not val.startswith('0x'):
+    if not val.startswith("0x"):
         return False
     try:
-        bytes.fromhex(val.replace('0x', ''))
+        bytes.fromhex(val.replace("0x", ""))
         return True
     except Exception:
         return False
@@ -32,8 +32,8 @@ class CDCSourceWatermarkUpdateOpertor(BaseOperator):
 
     """
 
-    TEMP_TABLE_NAME = '#temp'
-    TRACKER_GROUP_NAME = 'airflow'
+    TEMP_TABLE_NAME = "#temp"
+    TRACKER_GROUP_NAME = "airflow"
     CDC_CONN_ID = conn_ids.MsSql.dbp61_app_airflow
     TABLE_LIST = [
         "lake.ultra_warehouse_cdc.case_item__del",
@@ -67,8 +67,8 @@ class CDCSourceWatermarkUpdateOpertor(BaseOperator):
 
     def get_watermarks(self):
         df = self.postgres_hook.get_pandas_df(self.source_query)
-        df['table_name'] = df['process_name']
-        df = df[['table_name', 'high_watermark']]
+        df["table_name"] = df["process_name"]
+        df = df[["table_name", "high_watermark"]]
         df.high_watermark = df.high_watermark.apply(lambda x: x.strip('"'))
         df = df[df.high_watermark.apply(is_hex)]
         watermark_dict = dict(list(df.itertuples(index=False)))
@@ -86,7 +86,7 @@ class CDCSourceWatermarkUpdateOpertor(BaseOperator):
             cur = cnx.cursor()
             cur.fast_executemany = True
             for table, val in watermark_list:
-                proc = 'um_replicated.dbo.watermark_tracker_upd'
+                proc = "um_replicated.dbo.watermark_tracker_upd"
                 call = (
                     f"EXEC {proc} "
                     f"@tablename='{table}', "
@@ -106,22 +106,22 @@ class CDCSourceWatermarkUpdateOpertor(BaseOperator):
 
 
 default_args = {
-    'start_date': pendulum.datetime(2019, 11, 19, tz='America/Los_Angeles'),
-    'retries': 0,
-    'owner': owners.data_integrations,
-    'email': data_integration_support,
+    "start_date": pendulum.datetime(2019, 11, 19, tz="America/Los_Angeles"),
+    "retries": 0,
+    "owner": owners.data_integrations,
+    "email": data_integration_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 
 dag = DAG(
-    dag_id='edm_acquisition_cdc_watermark_push_back',
+    dag_id="edm_acquisition_cdc_watermark_push_back",
     default_args=default_args,
-    schedule='@daily',
+    schedule="@daily",
     catchup=False,
     max_active_tasks=1000,
     max_active_runs=1,
 )
 
 with dag:
-    task = CDCSourceWatermarkUpdateOpertor(task_id='watermark_push_back')
+    task = CDCSourceWatermarkUpdateOpertor(task_id="watermark_push_back")

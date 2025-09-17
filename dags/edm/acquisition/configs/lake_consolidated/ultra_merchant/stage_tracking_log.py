@@ -5,7 +5,7 @@ from include.utils.acquisition.lake_consolidated_table_config import TableType
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='stage_tracking_log',
+    table="stage_tracking_log",
     table_type=TableType.OBJECT_COLUMN_NULL,
     company_join_sql="""
         SELECT DISTINCT
@@ -19,21 +19,21 @@ table_config = TableConfig(
         INNER JOIN {database}.{source_schema}.stage_tracking_log AS L
             ON L.STAGE_TRACKING_ID = ST.STAGE_TRACKING_ID """,
     column_list=[
-        Column('stage_tracking_log_id', 'INT', uniqueness=True, key=True),
-        Column('stage_tracking_id', 'INT', key=True),
-        Column('stage_code', 'VARCHAR(25)'),
-        Column('object', 'VARCHAR(50)'),
-        Column('object_id', 'INT'),
-        Column('input_errors', 'INT'),
-        Column('process_errors', 'INT'),
+        Column("stage_tracking_log_id", "INT", uniqueness=True, key=True),
+        Column("stage_tracking_id", "INT", key=True),
+        Column("stage_code", "VARCHAR(25)"),
+        Column("object", "VARCHAR(50)"),
+        Column("object_id", "INT"),
+        Column("input_errors", "INT"),
+        Column("process_errors", "INT"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
         Column(
-            'datetime_modified',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_modified",
+            "TIMESTAMP_NTZ(3)",
         ),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

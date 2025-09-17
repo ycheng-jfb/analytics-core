@@ -14,7 +14,7 @@ class StoreforceToS3Operator(BaseRowsToS3CsvOperator):
     def __init__(
         self,
         endpoint,
-        storeforce_conn_id='storeforce_default',
+        storeforce_conn_id="storeforce_default",
         *args,
         **kwargs,
     ):
@@ -24,7 +24,7 @@ class StoreforceToS3Operator(BaseRowsToS3CsvOperator):
 
     def yield_rows_from_data(self, data) -> Iterator[dict]:
         updated_at = pendulum.DateTime.utcnow().isoformat()
-        for row in data["result"]['storeKPIs']:
+        for row in data["result"]["storeKPIs"]:
             row = {
                 **{key: value for key, value in row.items() if key in self.column_list},
                 "updated_at": updated_at,
@@ -34,9 +34,9 @@ class StoreforceToS3Operator(BaseRowsToS3CsvOperator):
     def get_rows(self) -> Iterator[dict]:
         conn = BaseHook.get_connection(self.store_force_conn_id)
         url = f"https://{conn.host}/exportapi/v1/api/Export/{self.endpoint}/"
-        auth_creds = base64.b64encode(f'{conn.login}:{conn.password}'.encode())
+        auth_creds = base64.b64encode(f"{conn.login}:{conn.password}".encode())
         headers = {
-            "Ocp-Apim-Subscription-Key": conn.extra_dejson.get('subscription_key'),
+            "Ocp-Apim-Subscription-Key": conn.extra_dejson.get("subscription_key"),
             "Authorization": f"Basic {auth_creds.decode()}",
         }
 

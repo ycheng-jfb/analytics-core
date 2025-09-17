@@ -192,7 +192,9 @@ def download_files(service, report_id, report_fragment, out_filename):
     :param report_id: The ID DS has assigned to a report.
     :param report_fragment: The 0-based index of the file fragment from the files array.
     """
-    file_request = service.reports().getFile(reportId=report_id, reportFragment=report_fragment)
+    file_request = service.reports().getFile(
+        reportId=report_id, reportFragment=report_fragment
+    )
     download = file_request.execute()
 
     if not path.exists(out_filename):

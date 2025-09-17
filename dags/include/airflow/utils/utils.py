@@ -29,14 +29,14 @@ def render_template(task, attr_name, data_interval_start=pendulum.today()):
 def flatten_json(y, flatten_list=True):
     out = {}
 
-    def flatten(x, name=''):
+    def flatten(x, name=""):
         if type(x) is dict:
             for a in x:
-                flatten(x[a], name + a + '_')
+                flatten(x[a], name + a + "_")
         elif type(x) is list and flatten_list:
             i = 0
             for a in x:
-                flatten(a, name + str(i) + '_')
+                flatten(a, name + str(i) + "_")
                 i += 1
         else:
             out[name[:-1]] = x
@@ -59,11 +59,11 @@ def remove_listed_columns(data, columns):
                 x.pop(fields[0])
 
     for column in columns:
-        column_fields = column.split('_')
+        column_fields = column.split("_")
         remove_column(data, column_fields)
 
 
-def scrub_nones(x, repl=''):
+def scrub_nones(x, repl=""):
     if type(x) is list:
         for i in range(len(x)):
             if x[i] is None:
@@ -92,11 +92,11 @@ def recursive_lookup(obj, string_list):
 
 def flatten_json_lookup_list(obj, lookup_list, prefix=None):
     if not prefix:
-        prefix = ''
+        prefix = ""
     else:
-        prefix = prefix + '_'
+        prefix = prefix + "_"
     output = {}
     for i in lookup_list:
-        value = recursive_lookup(obj, i.split(':'))
-        output[prefix + i.replace(':', '_')] = value
+        value = recursive_lookup(obj, i.split(":"))
+        output[prefix + i.replace(":", "_")] = value
     return output

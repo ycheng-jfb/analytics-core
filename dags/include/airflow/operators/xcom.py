@@ -46,7 +46,9 @@ class IncrementalXcomUnixTimestampOperator(BaseOperator):
     def set_high_watermark(self, context):
         dr = context["dag_run"]  # type: DagRun
         new_high_watermark = int(dr.start_date.timestamp())
-        self.xcom_push(context=context, key=self.WATERMARK_XCOM_KEY, value=new_high_watermark)
+        self.xcom_push(
+            context=context, key=self.WATERMARK_XCOM_KEY, value=new_high_watermark
+        )
 
     def execute(self, context):
         """

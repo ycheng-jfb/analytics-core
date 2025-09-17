@@ -11,7 +11,7 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2019, 4, 3, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }
@@ -27,13 +27,13 @@ dag = DAG(
 
 with dag:
     impact_radius_ltk_all_events = SnowflakeProcedureOperator(
-        procedure='dbo.impact_radius_ltk_all_events.sql',
-        database='reporting_media_base_prod',
+        procedure="dbo.impact_radius_ltk_all_events.sql",
+        database="reporting_media_base_prod",
         autocommit=False,
     )
     upload_task = ImpactRadiusConversionsExportOperator(
         task_id=f"upload_to_impactradius",
         initial_load_value="2024-11-04 09:00:00 +00:00",
-        watermark_tables=['reporting_media_base_prod.dbo.impact_radius_ltk_all_events'],
+        watermark_tables=["reporting_media_base_prod.dbo.impact_radius_ltk_all_events"],
     )
     impact_radius_ltk_all_events >> upload_task

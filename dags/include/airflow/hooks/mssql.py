@@ -16,8 +16,8 @@ class MsSqlOdbcHook(DbApiHook):
     Interact with Microsoft SQL Server.
     """
 
-    conn_name_attr = 'mssql_conn_id'
-    default_conn_name = 'mssql_default'
+    conn_name_attr = "mssql_conn_id"
+    default_conn_name = "mssql_default"
     supports_autocommit = True
 
     def __init__(
@@ -56,8 +56,8 @@ class MsSqlOdbcHook(DbApiHook):
     @property
     def conn_str(self):
         extra = self.conn_extra.copy()
-        driver = extra.pop('driver').strip()
-        if driver[0] != '{':
+        driver = extra.pop("driver").strip()
+        if driver[0] != "{":
             driver = f"{{{driver}}}"
         conn_str = f"DRIVER={driver};"
         if self.conn.host:
@@ -100,7 +100,7 @@ class MsSqlOdbcHook(DbApiHook):
         return uri
 
     def get_sqlalchemy_connection(self, connect_kwargs=None, engine_kwargs=None):
-        effective_engine_kwargs = dict(isolation_level='AUTOCOMMIT')
+        effective_engine_kwargs = dict(isolation_level="AUTOCOMMIT")
         if engine_kwargs:
             effective_engine_kwargs.update(engine_kwargs)
         engine = self.get_sqlalchemy_engine(engine_kwargs=effective_engine_kwargs)
@@ -119,8 +119,12 @@ class MsSqlOdbcHook(DbApiHook):
             prefer_unicode=True,
             autocommit=True,
         )
-        turbodbc_options = make_options(**{**default_options_kwargs, **(turbodbc_options or {})})
-        return turbodbc.connect(connection_string=self.conn_str, turbodbc_options=turbodbc_options)
+        turbodbc_options = make_options(
+            **{**default_options_kwargs, **(turbodbc_options or {})}
+        )
+        return turbodbc.connect(
+            connection_string=self.conn_str, turbodbc_options=turbodbc_options
+        )
 
     def set_autocommit(self, conn, autocommit):
         conn.autocommit = autocommit
@@ -184,38 +188,37 @@ def get_snowflake_types_from_schema(cur, table, database, schema, column_subset=
     col_list = [dict(zip(col_names, row)) for row in col_list]
 
     def source_type_mapping(type_name, column_size, decimal_digits):
-        if type_name in ('char', 'nvarchar', 'uniqueidentifier', 'varchar', 'text'):
+        if type_name in ("char", "nvarchar", "uniqueidentifier", "varchar", "text"):
             if 0 < column_size < 16777216:
                 dest_type = f"VARCHAR({column_size})"
             else:
-                dest_type = 'VARCHAR'
-        elif type_name in ('datetime', 'datetime2', 'smalldatetime'):
+                dest_type = "VARCHAR"
+        elif type_name in ("datetime", "datetime2", "smalldatetime"):
             dest_type = f"TIMESTAMP_NTZ({decimal_digits})"
-        elif type_name in ('datetimeoffset',):
+        elif type_name in ("datetimeoffset",):
             dest_type = f"TIMESTAMP_LTZ({decimal_digits})"
         elif type_name in (
-            'int',
-            'smallint',
-            'tinyint',
-            'bigint',
+            "int",
+            "smallint",
+            "tinyint",
+            "bigint",
             "int identity",
             "bigint identity",
         ):
-
             dest_type = "INT"
-        elif type_name in ('bit',):
+        elif type_name in ("bit",):
             dest_type = "BOOLEAN"
-        elif type_name in ('date',):
+        elif type_name in ("date",):
             dest_type = "DATE"
-        elif type_name in ('sql_variant',):
+        elif type_name in ("sql_variant",):
             dest_type = "VARIANT"
-        elif type_name in ('time',):
+        elif type_name in ("time",):
             dest_type = "TIME"
-        elif type_name in ('money', 'decimal', 'numeric'):
+        elif type_name in ("money", "decimal", "numeric"):
             dest_type = f"NUMBER({column_size}, {decimal_digits})"
-        elif type_name in ('double', 'float', 'real'):
+        elif type_name in ("double", "float", "real"):
             dest_type = "DOUBLE"
-        elif type_name in ('binary', 'image', 'varbinary', 'timestamp', 'rowversion'):
+        elif type_name in ("binary", "image", "varbinary", "timestamp", "rowversion"):
             if 0 < column_size < 8388608:
                 dest_type = f"BINARY({column_size})"
             else:
@@ -227,13 +230,16 @@ def get_snowflake_types_from_schema(cur, table, database, schema, column_subset=
     column_subset = set(column_subset) if column_subset else None
     result = []
     for row in col_list:
-        column_name = row['column_name']
-        type_name = row['type_name']
-        column_size = row['column_size']
-        decimal_digits = row['decimal_digits']
+        column_name = row["column_name"]
+        type_name = row["type_name"]
+        column_size = row["column_size"]
+        decimal_digits = row["decimal_digits"]
         if column_subset is None or column_name in column_subset:
             result.append(
-                (column_name, source_type_mapping(type_name, column_size, decimal_digits))
+                (
+                    column_name,
+                    source_type_mapping(type_name, column_size, decimal_digits),
+                )
             )
     return result
 
@@ -268,18 +274,22 @@ def get_column_list_definition(cur, database, schema, table):
         table: source table name
 
     """
-    reserved_word_map = {'order': '"ORDER"', 'group': '"GROUP"'}
+    reserved_word_map = {"order": '"ORDER"', "group": '"GROUP"'}
     primary_key_list = {
         camel_to_snake(x)
-        for x in get_primary_key_list(cur=cur, database=database, schema=schema, table=table)
+        for x in get_primary_key_list(
+            cur=cur, database=database, schema=schema, table=table
+        )
     }
 
-    cols = get_snowflake_types_from_schema(cur, table=table, database=database, schema=schema)
+    cols = get_snowflake_types_from_schema(
+        cur, table=table, database=database, schema=schema
+    )
     column_list = []
     for name, type_ in cols:
         target_name = camel_to_snake(name)
         source_name = name if name != target_name else None
-        if 'TIMESTAMP_LTZ' in type_:
+        if "TIMESTAMP_LTZ" in type_:
             source_name = f"convert(VARCHAR, {(source_name or target_name)}, 127)"
         if target_name in reserved_word_map:
             target_name = reserved_word_map.get(target_name)
@@ -287,19 +297,21 @@ def get_column_list_definition(cur, database, schema, table):
         column_list.append(Column(target_name, type_, source_name=source_name))
 
     delta_candidate_list = [
-        'meta_update_datetime',
-        'meta_create_datetime',
-        'datetime_modified',
-        'datetime_added',
-        'rollup_datetime_modified',
-        'date_update',
-        'date_create',
-        'modified_on',
-        'created_on',
+        "meta_update_datetime",
+        "meta_create_datetime",
+        "datetime_modified",
+        "datetime_added",
+        "rollup_datetime_modified",
+        "date_update",
+        "date_create",
+        "modified_on",
+        "created_on",
     ]
     delta_candidate_sort_mapping = {x[1]: x[0] for x in enumerate(delta_candidate_list)}
     delta_cols = [col.name for col in column_list if col.name in delta_candidate_list]
-    delta_cols_sorted = sorted(delta_cols, key=lambda x: delta_candidate_sort_mapping.get(x))
+    delta_cols_sorted = sorted(
+        delta_cols, key=lambda x: delta_candidate_sort_mapping.get(x)
+    )
     delta_cols_mapping = {x[1]: x[0] for x in enumerate(delta_cols_sorted)}
     for c in column_list:
         if c.name in delta_cols:

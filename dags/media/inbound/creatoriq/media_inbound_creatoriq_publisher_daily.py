@@ -86,7 +86,7 @@ column_list = [
 DEFAULT_ARGS = {
     "start_date": pendulum.datetime(2020, 11, 13, 0, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }
@@ -119,29 +119,29 @@ class CreatorIQPullPublishersToS3Operator(CreatorIQToS3Operator):
             a dict with specified columns
 
         """
-        tree = ET.fromstring('<root>' + (xml_str or '') + '</root>')
+        tree = ET.fromstring("<root>" + (xml_str or "") + "</root>")
         for row in tree:
             yield {x.tag: x.text for x in row if x.tag in xml_cols}
 
     def get_rows(self):
         xml_cols = [
-            'Network',
-            'SocialNetworkId',
-            'NetworkUser',
-            'AccountWeight',
-            'WebReach',
-            'Title',
-            'Followers',
-            'LinkedBy',
-            'LinkedAt',
-            'isVerifiedBySocialNetwork',
-            'Linked',
-            'Unlinked',
-            'LinkBroken',
-            'Business',
-            'TokenInvalidDate',
-            'BoostableTotal',
-            'DateSocialStatsUpdated',
+            "Network",
+            "SocialNetworkId",
+            "NetworkUser",
+            "AccountWeight",
+            "WebReach",
+            "Title",
+            "Followers",
+            "LinkedBy",
+            "LinkedAt",
+            "isVerifiedBySocialNetwork",
+            "Linked",
+            "Unlinked",
+            "LinkBroken",
+            "Business",
+            "TokenInvalidDate",
+            "BoostableTotal",
+            "DateSocialStatsUpdated",
         ]
 
         params = {
@@ -153,11 +153,11 @@ class CreatorIQPullPublishersToS3Operator(CreatorIQToS3Operator):
         }
         while True:
             response = self.hook.make_request(
-                url='https://api.creatoriq.com/rest/view/data', params=params
+                url="https://api.creatoriq.com/rest/view/data", params=params
             )
-            result = response.json()['results']
+            result = response.json()["results"]
             for record in result:
-                xml_str = record.pop('SocialAccountsList')
+                xml_str = record.pop("SocialAccountsList")
                 for row in self.parse_xml(xml_str, xml_cols):
                     yield self.merge_dicts(record, row)
             if len(result) < params["requestData[take]"]:
@@ -177,7 +177,7 @@ with dag:
         table=TABLE,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{S3_PREFIX}",
-        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=1),
+        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=1),
     )
     op = CreatorIQPullPublishersToS3Operator(
         task_id="get_ciq_data",

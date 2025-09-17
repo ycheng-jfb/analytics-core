@@ -22,7 +22,7 @@ class GPGHook(BaseHook):
         Connection establishment for gpg using connection_id and resource_address
         """
         conn = self.get_connection(self.gpg_conn_id)
-        credentials = conn.extra_dejson['extra__keyfile_dict']
+        credentials = conn.extra_dejson["extra__keyfile_dict"]
         return credentials
 
     def decrypt_file(self, encrypted_content):
@@ -30,5 +30,7 @@ class GPGHook(BaseHook):
             gpg = gnupg.GPG(gnupghome=gnupghome)
             private_key = self.get_conn()
             import_result = gpg.import_keys(key_data=private_key)
-            gpg.trust_keys([x["fingerprint"] for x in import_result.results], 'TRUST_ULTIMATE')
+            gpg.trust_keys(
+                [x["fingerprint"] for x in import_result.results], "TRUST_ULTIMATE"
+            )
             return gpg.decrypt(encrypted_content)

@@ -6,7 +6,10 @@ from airflow.models import DAG
 from include.airflow.callbacks.slack import slack_failure_edm
 from include.airflow.operators.sentry import SentryToS3Operator, SentryJsonToS3Operator
 from include.airflow.operators.snowflake import SnowflakeProcedureOperator
-from include.airflow.operators.snowflake_load import Column, SnowflakeIncrementalLoadOperator
+from include.airflow.operators.snowflake_load import (
+    Column,
+    SnowflakeIncrementalLoadOperator,
+)
 from include.config import email_lists, owners, s3_buckets, stages, conn_ids
 from include.utils.snowflake import CopyConfigJson, CopyConfigCsv
 
@@ -15,14 +18,14 @@ schema = "sentry"
 events_table = "events"
 events_s3_prefix = f"lake/{schema}.{events_table}/daily_v1"
 events_column_list = [
-    Column('id', "VARCHAR", uniqueness=True),
-    Column('project_name', "VARCHAR", source_name="project.name"),
+    Column("id", "VARCHAR", uniqueness=True),
+    Column("project_name", "VARCHAR", source_name="project.name"),
     Column(
-        'transaction',
+        "transaction",
         "VARCHAR",
     ),
     Column(
-        'environment',
+        "environment",
         "VARCHAR",
     ),
     Column("timestamp", "TIMESTAMP_NTZ"),
@@ -167,7 +170,7 @@ event_details_column_list = [
 default_args = {
     "start_date": pendulum.datetime(2025, 1, 1, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.data_integrations,
+    "owner": owners.data_integrations,
     "email": email_lists.data_integration_support,
     "on_failure_callback": slack_failure_edm,
     "execution_timeout": timedelta(hours=2),
@@ -199,7 +202,7 @@ with dag:
         table=events_table,
         column_list=events_column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{events_s3_prefix}",
-        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=3),
+        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=3),
     )
     get_events = SentryToS3Operator(
         task_id="sentry_events_to_s3",
@@ -221,16 +224,16 @@ with dag:
     )
     get_event_details = SentryJsonToS3Operator(
         task_id="sentry_event_details_to_s3",
-        initial_load_value='2025-02-06 05:30:36.755 -0800',
+        initial_load_value="2025-02-06 05:30:36.755 -0800",
         bucket=s3_buckets.tsos_da_int_inbound,
         key=f"{event_details_s3_prefix}/{schema}_{event_details_table}_{date_param}.tsv.gz",
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
-        namespace='sentry',
+        namespace="sentry",
         process_name="event_details",
     )
     flatten_events = SnowflakeProcedureOperator(
-        database='lake',
-        procedure='sentry.event_details.sql',
+        database="lake",
+        procedure="sentry.event_details.sql",
         watermark_tables=["lake.sentry.event_details_raw"],
     )
     (

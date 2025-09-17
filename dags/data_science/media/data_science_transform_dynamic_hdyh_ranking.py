@@ -12,9 +12,9 @@ from include.config import conn_ids, owners
 
 default_args = {
     "start_date": pendulum.datetime(2019, 1, 1, 7, tz="America/Los_Angeles"),
-    'retries': 1,
-    'owner': owners.data_science,
-    "email": 'datascience@techstyle.com',
+    "retries": 1,
+    "owner": owners.data_science,
+    "email": "datascience@techstyle.com",
     "on_failure_callback": slack_failure_data_science,
 }
 
@@ -34,7 +34,9 @@ class SqlOp(BaseOperator):
         self.mssql_conn_id = mssql_conn_id
 
     def execute(self, context=None):
-        ms_hook = MsSqlOdbcHook(mssql_conn_id=self.mssql_conn_id, database='ultraimport')
+        ms_hook = MsSqlOdbcHook(
+            mssql_conn_id=self.mssql_conn_id, database="ultraimport"
+        )
         truncate_statement = """execute pr_snowflake_hdyh_ranking_trunc"""
         with ms_hook.get_conn() as cnx:
             cnx.execute(truncate_statement)
@@ -86,8 +88,8 @@ with dag:
     )
 
     daily_performance_by_influencer_with_post_data = SnowflakeProcedureOperator(
-        database='reporting_media_base_prod',
-        procedure='influencers.daily_performance_by_influencer_with_post_data.sql',
+        database="reporting_media_base_prod",
+        procedure="influencers.daily_performance_by_influencer_with_post_data.sql",
     )
 
     influencer_impact_score_daily_sxna = SnowflakeProcedureOperator(
@@ -120,40 +122,43 @@ with dag:
     )
 
     truncate_table_db166 = SqlOp(
-        task_id='truncate_db166', mssql_conn_id=conn_ids.MsSql.db166_app_airflow_rw
+        task_id="truncate_db166", mssql_conn_id=conn_ids.MsSql.db166_app_airflow_rw
     )
 
     copy_to_sql_db166 = ExportConfig(
-        server='db166', mssql_conn_id=conn_ids.MsSql.db166_app_airflow_rw
+        server="db166", mssql_conn_id=conn_ids.MsSql.db166_app_airflow_rw
     )
 
     truncate_table_db50 = SqlOp(
-        task_id='truncate_db50', mssql_conn_id=conn_ids.MsSql.db50_app_airflow_rw
+        task_id="truncate_db50", mssql_conn_id=conn_ids.MsSql.db50_app_airflow_rw
     )
 
-    copy_to_sql_db50 = ExportConfig(server='db50', mssql_conn_id=conn_ids.MsSql.db50_app_airflow_rw)
+    copy_to_sql_db50 = ExportConfig(
+        server="db50", mssql_conn_id=conn_ids.MsSql.db50_app_airflow_rw
+    )
 
     truncate_table_fabletics = SqlOp(
-        task_id='truncate_fabletics', mssql_conn_id=conn_ids.MsSql.fabletics_app_airflow_rw
+        task_id="truncate_fabletics",
+        mssql_conn_id=conn_ids.MsSql.fabletics_app_airflow_rw,
     )
     copy_to_sql_fabletics = ExportConfig(
-        server='fabletics', mssql_conn_id=conn_ids.MsSql.fabletics_app_airflow_rw
+        server="fabletics", mssql_conn_id=conn_ids.MsSql.fabletics_app_airflow_rw
     )
 
     truncate_table_justfab = SqlOp(
-        task_id='truncate_justfab', mssql_conn_id=conn_ids.MsSql.justfab_app_airflow_rw
+        task_id="truncate_justfab", mssql_conn_id=conn_ids.MsSql.justfab_app_airflow_rw
     )
 
     copy_to_sql_justfab = ExportConfig(
-        server='justfab', mssql_conn_id=conn_ids.MsSql.justfab_app_airflow_rw
+        server="justfab", mssql_conn_id=conn_ids.MsSql.justfab_app_airflow_rw
     )
 
     truncate_table_savagex = SqlOp(
-        task_id='truncate_savagex', mssql_conn_id=conn_ids.MsSql.savagex_app_airflow_rw
+        task_id="truncate_savagex", mssql_conn_id=conn_ids.MsSql.savagex_app_airflow_rw
     )
 
     copy_to_sql_savagex = ExportConfig(
-        server='savagex', mssql_conn_id=conn_ids.MsSql.savagex_app_airflow_rw
+        server="savagex", mssql_conn_id=conn_ids.MsSql.savagex_app_airflow_rw
     )
 
     chain_tasks(

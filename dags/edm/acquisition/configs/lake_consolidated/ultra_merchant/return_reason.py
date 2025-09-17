@@ -6,12 +6,12 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table='return_reason',
+    table="return_reason",
     column_list=[
-        Column('return_reason_id', 'INT', uniqueness=True),
-        Column('store_group_id', 'INT'),
-        Column('label', 'VARCHAR(100)'),
-        Column('access', 'VARCHAR(15)'),
-        Column('sort', 'INT'),
+        Column("return_reason_id", "INT", uniqueness=True),
+        Column("store_group_id", "INT"),
+        Column("label", "VARCHAR(100)"),
+        Column("access", "VARCHAR(15)"),
+        Column("sort", "INT"),
     ],
 )

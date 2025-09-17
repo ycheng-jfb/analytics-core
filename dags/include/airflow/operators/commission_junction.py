@@ -30,10 +30,12 @@ class CommissionJunctionToS3Operator(BaseRowsToS3CsvOperator):
 
     @cached_property
     def hook(self):
-        return CommissionJunctionHook(commissionjunction_conn_id=self.commissionjunction_conn_id)
+        return CommissionJunctionHook(
+            commissionjunction_conn_id=self.commissionjunction_conn_id
+        )
 
     def build_config(self, date: str) -> dict:
-        end_date = pendulum.from_format(date, 'YYYY-MM-DD').add(days=1)
+        end_date = pendulum.from_format(date, "YYYY-MM-DD").add(days=1)
         config = (
             self.request_params[:72]
             + date
@@ -66,12 +68,14 @@ class CommissionJunctionToS3Operator(BaseRowsToS3CsvOperator):
         )
         print(f"request params are {self.request_params}")
         for date in self.report_date_list:
-            response = self.hook.make_request(path='query', payload=self.build_config(date))
+            response = self.hook.make_request(
+                path="query", payload=self.build_config(date)
+            )
             data = response.json()
             print(f"loading {data['data']['advertiserCommissions']['count']} to file")
 
-            if data["data"]['advertiserCommissions']['count'] != 0:
-                for item in data['data']['advertiserCommissions']['records']:
+            if data["data"]["advertiserCommissions"]["count"] != 0:
+                for item in data["data"]["advertiserCommissions"]["records"]:
                     if item.get("verticalAttributes"):
                         item["custSegment"] = item["verticalAttributes"]["custSegment"]
                         item.pop("verticalAttributes")
@@ -81,4 +85,6 @@ class CommissionJunctionToS3Operator(BaseRowsToS3CsvOperator):
                     yield dict(item, **extra_cols)
             else:
                 self.log.warning(data)
-                self.log.warning(f'unable to pull records for {self.build_config(date)} ')
+                self.log.warning(
+                    f"unable to pull records for {self.build_config(date)} "
+                )

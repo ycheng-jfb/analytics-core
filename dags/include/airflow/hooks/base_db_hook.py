@@ -21,7 +21,7 @@ class BaseDbHook(BaseHook):
             self.hook_copy_to_file(sql, conn, file_obj)
             conn.commit()
 
-    def pandas_copy_to_file(self, sql, conn, file_obj, sep='\t'):
+    def pandas_copy_to_file(self, sql, conn, file_obj, sep="\t"):
         df = pd.read_sql_query(sql, conn)
         df.to_csv(file_obj.filename, index=False, sep=sep)
 

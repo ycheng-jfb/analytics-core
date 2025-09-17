@@ -93,8 +93,12 @@ react_native_fl_schema = StructType(
                                     ArrayType(
                                         StructType(
                                             [
-                                                StructField("description", StringType(), True),
-                                                StructField("field", StringType(), True),
+                                                StructField(
+                                                    "description", StringType(), True
+                                                ),
+                                                StructField(
+                                                    "field", StringType(), True
+                                                ),
                                                 StructField("type", StringType(), True),
                                             ]
                                         )
@@ -189,13 +193,19 @@ react_native_fl_schema = StructType(
                                     StructField("bundle_name", StringType(), True),
                                     StructField("bundle_product_id", LongType(), True),
                                     StructField("bundle_quantity", LongType(), True),
-                                    StructField("bundle_retail_price", DoubleType(), True),
-                                    StructField("bundle_sale_price", DoubleType(), True),
+                                    StructField(
+                                        "bundle_retail_price", DoubleType(), True
+                                    ),
+                                    StructField(
+                                        "bundle_sale_price", DoubleType(), True
+                                    ),
                                     StructField("bundle_vip_price", DoubleType(), True),
                                     StructField("category", StringType(), True),
                                     StructField("grid_image_label", StringType(), True),
                                     StructField("grid_label", StringType(), True),
-                                    StructField("inventory_availability", LongType(), True),
+                                    StructField(
+                                        "inventory_availability", LongType(), True
+                                    ),
                                     StructField("is_bundle", BooleanType(), True),
                                     StructField("position", LongType(), True),
                                     StructField("price", DoubleType(), True),

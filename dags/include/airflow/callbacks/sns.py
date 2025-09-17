@@ -36,6 +36,8 @@ def task_fail_callback_factory(target_arn, aws_conn_id=conn_ids.AWS.tfg_default)
 *task_id*: {context.get('task_instance').task_id}
 *Execution Time*: `{context.get('data_interval_start')}`
 <{context.get('task_instance').log_url}|Log url>"""
-        publish_to_target(target_arn=target_arn, aws_conn_id=aws_conn_id, message=message)
+        publish_to_target(
+            target_arn=target_arn, aws_conn_id=aws_conn_id, message=message
+        )
 
     return partial(task_fail_callback, target_arn=target_arn, aws_conn_id=aws_conn_id)

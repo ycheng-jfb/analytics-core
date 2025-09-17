@@ -30,7 +30,11 @@ class OpenpathActivityEventsToS3Operator(BaseRowsToS3CsvOperator):
         updated_at = pendulum.DateTime.utcnow().isoformat()
         for row in data["data"]:
             row = {
-                **{key: value for key, value in row['uiData'].items() if key in self.column_list},
+                **{
+                    key: value
+                    for key, value in row["uiData"].items()
+                    if key in self.column_list
+                },
                 "updated_at": updated_at,
             }
             yield row
@@ -38,7 +42,7 @@ class OpenpathActivityEventsToS3Operator(BaseRowsToS3CsvOperator):
     @staticmethod
     def get_epochtime(input_time):
         initial_time = datetime.utcfromtimestamp(0).replace(tzinfo=timezone.utc)
-        conv_input_time = datetime.strptime(input_time, '%Y-%m-%dT%H:%M:%S%z')
+        conv_input_time = datetime.strptime(input_time, "%Y-%m-%dT%H:%M:%S%z")
         req_time = conv_input_time.replace(tzinfo=timezone.utc)
         epoch_time = (req_time - initial_time).total_seconds()
         return epoch_time
@@ -46,7 +50,7 @@ class OpenpathActivityEventsToS3Operator(BaseRowsToS3CsvOperator):
     def get_rows(self) -> Iterator[dict]:
         hook = OpenpathHook(openpath_conn_id=self.openpath_conn_id)
         params = {
-            'filter': f"uiData.time:({self.get_epochtime(self.req_params['start_time'])}-<{self.get_epochtime(self.req_params['end_time'])})"
+            "filter": f"uiData.time:({self.get_epochtime(self.req_params['start_time'])}-<{self.get_epochtime(self.req_params['end_time'])})"
         }
         request_url = f"{self.base_url}/orgs/{self.req_params['org_id']}/reports/{self.req_params['endpoint']}"
         response = hook.session.get(request_url, params=params)
@@ -60,8 +64,8 @@ class OpenpathActivityEventsToS3Operator(BaseRowsToS3CsvOperator):
         data = response.json()
         while True:
             yield from self.yield_rows_from_data(data)
-            if data['cursors']["hasNextPage"]:
-                params['cursor'] = data['cursors']['nextCursor']
+            if data["cursors"]["hasNextPage"]:
+                params["cursor"] = data["cursors"]["nextCursor"]
                 response = hook.session.get(request_url, params=params)
                 response.raise_for_status()
                 data = response.json()

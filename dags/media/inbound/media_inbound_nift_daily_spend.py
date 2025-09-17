@@ -23,7 +23,7 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2024, 12, 10, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": email_lists.airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "sla": timedelta(hours=1),
@@ -32,7 +32,7 @@ default_args = {
 
 
 dag = DAG(
-    dag_id='media_inbound_nift_daily_spend',
+    dag_id="media_inbound_nift_daily_spend",
     default_args=default_args,
     schedule="25 5 * * *",
     catchup=False,
@@ -44,9 +44,9 @@ with dag:
     to_snowflake = SnowflakeIncrementalLoadOperator(
         task_id="load_to_snowflake",
         database="lake",
-        schema='nift',
-        table='daily_spend',
+        schema="nift",
+        table="daily_spend",
         column_list=column_list,
-        files_path=f'{stages.tsos_da_int_vendor}/inbound/svc_nift/',
-        copy_config=CopyConfigCsv(field_delimiter=',', header_rows=1, skip_pct=1),
+        files_path=f"{stages.tsos_da_int_vendor}/inbound/svc_nift/",
+        copy_config=CopyConfigCsv(field_delimiter=",", header_rows=1, skip_pct=1),
     )

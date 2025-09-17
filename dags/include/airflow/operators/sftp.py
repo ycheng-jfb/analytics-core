@@ -13,7 +13,7 @@ class SFTPPutTouchFileOperator(SFTPOperator):
 
     def execute(self, context):
         with tempfile.TemporaryDirectory() as td:
-            local_path = Path(f'{Path(td)}/{self.local_filepath}')
+            local_path = Path(f"{Path(td)}/{self.local_filepath}")
             local_path.write_text("")
             self.local_filepath = str(local_path)
             super(SFTPPutTouchFileOperator, self).execute(context)
@@ -50,11 +50,15 @@ class SFTPTransferOperator(BaseOperator):
         super().__init__(*args, **kwargs)
 
     def copy_files(self, dry_run=False):
-        source_hook = SFTPHook(ftp_conn_id=self.source_sftp_conn_id, remote_host=self.source_host)
+        source_hook = SFTPHook(
+            ftp_conn_id=self.source_sftp_conn_id, remote_host=self.source_host
+        )
         source_client = source_hook.get_conn()
         if self.source_dir:
             source_client.chdir(self.source_dir)
-        target_hook = SFTPHook(ftp_conn_id=self.target_sftp_conn_id, remote_host=self.target_host)
+        target_hook = SFTPHook(
+            ftp_conn_id=self.target_sftp_conn_id, remote_host=self.target_host
+        )
         target_client = target_hook.get_conn()
         if self.target_dir:
             target_client.chdir(self.target_dir)
@@ -74,8 +78,16 @@ class SFTPTransferOperator(BaseOperator):
             raise ValueError("No files found")
 
         for filename in files_to_transfer:
-            source_path = self.source_dir and Path(self.source_dir, filename).as_posix() or filename
-            target_path = self.target_dir and Path(self.target_dir, filename).as_posix() or filename
+            source_path = (
+                self.source_dir
+                and Path(self.source_dir, filename).as_posix()
+                or filename
+            )
+            target_path = (
+                self.target_dir
+                and Path(self.target_dir, filename).as_posix()
+                or filename
+            )
             print(f"copy file {source_path} to {target_path}")
             if dry_run:
                 continue

@@ -20,7 +20,7 @@ default_args = {
     "start_date": pendulum.datetime(2024, 8, 15, tz="America/Los_Angeles"),
     "owner": owners.data_integrations,
     "email": email_lists.data_integration_support,
-    'on_failure_callback': slack_failure_edm,
+    "on_failure_callback": slack_failure_edm,
 }
 
 
@@ -54,7 +54,7 @@ class SFTPtoSharePointNordstromOperator(BaseOperator):
     ):
         super().__init__(**kwargs)
         self.sftp_conn_id = sftp_conn_id
-        self.remote_dir = remote_dir.rstrip('/')
+        self.remote_dir = remote_dir.rstrip("/")
         self.file_pattern = file_pattern
         self.files_per_batch = files_per_batch
         self.sharepoint_nordstrom_conn_id = sharepoint_nordstrom_conn_id
@@ -81,7 +81,9 @@ class SFTPtoSharePointNordstromOperator(BaseOperator):
         with self.ssh_client.open_sftp() as sftp_client:
             file_list = sftp_client.listdir(self.remote_dir)
             if self.file_pattern:
-                file_list = self.filter_files(file_list=file_list, pattern=self.file_pattern)
+                file_list = self.filter_files(
+                    file_list=file_list, pattern=self.file_pattern
+                )
         return file_list  # type: ignore
 
     def execute(self, context):
@@ -92,15 +94,15 @@ class SFTPtoSharePointNordstromOperator(BaseOperator):
                     remote_path = Path(self.remote_dir, remote_filename)
                     local_path = Path(temp_dir, remote_filename)
                     self.log.info(f"pull from sftp: {remote_path}")
-                    with open(Path(f"{local_path}"), 'wb') as f:
+                    with open(Path(f"{local_path}"), "wb") as f:
                         sftp_client.getfo(remote_path.as_posix(), f)
-                    with open(str(local_path), 'r') as f:
+                    with open(str(local_path), "r") as f:
                         encrypted_content = f.read()
                     gpg_conn = GPGHook(gpg_conn_id=self.gpg_conn_id)
                     decrypted_content = str(gpg_conn.decrypt_file(encrypted_content))
-                    with open(local_path, 'w') as csvfile:
+                    with open(local_path, "w") as csvfile:
                         csvfile.write(decrypted_content)
-                    df = pd.read_csv(local_path, delimiter=';')
+                    df = pd.read_csv(local_path, delimiter=";")
                     df.to_csv(local_path, index=False)
                     sharepoint_conn = MsGraphSharePointHook(
                         sharepoint_conn_id=self.sharepoint_nordstrom_conn_id
@@ -133,19 +135,19 @@ dag = DAG(
 
 with dag:
     for i in [
-        'RECEIPTS',
-        'ENHANCED_SALES',
-        'INVENTORY_SOH',
+        "RECEIPTS",
+        "ENHANCED_SALES",
+        "INVENTORY_SOH",
     ]:
         to_sharepoint = SFTPtoSharePointNordstromOperator(
-            task_id=f'to_sharepoint_{i}',
-            remote_dir='Nordstrom',
-            file_pattern=f'{i}_*',
+            task_id=f"to_sharepoint_{i}",
+            remote_dir="Nordstrom",
+            file_pattern=f"{i}_*",
             sftp_conn_id=conn_ids.SFTP.sftp_techstyle_nordstrom,
-            drive_id='b!gvBm6sONFUeYb7dNKyqncwIMGuc7xGpLoECxQMjza2MrgUK4IVA7SbZLrIkJk3qM',
-            site_id='ea66f082-8dc3-4715-986f-b74d2b2aa773',
+            drive_id="b!gvBm6sONFUeYb7dNKyqncwIMGuc7xGpLoECxQMjza2MrgUK4IVA7SbZLrIkJk3qM",
+            site_id="ea66f082-8dc3-4715-986f-b74d2b2aa773",
             sharepoint_nordstrom_conn_id=conn_ids.Sharepoint.nordstrom,
             gpg_conn_id=conn_ids.GPG.nordstrom_private_key,
-            folder_name='SavageX/Inbound (Non-PII)/Nordstrom Data Files',
+            folder_name="SavageX/Inbound (Non-PII)/Nordstrom Data Files",
             remove_remote_files=True,
         )

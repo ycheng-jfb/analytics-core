@@ -3,7 +3,9 @@ from elasticsearch import Elasticsearch
 
 
 class ESHook(BaseHook):
-    def __init__(self, es_conn_id, host=None, protocol="https", port=9200, *args, **kwargs):
+    def __init__(
+        self, es_conn_id, host=None, protocol="https", port=9200, *args, **kwargs
+    ):
         self.es_conn_id = es_conn_id
         self.creds = self.get_connection(self.es_conn_id)
         self.host = host or self.creds.host
@@ -24,8 +26,8 @@ class ESHook(BaseHook):
     def search_all(self, index, body, size=10000, **kwargs):
         while True:
             results = self.conn.search(index=index, body=body, size=size, **kwargs)
-            if len(results['hits']['hits']) == 0:
+            if len(results["hits"]["hits"]) == 0:
                 break
-            for result in results['hits']['hits']:
+            for result in results["hits"]["hits"]:
                 yield result
-            body['search_after'] = results['hits']['hits'][-1]['sort']
+            body["search_after"] = results["hits"]["hits"][-1]["sort"]

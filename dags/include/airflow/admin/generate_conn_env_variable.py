@@ -14,7 +14,9 @@ def print_conn_envs():
             print(generate_cmd_line_create_statement(conn_id, uri))
 
 
-def generate_conn_env_variable(conn_id, uri_base, extras_dict, wrap_single_quotes=False):
+def generate_conn_env_variable(
+    conn_id, uri_base, extras_dict, wrap_single_quotes=False
+):
     extra = "?" + urlencode(extras_dict) if extras_dict else ""
     uri = f"{uri_base}{extra}"
     if wrap_single_quotes:
@@ -55,7 +57,9 @@ def generate_yaml_conn_env_variable(conn_id, yaml_path, user=None):
     return conn_uri
 
 
-def generate_mssql_odbc_conn_env_variable(conn_id, username, password, host, database, driver):
+def generate_mssql_odbc_conn_env_variable(
+    conn_id, username, password, host, database, driver
+):
     conn = {
         "conn_id": conn_id,
         "uri_base": "mssql+pyodbc://{username}:{password}@{host}:{port}/{database}".format(

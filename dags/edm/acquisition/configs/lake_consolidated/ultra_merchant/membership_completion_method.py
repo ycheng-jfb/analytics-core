@@ -6,9 +6,9 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table='membership_completion_method',
+    table="membership_completion_method",
     column_list=[
-        Column('membership_completion_method_id', 'INT', uniqueness=True),
-        Column('label', 'VARCHAR(50)'),
+        Column("membership_completion_method_id", "INT", uniqueness=True),
+        Column("label", "VARCHAR(50)"),
     ],
 )

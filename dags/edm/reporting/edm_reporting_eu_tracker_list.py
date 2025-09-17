@@ -9,13 +9,13 @@ from include.config.email_lists import data_integration_support
 
 default_args = {
     "start_date": pendulum.datetime(2022, 1, 30, tz="America/Los_Angeles"),
-    'owner': owners.data_integrations,
+    "owner": owners.data_integrations,
     "email": data_integration_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
-    dag_id='edm_reporting_eu_tracker_list',
+    dag_id="edm_reporting_eu_tracker_list",
     default_args=default_args,
     schedule="20 4 * * 2",
     catchup=False,
@@ -38,23 +38,23 @@ AND segment = '{SEGMENT_TYPE}'
 AND store_name = '{BRAND}';
 """
 
-segment_types = ['Leads', 'Vips']
+segment_types = ["Leads", "Vips"]
 brands = [
-    'Fabletics UK',
-    'Fabletics ES',
-    'Fabletics DE',
-    'Fabletics FR',
-    'JustFab ES',
-    'JustFab DE',
-    'JustFab FR',
-    'JustFab UK',
+    "Fabletics UK",
+    "Fabletics ES",
+    "Fabletics DE",
+    "Fabletics FR",
+    "JustFab ES",
+    "JustFab DE",
+    "JustFab FR",
+    "JustFab UK",
 ]
 
 yr_mth_dy = "{{macros.datetime.now().strftime('%Y%m%d')}}"
 
 with dag:
     eu_tracker_list = SnowflakeProcedureOperator(
-        procedure='gms.eu_tracker_list.sql', database='reporting_prod'
+        procedure="gms.eu_tracker_list.sql", database="reporting_prod"
     )
 
     to_sftps_tasks = []
@@ -67,10 +67,10 @@ with dag:
                 smb_conn_id=conn_ids.SMB.nas01,
                 filename=f"EU Tracker List {segment}_{yr_mth_dy}.csv",
                 shared_dir=f"/Reporting/EUTrackerReports/{brand}",
-                share_name='BI',
+                share_name="BI",
                 field_delimiter=",",
                 header=True,
-                dialect='excel',
+                dialect="excel",
             )
             to_sftps_tasks.append(snowflake_to_sftp)
 

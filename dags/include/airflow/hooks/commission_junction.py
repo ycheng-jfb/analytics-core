@@ -11,7 +11,10 @@ class CommissionJunctionHook(BaseHook):
 
     @cached_property
     def session(self):
-        headers = {"Authorization": f"Bearer {self.access_token}", 'Content-Type': 'text/plain'}
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "text/plain",
+        }
         session = requests.session()
         session.headers = headers
         return session
@@ -21,6 +24,8 @@ class CommissionJunctionHook(BaseHook):
         path: str,
         payload: dict = None,
     ):
-        response = self.session.request(method="POST", url=self.url + '/' + path, data=payload)
+        response = self.session.request(
+            method="POST", url=self.url + "/" + path, data=payload
+        )
         response.raise_for_status()
         return response

@@ -312,7 +312,7 @@ FROM
 
 
 def check_feed_runtime_fn(**kwargs):
-    execution_time = kwargs['data_interval_end'].in_timezone('America/Los_Angeles')
+    execution_time = kwargs["data_interval_end"].in_timezone("America/Los_Angeles")
     if execution_time.hour == 5 and execution_time.minute == 0:
         return [tasks[f"product_feed_PROD"].task_id]
     else:
@@ -323,49 +323,51 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2024, 8, 19, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.data_integrations,
-    'email': data_integration_support,
+    "owner": owners.data_integrations,
+    "email": data_integration_support,
     "sla": timedelta(minutes=15),
     "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
-    dag_id='edm_outbound_gstore_rfid_feed',
+    dag_id="edm_outbound_gstore_rfid_feed",
     default_args=default_args,
-    schedule='0/15 * * * *',
+    schedule="0/15 * * * *",
     catchup=False,
     max_active_runs=1,
     dagrun_timeout=timedelta(minutes=30),
     sla_miss_callback=slack_sla_miss_edm,
 )
 
-datetime_param = "{{macros.tfgdt.to_pst(macros.datetime.now()).strftime('%Y%m%d-%H%M%S')}}"
+datetime_param = (
+    "{{macros.tfgdt.to_pst(macros.datetime.now()).strftime('%Y%m%d-%H%M%S')}}"
+)
 date_param = "{{macros.tfgdt.to_pst(macros.datetime.now()).strftime('%Y%m%d')}}"
 
 
-environments = ['PROD', 'QA']
+environments = ["PROD", "QA"]
 
 tasks = {}
 
 with dag:
     for environment in environments:
-        if environment.upper() == 'QA':
-            bucket_name = 'qa-fabletics-standard'
-            bopis_feed_path = 'external/inbound/fulfillments'
-            pos_feed_path = 'external/inbound/posFeed'
-            product_feed_path = 'external/inbound/productFeed'
+        if environment.upper() == "QA":
+            bucket_name = "qa-fabletics-standard"
+            bopis_feed_path = "external/inbound/fulfillments"
+            pos_feed_path = "external/inbound/posFeed"
+            product_feed_path = "external/inbound/productFeed"
             gcp_conn_id = conn_ids.Google.cloud_rfid
-        elif environment.upper() == 'PROD':
-            bucket_name = 'production-fabletics-standard'
-            bopis_feed_path = 'external/inbound/fulfillments'
-            pos_feed_path = 'external/inbound/posFeed'
-            product_feed_path = 'external/inbound/productFeed'
+        elif environment.upper() == "PROD":
+            bucket_name = "production-fabletics-standard"
+            bopis_feed_path = "external/inbound/fulfillments"
+            pos_feed_path = "external/inbound/posFeed"
+            product_feed_path = "external/inbound/productFeed"
             gcp_conn_id = "google_cloud_rfid_prod"
         else:
-            bucket_name = 'development-fabletics-standard'
-            bopis_feed_path = 'object/external/inbound/fulfillments'
-            pos_feed_path = 'object/external/inbound/posFeed'
-            product_feed_path = 'object/external/inbound/productFeed'
+            bucket_name = "development-fabletics-standard"
+            bopis_feed_path = "object/external/inbound/fulfillments"
+            pos_feed_path = "object/external/inbound/posFeed"
+            product_feed_path = "object/external/inbound/productFeed"
             gcp_conn_id = conn_ids.Google.cloud_rfid
 
         tasks[f"bopis_feed_{environment}"] = MssqlToGCSOperator(
@@ -393,12 +395,12 @@ with dag:
         tasks[f"product_feed_{environment}"] = SnowflakeToGCSOperator(
             task_id=f"product_feed_{environment}",
             sql_or_path=product_feed_csv_export_sql,
-            field_delimiter='|',
+            field_delimiter="|",
             header=False,
             quoting=csv.QUOTE_MINIMAL,
             bucket_name=bucket_name,
             filename=f"{date_param}.ndjson",
-            quotechar='|',
+            quotechar="|",
             gcp_conn_id=gcp_conn_id,
             remote_dir=product_feed_path,
             dag=dag,
@@ -408,7 +410,7 @@ with dag:
         python_callable=check_feed_runtime_fn, task_id=f"check_feed_runtime"
     )
 
-for feed in ['bopis_feed', 'pos_sales_feed', 'product_feed']:
+for feed in ["bopis_feed", "pos_sales_feed", "product_feed"]:
     chain_tasks(tasks[f"{feed}_PROD"], tasks[f"{feed}_QA"])
 
 check_feed_runtime >> tasks[f"product_feed_PROD"]

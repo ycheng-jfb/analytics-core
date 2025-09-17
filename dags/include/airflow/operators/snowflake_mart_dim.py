@@ -1,6 +1,9 @@
 from typing import List
 
-from include.airflow.operators.snowflake_mart_base import BaseSnowflakeMartUpsertOperator, Column
+from include.airflow.operators.snowflake_mart_base import (
+    BaseSnowflakeMartUpsertOperator,
+    Column,
+)
 from include.utils.string import unindent_auto
 
 
@@ -8,18 +11,18 @@ class SnowflakeMartDimOperator(BaseSnowflakeMartUpsertOperator):
     INITIAL_FROM_TIMESTAMP = "to_timestamp_ltz('1900-01-01')"
     INITIAL_TO_TIMESTAMP = "to_timestamp_ltz('9999-12-31')"
 
-    ui_fgcolor = '#000000'
-    ui_color = '#EBF6BF'
+    ui_fgcolor = "#000000"
+    ui_color = "#EBF6BF"
 
     @property
     def base_table_meta_cols(self) -> List[Column]:
         base_table_meta_cols = [
-            Column('effective_start_datetime', f"{self.EFF_START_TIMESTAMP_COL_TYPE}"),
-            Column('effective_end_datetime', f"{self.EFF_START_TIMESTAMP_COL_TYPE}"),
-            Column('is_current', 'BOOLEAN'),
-            Column('meta_row_hash', 'INT'),
-            Column('meta_create_datetime', 'TIMESTAMP_LTZ'),
-            Column('meta_update_datetime', 'TIMESTAMP_LTZ'),
+            Column("effective_start_datetime", f"{self.EFF_START_TIMESTAMP_COL_TYPE}"),
+            Column("effective_end_datetime", f"{self.EFF_START_TIMESTAMP_COL_TYPE}"),
+            Column("is_current", "BOOLEAN"),
+            Column("meta_row_hash", "INT"),
+            Column("meta_create_datetime", "TIMESTAMP_LTZ"),
+            Column("meta_update_datetime", "TIMESTAMP_LTZ"),
         ]
         return base_table_meta_cols
 

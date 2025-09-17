@@ -27,9 +27,9 @@ dag = DAG(
 
 
 def check_weekday(data_interval_end: pendulum.datetime):
-    run_time = data_interval_end.in_timezone('America/Los_Angeles')
+    run_time = data_interval_end.in_timezone("America/Los_Angeles")
     if run_time.day_of_week == 0:
-        return 'weekly_tasks_sunday_branch_out'
+        return "weekly_tasks_sunday_branch_out"
     else:
         return []
 
@@ -47,17 +47,23 @@ with dag:
         procedure="sxf.gc_historical_customer_request_sxf.sql",
         database="reporting_prod",
     )
-    general_catalyst_historical_customer_request_sxf_snapshot = SnowflakeProcedureOperator(
-        procedure="sxf.gc_historical_customer_request_sxf_snapshot.sql",
-        database="reporting_prod",
+    general_catalyst_historical_customer_request_sxf_snapshot = (
+        SnowflakeProcedureOperator(
+            procedure="sxf.gc_historical_customer_request_sxf_snapshot.sql",
+            database="reporting_prod",
+        )
     )
-    general_catalyst_historical_customer_request_validation_data = SnowflakeProcedureOperator(
-        procedure="fabletics.gc_historical_customer_request_validation_data.sql",
-        database="reporting_prod",
+    general_catalyst_historical_customer_request_validation_data = (
+        SnowflakeProcedureOperator(
+            procedure="fabletics.gc_historical_customer_request_validation_data.sql",
+            database="reporting_prod",
+        )
     )
-    general_catalyst_historical_customer_request_sxf_validation_data = SnowflakeProcedureOperator(
-        procedure="sxf.gc_historical_customer_request_sxf_validation_data.sql",
-        database="reporting_prod",
+    general_catalyst_historical_customer_request_sxf_validation_data = (
+        SnowflakeProcedureOperator(
+            procedure="sxf.gc_historical_customer_request_sxf_validation_data.sql",
+            database="reporting_prod",
+        )
     )
 
     check_weekday_br = BranchPythonOperator(
@@ -65,7 +71,9 @@ with dag:
         python_callable=check_weekday,
     )
 
-    weekly_tasks_sunday_branch_out = EmptyOperator(task_id='weekly_tasks_sunday_branch_out')
+    weekly_tasks_sunday_branch_out = EmptyOperator(
+        task_id="weekly_tasks_sunday_branch_out"
+    )
 
     chain_tasks(check_weekday_br, weekly_tasks_sunday_branch_out)
 

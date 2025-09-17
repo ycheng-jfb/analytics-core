@@ -25,9 +25,9 @@ def get_mart_operator(table_name):
 
     Returns: Union[BaseSnowflakeMartOperator, SnowflakeProcedureOperator]
     """
-    parts = table_name.split('.')
+    parts = table_name.split(".")
     if len(parts) != 3:
-        raise Exception('`table_name` param must use 3-part naming')
+        raise Exception("`table_name` param must use 3-part naming")
     mod = import_module(f"edm.mart.configs.{table_name}")
     op = mod.get_mart_operator()
     return op
@@ -46,8 +46,8 @@ def get_all_mart_operators(table_list=None):
     if not table_list:
         path = f"{DAGS_DIR}/edm/mart/configs/edw"
         table_list = []
-        for elem in Path(path).rglob('*.py'):
-            if elem.name == '__init__.py':
+        for elem in Path(path).rglob("*.py"):
+            if elem.name == "__init__.py":
                 continue
             table_name = path_to_table_name(elem)
             table_list.append(table_name)
@@ -58,9 +58,9 @@ def get_all_mart_operators(table_list=None):
 def path_to_table_name(file_path):
     table_name = (
         file_path.as_posix()
-        .replace(f"{DAGS_DIR}/edm/mart/configs/", '')
-        .replace('/', '.')
-        .replace('.py', '')
+        .replace(f"{DAGS_DIR}/edm/mart/configs/", "")
+        .replace("/", ".")
+        .replace(".py", "")
     )
     return table_name
 
@@ -77,21 +77,24 @@ def create_views(table_list=None, dryrun=False):
     op_list = list(get_all_mart_operators(table_list))
     if dryrun:
         for op in op_list:
-            if not hasattr(op, 'get_view_ddl'):
+            if not hasattr(op, "get_view_ddl"):
                 continue
             try:
                 cmd = op.get_view_ddl()
             except MissingViewException:
-                warnings.warn(f"view '{op.table_name}' missing from source control. adding.")
+                warnings.warn(
+                    f"view '{op.table_name}' missing from source control. adding."
+                )
                 cmd = op.get_view_ddl()
             print(cmd)
     else:
         hook = SnowflakeHook(
-            snowflake_conn_id=conn_ids.Snowflake.default, role=snowflake_roles.etl_service_account
+            snowflake_conn_id=conn_ids.Snowflake.default,
+            role=snowflake_roles.etl_service_account,
         )
         with ConnClosing(hook.get_conn()) as cnx, cnx.cursor() as cur:
             for op in op_list:
-                if not hasattr(op, 'get_view_ddl'):
+                if not hasattr(op, "get_view_ddl"):
                     continue
                 cmd = op.get_view_ddl()
                 print(f"creating view for table {op.target_full_table_name}")
@@ -108,7 +111,7 @@ def generate_ddls(table_list=None):
         E.g. ['edw.dbo.dim_address', 'edw.dbo.dim_bundle']
     """
     for op in get_all_mart_operators(table_list):
-        if not hasattr(op, 'create_stg_table'):
+        if not hasattr(op, "create_stg_table"):
             continue
         yield f"{op.table_name}_stg", op.create_stg_table()
         yield f"{op.table_name}_excp", op.create_excp_table()
@@ -144,7 +147,7 @@ def write_out_ddls(table_list=None):
     for table_name, cmd in generate_ddls(table_list=table_list):
         write_out_script(
             database=MART_DATABASE,
-            folder='tables',
+            folder="tables",
             script=cmd,
             schema=MART_SCHEMA,
             table=table_name,
@@ -154,7 +157,7 @@ def write_out_ddls(table_list=None):
 def write_out_script(database, folder, schema, table, script):
     path = Path(f"{SQL_DIR}/{database}/{folder}/{schema}.{table.lower()}.sql")
     ensure_dir(path.parent)
-    with open(path, 'wt') as f:
+    with open(path, "wt") as f:
         f.write(script)
 
 
@@ -165,7 +168,7 @@ def update_meta_row_hash(table_list=None, dryrun=False):
         table_list: if we provide table values, meta row hash will update for these tables
         E.g. ['edw.dbo.dim_address', 'edw.dbo.dim_bundle']
     """
-    schema = 'dbo'
+    schema = "dbo"
     config_list = []
     if table_list:
         for tbl in table_list:
@@ -180,13 +183,16 @@ def update_meta_row_hash(table_list=None, dryrun=False):
             print(cmd)
     else:
         hook = SnowflakeHook(
-            snowflake_conn_id=conn_ids.Snowflake.default, role=snowflake_roles.etl_service_account
+            snowflake_conn_id=conn_ids.Snowflake.default,
+            role=snowflake_roles.etl_service_account,
         )
         with ConnClosing(hook.get_conn()) as cnx, cnx.cursor() as cur:
             for config in config_list:
                 cmd = get_meta_row_hash_cmd(config)
                 try:
-                    print(f"Updating meta row hash for table {config.target_full_table_name}")
+                    print(
+                        f"Updating meta row hash for table {config.target_full_table_name}"
+                    )
                     print(cmd)
                     cur.execute(cmd)
                 except Exception as e:

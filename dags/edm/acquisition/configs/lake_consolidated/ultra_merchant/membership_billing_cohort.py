@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='membership_billing_cohort',
+    table="membership_billing_cohort",
     company_join_sql="""
         SELECT DISTINCT
             L.MEMBERSHIP_BILLING_COHORT_ID,
@@ -15,14 +15,14 @@ table_config = TableConfig(
         INNER JOIN {database}.{source_schema}.membership_billing_cohort AS L
             ON MP.MEMBERSHIP_PLAN_ID = L.MEMBERSHIP_PLAN_ID """,
     column_list=[
-        Column('membership_billing_cohort_id', 'INT', uniqueness=True, key=True),
-        Column('membership_plan_id', 'INT', key=True),
-        Column('period_id', 'INT'),
-        Column('date_activated_start', 'TIMESTAMP_NTZ(0)'),
-        Column('date_activated_end', 'TIMESTAMP_NTZ(0)'),
+        Column("membership_billing_cohort_id", "INT", uniqueness=True, key=True),
+        Column("membership_plan_id", "INT", key=True),
+        Column("period_id", "INT"),
+        Column("date_activated_start", "TIMESTAMP_NTZ(0)"),
+        Column("date_activated_end", "TIMESTAMP_NTZ(0)"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
     ],
 )

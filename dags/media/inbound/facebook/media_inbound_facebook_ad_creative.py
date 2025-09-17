@@ -43,7 +43,7 @@ column_list = [
 default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2019, 5, 1, tz="America/Los_Angeles"),
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "execution_timeout": timedelta(hours=8),
@@ -66,7 +66,7 @@ with dag:
         table=table,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}",
-        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=1),
+        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=1),
         trigger_rule="all_done",
     )
     for region, account_list in ACCOUNT_CONFIG.items():

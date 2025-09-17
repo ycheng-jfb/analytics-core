@@ -13,17 +13,17 @@ class CheckTempTable(SqlCheck):
     @staticmethod
     def evaluate_temp_table_name(table_name):
         issues = []
-        m = re.match(r'^_[a-zA-Z0-9_]+$', table_name)
+        m = re.match(r"^_[a-zA-Z0-9_]+$", table_name)
         if not m:
-            issues.append('must begin with _ and no database or schema')
+            issues.append("must begin with _ and no database or schema")
         return issues
 
     @staticmethod
     def get_table_name(line):
         m = re.match(
-            r'create\s+(?:or\s+replace\s+)'
-            r'?(?:temp|temporary)\s+table\s+'
-            r'(?:if\s+not\s+exists\s+)'
+            r"create\s+(?:or\s+replace\s+)"
+            r"?(?:temp|temporary)\s+table\s+"
+            r"(?:if\s+not\s+exists\s+)"
             r'?([\w".]+)\s*(?:as|\(|$)',
             line,
             flags=re.IGNORECASE | re.MULTILINE,
@@ -44,8 +44,8 @@ class CheckTempTable(SqlCheck):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Check temp table naming.')
-    parser.add_argument('filenames', nargs='*', help='Filenames to check')
+    parser = argparse.ArgumentParser(description="Check temp table naming.")
+    parser.add_argument("filenames", nargs="*", help="Filenames to check")
     args = parser.parse_args(argv)
     retv = 0
 
@@ -56,5 +56,5 @@ def main(argv=None):
     return retv
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())

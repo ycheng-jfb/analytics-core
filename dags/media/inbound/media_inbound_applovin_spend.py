@@ -39,11 +39,11 @@ column_list = [
 
 
 config = {
-    "columns": ','.join(
+    "columns": ",".join(
         [
             col.source_name
             for col in column_list
-            if col.name not in ['api_call_timestamp', 'advertiser_id']
+            if col.name not in ["api_call_timestamp", "advertiser_id"]
         ]
     ),
     "report_type": "advertiser",
@@ -53,7 +53,7 @@ config = {
 default_args = {
     "start_date": pendulum.datetime(2024, 4, 1, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": email_lists.airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "execution_timeout": timedelta(hours=1),
@@ -69,16 +69,16 @@ dag = DAG(
 )
 
 
-Advertiser = namedtuple('Advertiser', ['brand', 'id'])
+Advertiser = namedtuple("Advertiser", ["brand", "id"])
 advertisers = [
-    Advertiser('fl', '123456ALFL'),
-    Advertiser('jf', '987654ALJF'),
-    Advertiser('sx', '73625378ALSX'),
+    Advertiser("fl", "123456ALFL"),
+    Advertiser("jf", "987654ALJF"),
+    Advertiser("sx", "73625378ALSX"),
 ]
 
 with dag:
     schema = "media"
-    table = 'applovin_spend'
+    table = "applovin_spend"
     date_param = "{{ data_interval_start.strftime('%Y%m%dT%H%M%S%z')[0:-5] }}"
     s3_prefix = f"inbound/{schema}.{table}/daily_v1"
     update_advertiser_ids = """
@@ -94,7 +94,7 @@ with dag:
         table=table,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}",
-        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=1),
+        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=1),
         trigger_rule="all_done",
         pre_merge_command=update_advertiser_ids,
     )

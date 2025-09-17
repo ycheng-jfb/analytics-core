@@ -9,18 +9,18 @@ from include.utils.snowflake import Column, CopyConfigCsv
 
 sheets = [
     SheetConfig(
-        sheet_name='Ingestion Sheet',
-        schema='excel',
-        table='jfb_amazon_assortment',
+        sheet_name="Ingestion Sheet",
+        schema="excel",
+        table="jfb_amazon_assortment",
         header_rows=1,
         column_list=[
-            Column('po_number', 'STRING', uniqueness=True, source_name='PO_Number'),
-            Column('sku', 'STRING', source_name='SKU'),
-            Column('launch_month', 'DATETIME', source_name='Launch_Month'),
-            Column('eta', 'DATETIME', source_name='ETA'),
-            Column('amazon_on_order', 'NUMBER(38,0)', source_name='Amazon_On_Order'),
+            Column("po_number", "STRING", uniqueness=True, source_name="PO_Number"),
+            Column("sku", "STRING", source_name="SKU"),
+            Column("launch_month", "DATETIME", source_name="Launch_Month"),
+            Column("eta", "DATETIME", source_name="ETA"),
+            Column("amazon_on_order", "NUMBER(38,0)", source_name="Amazon_On_Order"),
         ],
-        default_schema_version='v2',
+        default_schema_version="v2",
     ),
 ]
 
@@ -34,39 +34,39 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id='edm_inbound_jfb_amazon_assortment',
+    dag_id="edm_inbound_jfb_amazon_assortment",
     default_args=default_args,
-    schedule='0 10 * * 2',
+    schedule="0 10 * * 2",
     catchup=False,
     max_active_runs=1,
 )
 with dag:
     to_s3 = ExcelSMBToS3Operator(
-        task_id='excel_to_s3',
-        smb_path='/Inbound/airflow.amazon_assortment/Amazon 2023 Assortment.xlsx',
-        share_name='BI',
+        task_id="excel_to_s3",
+        smb_path="/Inbound/airflow.amazon_assortment/Amazon 2023 Assortment.xlsx",
+        share_name="BI",
         bucket=s3_buckets.tsos_da_int_inbound,
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
         smb_conn_id=conn_ids.SMB.nas01,
         sheet_configs=sheets,
-        default_schema_version='v2',
+        default_schema_version="v2",
         is_archive_file=True,
-        archive_folder='archive',
+        archive_folder="archive",
     )
     for sheet in sheets:
         to_snowflake = SnowflakeInsertOperator(
             task_id=f"{sheet.schema}.{sheet.table}.load_to_snowflake",
             files_path=f"{stages.tsos_da_int_inbound}/lake/{sheet.schema}.{sheet.table}/v2/",
-            database='lake',
-            staging_database='lake_stg',
-            view_database='lake_view',
-            schema='excel',
+            database="lake",
+            staging_database="lake_stg",
+            view_database="lake_view",
+            schema="excel",
             table=sheet.table,
             column_list=sheet.column_list,
             initial_load=True,
             copy_config=CopyConfigCsv(
-                field_delimiter='|',
-                record_delimiter='\n',
+                field_delimiter="|",
+                record_delimiter="\n",
                 header_rows=sheet.header_rows,
                 skip_pct=1,
             ),

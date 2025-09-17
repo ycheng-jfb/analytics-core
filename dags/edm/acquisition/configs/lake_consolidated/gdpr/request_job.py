@@ -4,8 +4,8 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='request_job',
-    schema='gdpr',
+    table="request_job",
+    schema="gdpr",
     company_join_sql="""
         SELECT DISTINCT
             L.request_job_id,
@@ -18,14 +18,14 @@ table_config = TableConfig(
             ON L.CUSTOMER_ID = C.CUSTOMER_ID
     """,
     column_list=[
-        Column('CUSTOMER_ID', 'INT', uniqueness=True, key=True),
-        Column('REQUEST_JOB_ID', 'INT', uniqueness=True, key=True),
-        Column('REQUEST_ID', 'INT'),
-        Column('SYSTEM_ID', 'INT'),
-        Column('DATETIME_ADDED', 'TIMESTAMP_NTZ'),
-        Column('STATUSCODE', 'INT'),
-        Column('SNOWFLAKE_UPDATED', 'INT'),
-        Column('PUSHED_TO_MSSQL', 'INT'),
+        Column("CUSTOMER_ID", "INT", uniqueness=True, key=True),
+        Column("REQUEST_JOB_ID", "INT", uniqueness=True, key=True),
+        Column("REQUEST_ID", "INT"),
+        Column("SYSTEM_ID", "INT"),
+        Column("DATETIME_ADDED", "TIMESTAMP_NTZ"),
+        Column("STATUSCODE", "INT"),
+        Column("SNOWFLAKE_UPDATED", "INT"),
+        Column("PUSHED_TO_MSSQL", "INT"),
     ],
     watermark_column="DATETIME_ADDED",
 )

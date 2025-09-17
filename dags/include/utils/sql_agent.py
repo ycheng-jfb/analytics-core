@@ -39,7 +39,11 @@ def run_sqlagent_job_and_await_finish_file(
             return
         else:
             print("Did not find finish file on attempt {}.".format(attempt_count))
-            print("Waiting {} minutes before checking again...".format(retry_wait_interval_minutes))
+            print(
+                "Waiting {} minutes before checking again...".format(
+                    retry_wait_interval_minutes
+                )
+            )
             attempt_count += 1
             time.sleep(retry_wait_interval_minutes * 60)
             current_wait_time_minutes += retry_wait_interval_minutes

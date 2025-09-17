@@ -28,21 +28,21 @@ SFTP_CONFIG_MAP: dict[str, dict[str, str]] = {
 SFTP_ENV = "prd"
 SFTP_CONFIG = SFTP_CONFIG_MAP[SFTP_ENV]
 
-sftp_conn_id = SFTP_CONFIG['sftp_conn_id']
-sftp_path = SFTP_CONFIG['base_path']
+sftp_conn_id = SFTP_CONFIG["sftp_conn_id"]
+sftp_path = SFTP_CONFIG["base_path"]
 
 default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2022, 12, 1, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.data_integrations,
+    "owner": owners.data_integrations,
     "email": data_integration_support,
 }
 
 dag = DAG(
-    dag_id='edm_outbound_sftp_salesfloor_feed',
+    dag_id="edm_outbound_sftp_salesfloor_feed",
     default_args=default_args,
-    schedule='0 5 * * *',
+    schedule="0 5 * * *",
     catchup=False,
     max_active_tasks=1,
     max_active_runs=1,
@@ -52,7 +52,7 @@ with dag:
     timestamp = "{{ ts_nodash }}"
 
     customer_feed_snowflake = SnowflakeProcedureOperator(
-        procedure='salesfloor.customer.sql', database='reporting_prod'
+        procedure="salesfloor.customer.sql", database="reporting_prod"
     )
 
     customer_feed_sftp = SalesfloorExportToSFTP(
@@ -70,7 +70,7 @@ with dag:
         header=True,
     )
     product_feed_snowflake = SnowflakeProcedureOperator(
-        procedure='salesfloor.product.sql', database='reporting_prod'
+        procedure="salesfloor.product.sql", database="reporting_prod"
     )
     product_feed_sftp = SnowflakeToSFTPOperator(
         task_id="salesfloor_product_feed",
@@ -83,7 +83,7 @@ with dag:
     )
     product_feed_snowflake >> product_feed_sftp
     transaction_feed_snowflake = SnowflakeProcedureOperator(
-        procedure='salesfloor.transaction.sql', database='reporting_prod'
+        procedure="salesfloor.transaction.sql", database="reporting_prod"
     )
     transaction_feed_sftp = SalesfloorExportToSFTP(
         task_id="salesfloor_transaction_feed",
@@ -119,7 +119,7 @@ with dag:
     transaction_feed_snowflake >> transaction_feed_sftp
 
     statistics_feed_snowflake = SnowflakeProcedureOperator(
-        procedure='salesfloor.statistics.sql', database='reporting_prod'
+        procedure="salesfloor.statistics.sql", database="reporting_prod"
     )
     statistics_feed_sftp = SalesfloorExportToSFTP(
         task_id="salesfloor_statistics_feed",
@@ -139,5 +139,9 @@ with dag:
     (
         customer_feed_snowflake
         >> customer_feed_sftp
-        >> [statistics_feed_snowflake, product_feed_snowflake, transaction_feed_snowflake]
+        >> [
+            statistics_feed_snowflake,
+            product_feed_snowflake,
+            transaction_feed_snowflake,
+        ]
     )

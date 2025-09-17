@@ -19,7 +19,7 @@ data_interval_start = "{{ data_interval_end.strftime('%Y%m%d') }}"
 default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2021, 9, 13, tz="America/Los_Angeles"),
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }
@@ -34,21 +34,30 @@ dag = DAG(
     max_active_runs=1,
 )
 
-SftpPath = namedtuple('SftpPath', ['store', 'region', 'conn_id', 'cid', 'subid', 'actiontrackerid'])
+SftpPath = namedtuple(
+    "SftpPath", ["store", "region", "conn_id", "cid", "subid", "actiontrackerid"]
+)
 
 
 items = [
-    SftpPath('SX', 'NA', f"{SFTP.sftp_cj_sxna}", 5844330, 256340, [448334]),
-    SftpPath('FL', 'NA', f"{SFTP.sftp_cj_flna}", 5885341, 257710, [445552]),
-    SftpPath('FK', 'NA', f"{SFTP.sftp_cj_fkna}", 5886277, 257713, [448314]),
-    SftpPath('JF', 'NA', f"{SFTP.sftp_cj_jfna}", 5886275, 257711, [447612]),
-    SftpPath('SD', 'NA', f"{SFTP.sftp_cj_sdna}", 5886276, 257712, [448332]),
-    SftpPath('YTY', 'NA', f"{SFTP.sftp_cj_flna}", 5885341, 257710, [445554]),
-    SftpPath('SX', 'EU', f"{SFTP.sftp_cj_sxeu}", 5963319, 260704, [430735, 436913, 436915, 436914]),
-    SftpPath('SX', 'UK', f"{SFTP.sftp_cj_sxeu}", 5889552, 257920, [429724]),
+    SftpPath("SX", "NA", f"{SFTP.sftp_cj_sxna}", 5844330, 256340, [448334]),
+    SftpPath("FL", "NA", f"{SFTP.sftp_cj_flna}", 5885341, 257710, [445552]),
+    SftpPath("FK", "NA", f"{SFTP.sftp_cj_fkna}", 5886277, 257713, [448314]),
+    SftpPath("JF", "NA", f"{SFTP.sftp_cj_jfna}", 5886275, 257711, [447612]),
+    SftpPath("SD", "NA", f"{SFTP.sftp_cj_sdna}", 5886276, 257712, [448332]),
+    SftpPath("YTY", "NA", f"{SFTP.sftp_cj_flna}", 5885341, 257710, [445554]),
     SftpPath(
-        'FL',
-        'EU',
+        "SX",
+        "EU",
+        f"{SFTP.sftp_cj_sxeu}",
+        5963319,
+        260704,
+        [430735, 436913, 436915, 436914],
+    ),
+    SftpPath("SX", "UK", f"{SFTP.sftp_cj_sxeu}", 5889552, 257920, [429724]),
+    SftpPath(
+        "FL",
+        "EU",
         f"{SFTP.sftp_cj_sxeu}",
         6323253,
         287822,
@@ -80,10 +89,10 @@ class CJCorrectionsToSFTP(SnowflakeToSFTPOperator):
                     dialect=self.dialect,
                     delimiter=self.field_delimiter,
                     quoting=csv.QUOTE_MINIMAL,
-                    escapechar='\\',
+                    escapechar="\\",
                 )
-                writer.writerow([f'&CID={self.cid}'])
-                writer.writerow([f'&SUBID={self.subid}'])
+                writer.writerow([f"&CID={self.cid}"])
+                writer.writerow([f"&SUBID={self.subid}"])
                 rows = cur.fetchmany(self.batch_size)
                 while rows:
                     writer.writerows(rows)
@@ -95,7 +104,6 @@ class CJCorrectionsToSFTP(SnowflakeToSFTPOperator):
 
 
 class CJOrdersToSFTP(SnowflakeToSFTPOperator):
-
     def export_to_file(self, sql, local_path) -> int:
         batch_count = 1
         rows_exported = 0
@@ -113,23 +121,23 @@ class CJOrdersToSFTP(SnowflakeToSFTPOperator):
                     dialect=self.dialect,
                     delimiter=self.field_delimiter,
                     quoting=self.quoting,
-                    escapechar='\\',
+                    escapechar="\\",
                 )
                 rows = cur.fetchmany(self.batch_size)
                 if rows and self.header:
                     column_list = [
-                        'companyId',
-                        'enterpriseId',
-                        'subscriptionId',
-                        'orderId',
-                        'actionTrackerId',
-                        'eventTime',
-                        'cjEvent',
-                        'amount',
-                        'discount',
-                        'currency',
-                        'duration',
-                        'customerStatus',
+                        "companyId",
+                        "enterpriseId",
+                        "subscriptionId",
+                        "orderId",
+                        "actionTrackerId",
+                        "eventTime",
+                        "cjEvent",
+                        "amount",
+                        "discount",
+                        "currency",
+                        "duration",
+                        "customerStatus",
                     ]
                     writer.writerow(column_list)
                 while rows:
@@ -140,7 +148,7 @@ class CJOrdersToSFTP(SnowflakeToSFTPOperator):
                     rows = cur.fetchmany(self.batch_size)
                 s3_hook = S3Hook(conn_ids.S3.tsos_da_int_prod)
                 s3_bucket = s3_buckets.tsos_da_int_inbound
-                s3_key = f'media/cj.orders/{self.filename}'
+                s3_key = f"media/cj.orders/{self.filename}"
                 print(f"uploading to s3 - {s3_bucket}/{s3_key}")
                 s3_hook.load_file(
                     filename=local_path,
@@ -153,8 +161,8 @@ class CJOrdersToSFTP(SnowflakeToSFTPOperator):
 
 with dag:
     cj_all_events = SnowflakeProcedureOperator(
-        procedure='dbo.cj_all_events.sql',
-        database='reporting_media_base_prod',
+        procedure="dbo.cj_all_events.sql",
+        database="reporting_media_base_prod",
         autocommit=False,
     )
 
@@ -179,12 +187,12 @@ with dag:
             sftp_conn_id=item.conn_id,
             filename=f"cj_corrections_{item.store}{item.region}_{data_interval_start}.csv",
             sftp_dir="",
-            field_delimiter=',',
+            field_delimiter=",",
             cid=item.cid,
             subid=item.subid,
         )
 
-        if item.store != 'YTY':
+        if item.store != "YTY":
             orders_sql = f"""
                 SELECT companyid,
                        enterpriseid,
@@ -208,7 +216,7 @@ with dag:
                 sftp_conn_id=item.conn_id,
                 filename=f"cj_orders_{item.store}{item.region}_{data_interval_start}.csv",
                 sftp_dir="",
-                field_delimiter=',',
+                field_delimiter=",",
                 header=True,
             )
             cj_all_events >> post_orders_to_sftp

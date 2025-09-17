@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='store_warehouse_map',
+    table="store_warehouse_map",
     company_join_sql="""
         SELECT DISTINCT
             L.STORE_ID,
@@ -14,9 +14,9 @@ table_config = TableConfig(
         INNER JOIN {database}.{source_schema}.store_warehouse_map AS L
             ON DS.STORE_ID = L.STORE_ID """,
     column_list=[
-        Column('store_id', 'INT', uniqueness=True),
-        Column('country_code', 'VARCHAR(2)', uniqueness=True),
-        Column('warehouse_id', 'INT'),
-        Column('shipper_item_number', 'VARCHAR(30)'),
+        Column("store_id", "INT", uniqueness=True),
+        Column("country_code", "VARCHAR(2)", uniqueness=True),
+        Column("warehouse_id", "INT"),
+        Column("shipper_item_number", "VARCHAR(30)"),
     ],
 )

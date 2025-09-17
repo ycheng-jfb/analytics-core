@@ -5,7 +5,9 @@ from functools import cached_property
 from include import DAGS_DIR
 from include.airflow.utils.db import CLUSTER_BASE_URL
 from include.config import conn_ids
-from include.airflow.callbacks.slack import send_slack_message  # Import Slack message sender
+from include.airflow.callbacks.slack import (
+    send_slack_message,
+)  # Import Slack message sender
 
 
 class DisabledDagsAlertOperator(BaseOperator):
@@ -31,9 +33,9 @@ class DisabledDagsAlertOperator(BaseOperator):
 
     @property
     def alert_message(self):
-        body = 'The following critical DAGs are disabled in prod.\n'
-        body += '\n'.join([self.make_link(dag_id) for dag_id in self.disabled_dags])
-        return body.replace('\n', '\n<br>')
+        body = "The following critical DAGs are disabled in prod.\n"
+        body += "\n".join([self.make_link(dag_id) for dag_id in self.disabled_dags])
+        return body.replace("\n", "\n<br>")
 
     @property
     def slack_message(self):
@@ -52,7 +54,7 @@ class DisabledDagsAlertOperator(BaseOperator):
         if self.disabled_dags:
             send_email(
                 to=self.email,
-                subject='🚨 Airflow Alert: Disabled DAGs',
+                subject="🚨 Airflow Alert: Disabled DAGs",
                 html_content=self.alert_message,
             )
             send_slack_message(message=self.slack_message, conn_id=self.slack_conn_id)

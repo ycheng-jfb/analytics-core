@@ -12,7 +12,9 @@ def wrap_toc(toc_content, start_token, end_token):
 
 
 def anchor_name(section_name, section_count):
-    repl_map = str.maketrans({' ': '-', '`': '', '.': '_', '/': '_', '&': '_', '~': '-', '?': ''})
+    repl_map = str.maketrans(
+        {" ": "-", "`": "", ".": "_", "/": "_", "&": "_", "~": "-", "?": ""}
+    )
     if section_count > 1:
         suffix = f"_{section_count}"
     else:
@@ -69,7 +71,9 @@ def process_content(content):
     is_in_code_block = False
     for idx, line in enumerate(content.splitlines()):
         if line[0:3] in ("---", "==="):
-            raise Exception(f"bad header found on line {idx}; use '# ', '## ' to denote headings.")
+            raise Exception(
+                f"bad header found on line {idx}; use '# ', '## ' to denote headings."
+            )
         if line[0 : len(start_toc_token)] == start_toc_token:
             is_in_toc = True
         if line[0 : len(end_toc_token)] == end_toc_token:
@@ -95,13 +99,17 @@ def process_content(content):
             section_counter.increment_section_count(section)
             count = section_counter.get_section_count(section)
             out_content.append(anchor_tag(section_name=section, section_count=count))
-            toc.append(toc_element(section_name=section, header_type="h1", section_count=count))
+            toc.append(
+                toc_element(section_name=section, header_type="h1", section_count=count)
+            )
         if line[0:3] == "## ":
             section = parse_section_name(line=line, htype="h2")
             section_counter.increment_section_count(section)
             count = section_counter.get_section_count(section)
             out_content.append(anchor_tag(section_name=section, section_count=count))
-            toc.append(toc_element(section_name=section, header_type="h2", section_count=count))
+            toc.append(
+                toc_element(section_name=section, header_type="h2", section_count=count)
+            )
         out_content.append(line)
 
     new_toc = wrap_toc(
@@ -117,7 +125,7 @@ def process_file(filename):
 
     new_content = process_content(content)
     with open(filename, "wb") as f:
-        f.write(new_content.encode('utf-8'))
+        f.write(new_content.encode("utf-8"))
 
 
 if __name__ == "__main__":

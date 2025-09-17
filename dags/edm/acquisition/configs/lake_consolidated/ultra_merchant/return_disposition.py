@@ -6,10 +6,10 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table='return_disposition',
+    table="return_disposition",
     column_list=[
-        Column('return_disposition_id', 'INT', uniqueness=True),
-        Column('label', 'VARCHAR(50)'),
-        Column('description', 'VARCHAR(255)'),
+        Column("return_disposition_id", "INT", uniqueness=True),
+        Column("label", "VARCHAR(50)"),
+        Column("description", "VARCHAR(255)"),
     ],
 )

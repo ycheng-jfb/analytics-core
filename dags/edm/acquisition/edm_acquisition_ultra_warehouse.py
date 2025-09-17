@@ -16,16 +16,16 @@ from include.config import owners
 from include.config.email_lists import data_integration_support
 
 dag = DAG(
-    dag_id='edm_acquisition_ultra_warehouse',
+    dag_id="edm_acquisition_ultra_warehouse",
     default_args={
-        'start_date': pendulum.datetime(2019, 11, 19, tz='America/Los_Angeles'),
-        'retries': 0,
-        'owner': owners.data_integrations,
-        'email': data_integration_support,
+        "start_date": pendulum.datetime(2019, 11, 19, tz="America/Los_Angeles"),
+        "retries": 0,
+        "owner": owners.data_integrations,
+        "email": data_integration_support,
         "on_failure_callback": slack_failure_edm,
-        'execution_timeout': timedelta(hours=3),
+        "execution_timeout": timedelta(hours=3),
     },
-    schedule='15 */2 * * *',
+    schedule="15 */2 * * *",
     sla_miss_callback=slack_sla_miss_edm,
     catchup=False,
     max_active_tasks=1000,
@@ -39,7 +39,7 @@ with dag:
     for cfg in table_config_list:
         if (
             cfg.full_target_table_name not in lake_exclusion_table_list
-            and cfg.database == 'ultrawarehouse'
+            and cfg.database == "ultrawarehouse"
         ):
             to_s3 = cfg.to_s3_operator
             to_snowflake = cfg.to_snowflake_operator
@@ -47,4 +47,4 @@ with dag:
             tfg_control >> to_s3 >> to_snowflake
             for op in (to_s3, to_snowflake):
                 op.priority_weight = priority_weight
-                op.weight_rule = 'absolute'
+                op.weight_rule = "absolute"

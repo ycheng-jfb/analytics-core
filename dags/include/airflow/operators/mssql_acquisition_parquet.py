@@ -12,7 +12,7 @@ from include.config import conn_ids
 
 
 class MsSqlTableToS3ParquetOperator(BaseTableAcquisitionOperator):
-    template_fields = ['key']
+    template_fields = ["key"]
 
     def __init__(
         self,
@@ -36,7 +36,9 @@ class MsSqlTableToS3ParquetOperator(BaseTableAcquisitionOperator):
         s3_hook = S3Hook(self.s3_conn_id)
         if Path(filename).exists():
             self.log.info(f"uploading to {self.key}")
-            s3_hook.load_file(filename=filename, key=key, bucket_name=bucket, replace=replace)
+            s3_hook.load_file(
+                filename=filename, key=key, bucket_name=bucket, replace=replace
+            )
         else:
             self.log.info(f"filename {filename} does not exist; nothing to do.")
 
@@ -50,20 +52,25 @@ class MsSqlTableToS3ParquetOperator(BaseTableAcquisitionOperator):
         )
 
     def get_sql_to_s3_local(self, sql):
-        with tempfile.TemporaryDirectory() as td, ConnClosing(self.mssql_hook.get_conn()) as cnx:
+        with tempfile.TemporaryDirectory() as td, ConnClosing(
+            self.mssql_hook.get_conn()
+        ) as cnx:
             cnx.add_output_converter(SQL_VARBINARY, hexlify)
             cnx.add_output_converter(SQL_BINARY, hexlify)
-            filename = Path(td, 'temp').as_posix()
+            filename = Path(td, "temp").as_posix()
             cur = cnx.cursor()
             table_schema = self.get_arrow_schema(cur)
             cur.execute(sql)
             with BatchedParquetWriter(
-                where=filename, schema=table_schema, flavor='spark', version='2.0'
+                where=filename, schema=table_schema, flavor="spark", version="2.0"
             ) as writer:
                 writer.write_all(cur=cur, batch_size=30000)
 
             self.copy_to_s3(
-                filename=filename, key=self.key, bucket=self.bucket, replace=self.s3_replace
+                filename=filename,
+                key=self.key,
+                bucket=self.bucket,
+                replace=self.s3_replace,
             )
 
     def watermark_execute(self, context=None):

@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='case_comment',
+    table="case_comment",
     company_join_sql="""
      SELECT DISTINCT
          L.CASE_COMMENT_ID,
@@ -25,19 +25,19 @@ table_config = TableConfig(
       ON L.administrator_id=ASG.administrator_id
       """,
     column_list=[
-        Column('case_comment_id', 'INT', uniqueness=True),
-        Column('case_id', 'INT', key=True),
-        Column('case_comment_type_id', 'INT'),
-        Column('comment', 'VARCHAR(8000)'),
-        Column('administrator_id', 'INT'),
+        Column("case_comment_id", "INT", uniqueness=True),
+        Column("case_id", "INT", key=True),
+        Column("case_comment_type_id", "INT"),
+        Column("comment", "VARCHAR(8000)"),
+        Column("administrator_id", "INT"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
         Column(
-            'datetime_modified',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_modified",
+            "TIMESTAMP_NTZ(3)",
         ),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

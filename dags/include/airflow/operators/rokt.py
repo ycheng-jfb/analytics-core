@@ -50,7 +50,9 @@ class RoktToS3Operator(BaseRowsToS3CsvOperator):
     @property
     def report_date_list(self):
         date_dt_list = pd.date_range(
-            start=self.request_params['dateStart'], end=self.request_params['dateEnd'], freq="D"
+            start=self.request_params["dateStart"],
+            end=self.request_params["dateEnd"],
+            freq="D",
         )
         date_list = [x.isoformat()[0:10] for x in date_dt_list]
         return date_list
@@ -58,23 +60,25 @@ class RoktToS3Operator(BaseRowsToS3CsvOperator):
     def get_rows(self) -> Iterable[Dict]:
         print(f"request params are {self.request_params}")
         for date in self.report_date_list:
-            end_date = str(pendulum.from_format(date, 'YYYY-MM-DD').add(days=1).date())
+            end_date = str(pendulum.from_format(date, "YYYY-MM-DD").add(days=1).date())
             extra_cols = dict(
                 dateStart=date,
                 dateEnd=end_date,
-                accountId=self.request_params['accountId'],
-                campaignId=self.request_params['campaignId'],
+                accountId=self.request_params["accountId"],
+                campaignId=self.request_params["campaignId"],
             )
             response = self.hook.make_request(
-                method='GET',
+                method="GET",
                 endpoint=f"/reporting/accounts/{self.request_params['accountId']}/campaigns/{self.request_params['campaignId']}/breakdown",
                 params=self.build_config(date, end_date),
             )
             data = response.json()
 
-            if len(data['data']['items']) > 0:
-                for record in data['data']['items']:
+            if len(data["data"]["items"]) > 0:
+                for record in data["data"]["items"]:
                     yield dict(record, **extra_cols)
             else:
                 self.log.warning(data)
-                self.log.warning(f'unable to pull records for {self.build_config(date, end_date)} ')
+                self.log.warning(
+                    f"unable to pull records for {self.build_config(date, end_date)} "
+                )

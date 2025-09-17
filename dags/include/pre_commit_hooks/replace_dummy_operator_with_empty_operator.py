@@ -16,26 +16,30 @@ class DummyOperatorReplacer(cst.CSTTransformer):
         self.modified: bool = False
         super().__init__()
 
-    def leave_Name(self, original_node: cst.Name, updated_node: cst.Name) -> cst.BaseExpression:
-        if original_node.value == 'DummyOperator':
+    def leave_Name(
+        self, original_node: cst.Name, updated_node: cst.Name
+    ) -> cst.BaseExpression:
+        if original_node.value == "DummyOperator":
             self.modified = True
-            return updated_node.with_changes(value='EmptyOperator')
+            return updated_node.with_changes(value="EmptyOperator")
         return updated_node
 
     def leave_ImportFrom(
         self, original_node: cst.ImportFrom, updated_node: cst.ImportFrom
     ) -> Union[
-        cst.BaseSmallStatement, cst.FlattenSentinel[cst.BaseSmallStatement], cst.RemovalSentinel
+        cst.BaseSmallStatement,
+        cst.FlattenSentinel[cst.BaseSmallStatement],
+        cst.RemovalSentinel,
     ]:
         if isinstance(original_node.module, cst.Attribute):
             if isinstance(original_node.module.value, cst.Attribute):
-                if original_node.module.value.value.value == 'airflow':  # type: ignore
-                    if original_node.module.value.attr.value == 'operators':
-                        if original_node.module.attr.value == 'dummy':
+                if original_node.module.value.value.value == "airflow":  # type: ignore
+                    if original_node.module.value.attr.value == "operators":
+                        if original_node.module.attr.value == "dummy":
                             self.modified = True
                             updated_node = updated_node.deep_replace(
                                 updated_node.module.attr,  # type: ignore
-                                cst.Name(value='empty', lpar=[], rpar=[]),  # type: ignore
+                                cst.Name(value="empty", lpar=[], rpar=[]),  # type: ignore
                             )
         return updated_node
 
@@ -75,18 +79,20 @@ class ReplaceDummyOpWithEmptyOp:
         modified = any(list(map(self._validate_file, self.files)))
 
         if modified:
-            print('DummyOperator usage found! Replacing with EmptyOperator...')
+            print("DummyOperator usage found! Replacing with EmptyOperator...")
             return 1
         return 0
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Replace DummyOperator with EmptyOperator in code')
-    parser.add_argument('filenames', nargs='*', help='Filenames to check')
+    parser = argparse.ArgumentParser(
+        description="Replace DummyOperator with EmptyOperator in code"
+    )
+    parser.add_argument("filenames", nargs="*", help="Filenames to check")
     args = parser.parse_args(argv)
 
     return ReplaceDummyOpWithEmptyOp(files=args.filenames).validate_files()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())

@@ -10,7 +10,6 @@ from include.airflow.hooks.s3 import S3Hook
 
 
 class AwsCostCopy(BaseOperator):
-
     template_fields = ["current_timestamp"]
 
     def __init__(
@@ -44,7 +43,9 @@ class AwsCostCopy(BaseOperator):
         return S3Hook(self.s3_conn_id)
 
     def get_keys(self):
-        keys = self.hook.list_keys(bucket_name=self.source_bucket, prefix=self.source_prefix)
+        keys = self.hook.list_keys(
+            bucket_name=self.source_bucket, prefix=self.source_prefix
+        )
         return keys
 
     def create_new_file(self, temp_dir, src_key):
@@ -56,21 +57,21 @@ class AwsCostCopy(BaseOperator):
         )
 
         df_blank = pd.DataFrame(columns=self.column_list)
-        df_data = pd.read_csv(temp_file_name, dtype=object, compression='gzip')
+        df_data = pd.read_csv(temp_file_name, dtype=object, compression="gzip")
         df_merged = pd.concat([df_blank, df_data], axis=0, ignore_index=True)
         df_target = df_merged[self.column_list]
-        df_target['updated_at'] = self.current_timestamp
-        key_split = src_key.split('/')
-        new_file = f'{key_split[3]}_{self.current_timestamp}_{key_split[4]}'
+        df_target["updated_at"] = self.current_timestamp
+        key_split = src_key.split("/")
+        new_file = f"{key_split[3]}_{self.current_timestamp}_{key_split[4]}"
 
-        self.log.info(f'uploading {new_file}')
+        self.log.info(f"uploading {new_file}")
         new_file_path = Path(temp_dir_path / new_file)
-        df_target.to_csv(new_file_path, index=False, compression='gzip')
+        df_target.to_csv(new_file_path, index=False, compression="gzip")
 
-        if self.target_output_prefix[-1] == '/':
-            key = f'{self.target_output_prefix}{key_split[3]}/{new_file}'
+        if self.target_output_prefix[-1] == "/":
+            key = f"{self.target_output_prefix}{key_split[3]}/{new_file}"
         else:
-            key = f'{self.target_output_prefix}/{key_split[3]}/{new_file}'
+            key = f"{self.target_output_prefix}/{key_split[3]}/{new_file}"
 
         return new_file_path, key
 

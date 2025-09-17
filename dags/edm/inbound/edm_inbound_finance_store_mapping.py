@@ -20,7 +20,7 @@ finance_store_mapping_column_list = [
 
 default_args = {
     "owner": owners.analytics_engineering,
-    "start_date": pendulum.datetime(2022, 4, 1, tz='America/Los_Angeles'),
+    "start_date": pendulum.datetime(2022, 4, 1, tz="America/Los_Angeles"),
 }
 
 dag = DAG(
@@ -31,7 +31,9 @@ dag = DAG(
     max_active_tasks=2,
 )
 
-finance_store_mapping_s3_prefix = "inbound/svc_oracle_ebs/lake.oracle_ebs.retail_store_mapping"
+finance_store_mapping_s3_prefix = (
+    "inbound/svc_oracle_ebs/lake.oracle_ebs.retail_store_mapping"
+)
 
 with dag:
     finance_store_mapping_to_snowflake = SnowflakeIncrementalLoadOperator(

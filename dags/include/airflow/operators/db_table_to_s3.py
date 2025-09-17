@@ -22,7 +22,9 @@ class BaseDbToS3Operator(BaseOperator):
     Override build_sql_statement method to construct sql statement to query DB instance.
     """
 
-    def __init__(self, bucket, key, db_conn_id, s3_conn_id=None, s3_replace=True, **kwargs):
+    def __init__(
+        self, bucket, key, db_conn_id, s3_conn_id=None, s3_replace=True, **kwargs
+    ):
         super().__init__(**kwargs)
         self.bucket = bucket
         self.key = key
@@ -45,8 +47,8 @@ class BaseDbToS3Operator(BaseOperator):
 
     def DbTableToS3Operator_execute(self):
         with tempfile.TemporaryDirectory() as td:
-            temp_file = Path(td, 'tmpfile').as_posix()
-            with gzip.open(temp_file, 'wb') as f:
+            temp_file = Path(td, "tmpfile").as_posix()
+            with gzip.open(temp_file, "wb") as f:
                 sql = self.build_sql_statement()
 
                 self.db_hook.copy_to_file(sql, f)
@@ -74,7 +76,13 @@ class BaseDbTableToS3Operator(BaseDbToS3Operator):
     template_fields = ["key"]
 
     def __init__(
-        self, table, database=None, schema=None, column_list=None, additional_sql=None, **kwargs
+        self,
+        table,
+        database=None,
+        schema=None,
+        column_list=None,
+        additional_sql=None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.database = database
@@ -85,17 +93,17 @@ class BaseDbTableToS3Operator(BaseDbToS3Operator):
 
     def build_table_string(self):
         table_str = self.table
-        table_str = f'{self.schema}.{table_str}' if self.schema else table_str
-        table_str = f'{self.database}.{table_str}' if self.database else table_str
+        table_str = f"{self.schema}.{table_str}" if self.schema else table_str
+        table_str = f"{self.database}.{table_str}" if self.database else table_str
         return table_str
 
     def build_sql_statement(self):
         if self.column_list:
-            cnt = ',\n\t'
+            cnt = ",\n\t"
             column_names = [x.source_name for x in self.column_list]
             select_columns = cnt.join(column_names)
         else:
-            select_columns = '*'
+            select_columns = "*"
 
         sql = f"""SELECT {select_columns}
                 FROM {self.build_table_string()}
@@ -124,7 +132,9 @@ class BaseDbQueryToS3Operator(BaseDbToS3Operator):
         return self.sql_query
 
 
-class BaseDbTableToS3WatermarkOperator(BaseProcessWatermarkOperator, BaseDbTableToS3Operator):
+class BaseDbTableToS3WatermarkOperator(
+    BaseProcessWatermarkOperator, BaseDbTableToS3Operator
+):
     """
     Base operator for saving the results from querying a DB to a file in S3, using standard
     watermark functionality.
@@ -188,18 +198,18 @@ class BaseDbTableToS3WatermarkOperator(BaseProcessWatermarkOperator, BaseDbTable
             cur.execute(cmd)
             k = cur.fetchone()
             val = k[0]
-            if hasattr(val, 'isoformat'):
+            if hasattr(val, "isoformat"):
                 return val.isoformat()
             else:
                 return val
 
     def build_sql_statement(self):
         if self.column_list:
-            cnt = ',\n\t'
+            cnt = ",\n\t"
             column_names = [x.source_name for x in self.column_list]
             select_columns = cnt.join(column_names)
         else:
-            select_columns = '*'
+            select_columns = "*"
 
         sql = f"""SELECT {select_columns}
                 FROM {self.build_table_string()}

@@ -14,17 +14,17 @@ from include.airflow.operators.snowflake_to_mssql import SnowflakeToMsSqlBCPOper
 from include.config import conn_ids, email_lists, owners, s3_buckets
 
 default_args = {
-    'start_date': pendulum.datetime(2022, 8, 6, tz='America/Los_Angeles'),
-    'retries': 1,
-    'owner': owners.data_integrations,
-    'email': email_lists.data_integration_support,
-    'on_failure_callback': slack_failure_gsc,
+    "start_date": pendulum.datetime(2022, 8, 6, tz="America/Los_Angeles"),
+    "retries": 1,
+    "owner": owners.data_integrations,
+    "email": email_lists.data_integration_support,
+    "on_failure_callback": slack_failure_gsc,
 }
 
 dag = DAG(
-    dag_id='global_apps_inbound_booking_data',
+    dag_id="global_apps_inbound_booking_data",
     default_args=default_args,
-    schedule='0 */6 * * *',
+    schedule="0 */6 * * *",
     catchup=False,
 )
 
@@ -46,10 +46,10 @@ class BookingDataToS3Operator(BaseOperator):
         self.ftp_conn_id = ftp_conn_id
         self.file_pattern = file_pattern
         self.s3_bucket = s3_bucket
-        self.s3_prefix = s3_prefix.strip('/')
+        self.s3_prefix = s3_prefix.strip("/")
         self.s3_schema_version = s3_schema_version
         self.s3_conn_id = s3_conn_id
-        self.parent_dir = parent_dir.rstrip('/')
+        self.parent_dir = parent_dir.rstrip("/")
         self.archive = archive
 
     @cached_property
@@ -94,28 +94,30 @@ class BookingDataToS3Operator(BaseOperator):
 
 with dag:
     ftp_to_s3 = BookingDataToS3Operator(
-        task_id='ftp_to_s3',
+        task_id="ftp_to_s3",
         s3_prefix="lake/gsc.booking_data/",
         s3_bucket=s3_buckets.tsos_da_int_inbound,
         s3_schema_version="v3",
-        file_pattern='JF_bookings_*.csv',
-        parent_dir='/ftp_justfab/out/bookings',
+        file_pattern="JF_bookings_*.csv",
+        parent_dir="/ftp_justfab/out/bookings",
         archive=True,
     )
 
-    to_snowflake = SnowflakeProcedureOperator(procedure='gsc.booking_data.sql', database='lake')
+    to_snowflake = SnowflakeProcedureOperator(
+        procedure="gsc.booking_data.sql", database="lake"
+    )
 
     booking_data_to_mssql = SnowflakeToMsSqlBCPOperator(
-        task_id='booking_dataset_to_mssql',
+        task_id="booking_dataset_to_mssql",
         snowflake_database="reporting_prod",
         snowflake_schema="gsc",
         snowflake_table="booking_dataset",
-        mssql_target_table='booking_dataset',
-        mssql_target_database='ssrs_reports',
-        mssql_target_schema='gsc',
+        mssql_target_table="booking_dataset",
+        mssql_target_database="ssrs_reports",
+        mssql_target_schema="gsc",
         mssql_conn_id=conn_ids.MsSql.evolve01_app_airflow_rw,
-        unique_columns=['so', 'po', 'style_color'],
-        watermark_column='meta_update_datetime',
+        unique_columns=["so", "po", "style_color"],
+        watermark_column="meta_update_datetime",
     )
 
     ftp_to_s3 >> to_snowflake >> booking_data_to_mssql

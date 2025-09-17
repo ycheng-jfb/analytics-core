@@ -57,7 +57,7 @@ class BashHook(BaseHook):
         bash_command = "set -e; python3 script.py '{{ data_interval_end }}'"
     """
 
-    def __init__(self, output_encoding='utf-8') -> None:
+    def __init__(self, output_encoding="utf-8") -> None:
         self.sub_process = None
         self.output_encoding = output_encoding
 
@@ -69,23 +69,23 @@ class BashHook(BaseHook):
         Execute the bash command in a temporary directory
         which will be cleaned afterwards
         """
-        self.log.info('Tmp dir root location: \n %s', gettempdir())
+        self.log.info("Tmp dir root location: \n %s", gettempdir())
 
         env = env or os.environ.copy()
 
-        with TemporaryDirectory(prefix='airflowtmp') as tmp_dir:
+        with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
 
             def pre_exec():
                 # Restore default signal disposition and invoke setsid
-                for sig in ('SIGPIPE', 'SIGXFZ', 'SIGXFSZ'):
+                for sig in ("SIGPIPE", "SIGXFZ", "SIGXFSZ"):
                     if hasattr(signal, sig):
                         signal.signal(getattr(signal, sig), signal.SIG_DFL)
                 os.setsid()
 
-            self.log.info('Running command: %s', bash_command)
+            self.log.info("Running command: %s", bash_command)
 
             self.sub_process = Popen(  # pylint: disable=subprocess-popen-preexec-fn
-                ['bash', "-c", bash_command],
+                ["bash", "-c", bash_command],
                 stdout=PIPE,
                 stderr=STDOUT,
                 cwd=tmp_dir,
@@ -93,19 +93,21 @@ class BashHook(BaseHook):
                 preexec_fn=pre_exec,
             )
 
-            self.log.info('Output:')
-            line = ''
-            for raw_line in iter(self.sub_process.stdout.readline, b''):
+            self.log.info("Output:")
+            line = ""
+            for raw_line in iter(self.sub_process.stdout.readline, b""):
                 line = raw_line.decode(self.output_encoding).rstrip()
                 self.log.info("%s", line)
 
             self.sub_process.wait()
 
-            self.log.info('Command exited with return code %s', self.sub_process.returncode)
+            self.log.info(
+                "Command exited with return code %s", self.sub_process.returncode
+            )
 
             if self.sub_process.returncode != 0:
                 raise AirflowException(
-                    'Bash command failed. The command returned a non-zero exit code.'
+                    "Bash command failed. The command returned a non-zero exit code."
                 )
 
         return line
@@ -114,6 +116,6 @@ class BashHook(BaseHook):
         """
         Sends sigterm to subprocess if subprocess exists.
         """
-        self.log.info('Sending SIGTERM signal to bash process group')
-        if self.sub_process and hasattr(self.sub_process, 'pid'):
+        self.log.info("Sending SIGTERM signal to bash process group")
+        if self.sub_process and hasattr(self.sub_process, "pid"):
             os.killpg(os.getpgid(self.sub_process.pid), signal.SIGTERM)

@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='bond_user_action',
+    table="bond_user_action",
     company_join_sql="""
     SELECT DISTINCT
          L.bond_user_action_id,
@@ -16,13 +16,13 @@ table_config = TableConfig(
         ON C.case_id = L.case_id
     """,
     column_list=[
-        Column('bond_user_action_id', 'INT', uniqueness=True, key=True),
-        Column('case_id', 'INT', key=True),
-        Column('customer_id', 'INT', key=True),
-        Column('administrator_id', 'INT'),
-        Column('bond_user_action_type_id', 'INT'),
-        Column('datetime_added', 'TIMESTAMP_NTZ(3)'),
-        Column('datetime_modified', 'TIMESTAMP_NTZ(3)'),
+        Column("bond_user_action_id", "INT", uniqueness=True, key=True),
+        Column("case_id", "INT", key=True),
+        Column("customer_id", "INT", key=True),
+        Column("administrator_id", "INT"),
+        Column("bond_user_action_type_id", "INT"),
+        Column("datetime_added", "TIMESTAMP_NTZ(3)"),
+        Column("datetime_modified", "TIMESTAMP_NTZ(3)"),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

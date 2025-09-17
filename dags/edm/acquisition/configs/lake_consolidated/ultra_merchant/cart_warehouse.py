@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='cart_warehouse',
+    table="cart_warehouse",
     company_join_sql="""
      SELECT DISTINCT
          L.CART_WAREHOUSE_ID,
@@ -17,20 +17,20 @@ table_config = TableConfig(
      INNER JOIN {database}.{source_schema}.cart_warehouse AS L
      ON L.CART_ID=C.CART_ID """,
     column_list=[
-        Column('cart_warehouse_id', 'INT', uniqueness=True, key=True),
-        Column('cart_id', 'INT', key=True),
-        Column('warehouse_id', 'INT'),
-        Column('statuscode', 'INT'),
-        Column('administrator_id', 'INT'),
+        Column("cart_warehouse_id", "INT", uniqueness=True, key=True),
+        Column("cart_id", "INT", key=True),
+        Column("warehouse_id", "INT"),
+        Column("statuscode", "INT"),
+        Column("administrator_id", "INT"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
         Column(
-            'datetime_modified',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_modified",
+            "TIMESTAMP_NTZ(3)",
         ),
-        Column('datetime_expired', 'TIMESTAMP_NTZ(3)'),
+        Column("datetime_expired", "TIMESTAMP_NTZ(3)"),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

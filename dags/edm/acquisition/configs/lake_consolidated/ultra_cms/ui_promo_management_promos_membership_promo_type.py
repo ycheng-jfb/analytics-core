@@ -4,8 +4,8 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    schema='ultra_cms',
-    table='ui_promo_management_promos_membership_promo_type',
+    schema="ultra_cms",
+    table="ui_promo_management_promos_membership_promo_type",
     company_join_sql="""
       SELECT DISTINCT
           L.ui_promo_management_promos_membership_promo_type_id,
@@ -17,9 +17,12 @@ table_config = TableConfig(
           ON L.ui_promo_management_promo_id = UPMP.ui_promo_management_promo_id """,
     column_list=[
         Column(
-            'ui_promo_management_promos_membership_promo_type_id', 'INT', uniqueness=True, key=True
+            "ui_promo_management_promos_membership_promo_type_id",
+            "INT",
+            uniqueness=True,
+            key=True,
         ),
-        Column('ui_promo_management_promo_id', 'INT', key=True),
-        Column('membership_promo_type_id', 'INT'),
+        Column("ui_promo_management_promo_id", "INT", key=True),
+        Column("membership_promo_type_id", "INT"),
     ],
 )

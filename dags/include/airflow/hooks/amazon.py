@@ -28,12 +28,15 @@ class AmazonHook(BaseHook):
         }
         auth_url = f"https://{self.host}/auth/o2/token"
         session = requests.session()
-        session.headers = {"Accept": "application/json", "Content-type": "application/json"}
+        session.headers = {
+            "Accept": "application/json",
+            "Content-type": "application/json",
+        }
         print("Generating an Access Token")
         response = session.post(url=auth_url, json=payload)
         response.raise_for_status()
 
         rdict = response.json()
-        access_token = rdict['access_token']
+        access_token = rdict["access_token"]
         session.headers.update({"x-amz-access-token": access_token})
         return session

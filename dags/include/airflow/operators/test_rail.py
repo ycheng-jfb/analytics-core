@@ -16,13 +16,17 @@ class TestRailBase(BaseRowsToS3CsvOperator):
 
     @cached_property
     def test_rail_hook(self):
-        return TestRailHook(conn_id=self.hook_conn_id) if self.hook_conn_id else TestRailHook()
+        return (
+            TestRailHook(conn_id=self.hook_conn_id)
+            if self.hook_conn_id
+            else TestRailHook()
+        )
 
 
 class TestRailCases(TestRailBase):
     def get_suite_ids(self, project_id):
-        suites = self.test_rail_hook.make_get_request_all(f'get_suites/{project_id}')
-        return [x.get('id') for x in suites]
+        suites = self.test_rail_hook.make_get_request_all(f"get_suites/{project_id}")
+        return [x.get("id") for x in suites]
 
     def get_rows(self):
         updated_at = pendulum.DateTime.utcnow()
@@ -32,8 +36,12 @@ class TestRailCases(TestRailBase):
 
             for suite_id in suite_ids:
                 cases = self.test_rail_hook.make_get_request_all(
-                    f'get_cases/{cfg.project_id}&suite_id={suite_id}', list_name='cases'
+                    f"get_cases/{cfg.project_id}&suite_id={suite_id}", list_name="cases"
                 )
 
                 for case in cases:
-                    yield {'project_id': cfg.project_id, **case, 'updated_at': updated_at}
+                    yield {
+                        "project_id": cfg.project_id,
+                        **case,
+                        "updated_at": updated_at,
+                    }

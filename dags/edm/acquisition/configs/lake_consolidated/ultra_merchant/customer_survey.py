@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='customer_survey',
+    table="customer_survey",
     company_join_sql="""
        SELECT DISTINCT
            L.customer_survey_id,
@@ -15,22 +15,22 @@ table_config = TableConfig(
        INNER JOIN {database}.{source_schema}.customer_survey AS L
            ON L.CUSTOMER_ID = C.CUSTOMER_ID """,
     column_list=[
-        Column('customer_survey_id', 'INT', uniqueness=True, key=True),
-        Column('customer_id', 'INT', key=True),
-        Column('survey_id', 'INT', key=True),
-        Column('subscription_id', 'INT'),
-        Column('session_id', 'INT', key=True),
-        Column('page_number', 'INT'),
+        Column("customer_survey_id", "INT", uniqueness=True, key=True),
+        Column("customer_id", "INT", key=True),
+        Column("survey_id", "INT", key=True),
+        Column("subscription_id", "INT"),
+        Column("session_id", "INT", key=True),
+        Column("page_number", "INT"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
-        Column('datetime_completed', 'TIMESTAMP_NTZ(3)'),
-        Column('statuscode', 'INT'),
+        Column("datetime_completed", "TIMESTAMP_NTZ(3)"),
+        Column("statuscode", "INT"),
         Column(
-            'datetime_modified',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_modified",
+            "TIMESTAMP_NTZ(3)",
         ),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

@@ -5,16 +5,19 @@ from airflow.providers.databricks.operators.databricks import DatabricksRunNowOp
 from include.airflow.callbacks.slack import slack_failure_data_science
 from include.airflow.dag_helpers import chain_tasks
 from include.airflow.operators.snowflake import SnowflakeProcedureOperator
-from include.airflow.operators.snowflake_load import CopyConfigCsv, SnowflakeIncrementalLoadOperator
+from include.airflow.operators.snowflake_load import (
+    CopyConfigCsv,
+    SnowflakeIncrementalLoadOperator,
+)
 from include.config import conn_ids, owners, snowflake_roles, stages
 from include.config.email_lists import airflow_media_support
 from include.utils.snowflake import Column
 
-file_path = f'{stages.tsos_da_int_databricks}/snowflake/reporting_prod.data_science/tableau_reviews_topic_model.update.csv.gz'
+file_path = f"{stages.tsos_da_int_databricks}/snowflake/reporting_prod.data_science/tableau_reviews_topic_model.update.csv.gz"
 
 default_args = {
     "start_date": pendulum.datetime(2019, 1, 1, 7, tz="America/Los_Angeles"),
-    'owner': owners.data_science,
+    "owner": owners.data_science,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_data_science,
 }
@@ -31,14 +34,14 @@ dag = DAG(
 
 with dag:
     transform_reviews = SnowflakeProcedureOperator(
-        procedure='data_science.tableau_customer_reviews.sql',
-        database='reporting_prod',
+        procedure="data_science.tableau_customer_reviews.sql",
+        database="reporting_prod",
     )
 
     databricks_run_topic_model = DatabricksRunNowOperator(
         databricks_conn_id=conn_ids.Databricks.duplo,
         task_id="databricks_run_topic_model",
-        job_id='910810365578499',
+        job_id="910810365578499",
         json={
             "notebook_params": {
                 "run_mode": "daily_update",
@@ -52,15 +55,15 @@ with dag:
         task_id="snowflake_load_topic_model",
         files_path=file_path,
         role=snowflake_roles.etl_service_account,
-        database='reporting_prod',
-        schema='data_science',
-        table='tableau_reviews_topic_model',
+        database="reporting_prod",
+        schema="data_science",
+        table="tableau_reviews_topic_model",
         column_list=[
-            Column('group_code', 'VARCHAR(20)'),
-            Column('review_id', 'INT', uniqueness=True),
-            Column('topic', 'VARCHAR(50)', uniqueness=True),
-            Column('score', 'DOUBLE'),
-            Column('updated_at', 'TIMESTAMP_LTZ', delta_column=True),
+            Column("group_code", "VARCHAR(20)"),
+            Column("review_id", "INT", uniqueness=True),
+            Column("topic", "VARCHAR(50)", uniqueness=True),
+            Column("score", "DOUBLE"),
+            Column("updated_at", "TIMESTAMP_LTZ", delta_column=True),
         ],
         pre_merge_command="""
             DELETE FROM reporting_prod.data_science.tableau_reviews_topic_model
@@ -69,18 +72,18 @@ with dag:
                 FROM reporting_prod.data_science.tableau_reviews_topic_model_stg
             );
         """,
-        copy_config=CopyConfigCsv(field_delimiter=',', header_rows=1, skip_pct=1),
+        copy_config=CopyConfigCsv(field_delimiter=",", header_rows=1, skip_pct=1),
     )
 
     databricks_run_vector_semantic_score = DatabricksRunNowOperator(
         databricks_conn_id=conn_ids.Databricks.duplo,
         task_id="databricks_run_vector_semantic_score",
-        job_id='476387114396320',
+        job_id="476387114396320",
     )
 
     update_embedding_snowflake = SnowflakeProcedureOperator(
-        procedure='data_science.tableau_customer_reviews_embedding_snowflake.sql',
-        database='reporting_prod',
+        procedure="data_science.tableau_customer_reviews_embedding_snowflake.sql",
+        database="reporting_prod",
     )
 
     chain_tasks(

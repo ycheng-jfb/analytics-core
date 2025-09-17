@@ -6,8 +6,8 @@ class AemHook(BaseWebApiHook):
     def __init__(
         self,
         conn_id=conn_ids.AEM.metadata_api,
-        host='http://tfgelsvmlxaem01.corp.brandideas.com:4502',
-        path='bin/techstyle/',
+        host="http://tfgelsvmlxaem01.corp.brandideas.com:4502",
+        path="bin/techstyle/",
     ):
         self.path = path
         super().__init__(
@@ -16,10 +16,10 @@ class AemHook(BaseWebApiHook):
         )
 
     def get_base_url(self):
-        return f'{self.host}/{self.path}'
+        return f"{self.host}/{self.path}"
 
     def get_base_headers(self):
         return {
-            'userName': self.conn.login,
-            'password': self.conn.password,
+            "userName": self.conn.login,
+            "password": self.conn.password,
         }

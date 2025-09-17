@@ -2,11 +2,11 @@ from include.utils.acquisition.table_config import TableConfig
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    database='jf_portal',
-    schema='dbo',
-    table='bluecherry_po_dtl',
-    watermark_column='po_dtl_mod',
-    schema_version_prefix='v5',
+    database="jf_portal",
+    schema="dbo",
+    table="bluecherry_po_dtl",
+    watermark_column="po_dtl_mod",
+    schema_version_prefix="v5",
     column_list=[
         Column("po_number", "VARCHAR(60)"),
         Column("open_seq", "INT"),

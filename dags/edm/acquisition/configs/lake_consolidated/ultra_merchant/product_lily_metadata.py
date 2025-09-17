@@ -5,7 +5,7 @@ from include.utils.acquisition.lake_consolidated_table_config import TableType
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='product_lily_metadata',
+    table="product_lily_metadata",
     company_join_sql="""
        SELECT DISTINCT
         L.product_lily_metadata_id,
@@ -46,13 +46,13 @@ table_config = TableConfig(
         ON L.product_id = P.product_id
         """,
     column_list=[
-        Column('product_lily_metadata_id', 'INT', uniqueness=True, key=True),
-        Column('product_id', 'INT', key=True),
-        Column('category_name', 'VARCHAR(100)'),
-        Column('category_value', 'VARCHAR'),
-        Column('value_synonyms', 'VARCHAR'),
-        Column('datetime_added', 'TIMESTAMP_NTZ(3)'),
-        Column('datetime_modified', 'TIMESTAMP_NTZ(3)'),
+        Column("product_lily_metadata_id", "INT", uniqueness=True, key=True),
+        Column("product_id", "INT", key=True),
+        Column("category_name", "VARCHAR(100)"),
+        Column("category_value", "VARCHAR"),
+        Column("value_synonyms", "VARCHAR"),
+        Column("datetime_added", "TIMESTAMP_NTZ(3)"),
+        Column("datetime_modified", "TIMESTAMP_NTZ(3)"),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

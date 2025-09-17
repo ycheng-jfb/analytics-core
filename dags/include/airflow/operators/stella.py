@@ -62,11 +62,13 @@ class StellaToS3Operator(BaseOperator):
     @cached_property
     def headers(self):
         creds = BaseHook.get_connection(self.stella_conn_id)  # type: Connection
-        claims = {'iat': int(pendulum.DateTime.utcnow().replace(microsecond=0).timestamp())}
-        encoded_jwt = jwt.encode(claims, creds.password, algorithm='HS256')
+        claims = {
+            "iat": int(pendulum.DateTime.utcnow().replace(microsecond=0).timestamp())
+        }
+        encoded_jwt = jwt.encode(claims, creds.password, algorithm="HS256")
         return {
-            'x-api-key': creds.login,
-            'Authorization': encoded_jwt,
+            "x-api-key": creds.login,
+            "Authorization": encoded_jwt,
             "Content-Type": "application/json",
         }
 
@@ -89,12 +91,14 @@ class StellaToS3Operator(BaseOperator):
         # First call
         api_call_counter = 0
         if self.after_sequence_id:
-            params = {'after': self.after_sequence_id, "created_at_lte": self.to_date}
-            print(f"Running after sequence ID {self.after_sequence_id} until {self.to_date}")
+            params = {"after": self.after_sequence_id, "created_at_lte": self.to_date}
+            print(
+                f"Running after sequence ID {self.after_sequence_id} until {self.to_date}"
+            )
         else:
             params = {"created_at_gte": self.from_date, "created_at_lte": self.to_date}
             print(f"Running from {self.from_date} to {self.to_date}")
-        url = 'https://api.stellaconnect.net/v2/data'
+        url = "https://api.stellaconnect.net/v2/data"
         data = self.make_get_request(url, params)
 
         # Get paginated results based on sequence_id. Data will no longer be returned once it
@@ -103,14 +107,16 @@ class StellaToS3Operator(BaseOperator):
             api_call_counter += 1
             for row in data:
                 yield row
-            last_sequence_id = max(d['sequence_id'] for d in data)
-            params = {'after': last_sequence_id}
+            last_sequence_id = max(d["sequence_id"] for d in data)
+            params = {"after": last_sequence_id}
             data = self.make_get_request(url, params)
         print(f"Made {api_call_counter} api calls")
 
     def write_to_file(self, filename):
         if not filename.endswith(".gz"):
-            raise ValueError(f"File will be gzipped but filename {filename} does not end in .gz")
+            raise ValueError(
+                f"File will be gzipped but filename {filename} does not end in .gz"
+            )
 
         with gzip.open(filename, "wt") as f:
             data = self.get_data()

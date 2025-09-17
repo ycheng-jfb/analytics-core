@@ -28,8 +28,8 @@ class AtlanRelationshipOperator(BaseOperator):
     def __init__(
         self,
         database: str,
-        base_api_url: str = 'https://techstyle.atlan.com/api/metadata/atlas/tenants/default',
-        integration: str = 'snowflake/techstyle',
+        base_api_url: str = "https://techstyle.atlan.com/api/metadata/atlas/tenants/default",
+        integration: str = "snowflake/techstyle",
         *args,
         **kwargs,
     ):
@@ -44,16 +44,18 @@ class AtlanRelationshipOperator(BaseOperator):
 
     @cached_property
     def headers(self):
-        conn = BaseHook.get_connection('atlan_default')
-        return {'APIKEY': conn.password}
+        conn = BaseHook.get_connection("atlan_default")
+        return {"APIKEY": conn.password}
 
     def make_request(self, method, endpoint, body=None):
-        url = f'{self.base_api_url}{endpoint}'
+        url = f"{self.base_api_url}{endpoint}"
         try:
             r = requests.request(method, url, headers=self.headers, json=body)
             r.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            if r.status_code == 409:  # This code comes up when a relationship already exists
+            if (
+                r.status_code == 409
+            ):  # This code comes up when a relationship already exists
                 print(r.text)
             else:
                 print(r.text)
@@ -97,7 +99,7 @@ class AtlanRelationshipOperator(BaseOperator):
         }
 
     def create_atlan_relationship(self, body):
-        return self.make_request("POST", '/relationship', body=body)
+        return self.make_request("POST", "/relationship", body=body)
 
     def update_atlan_relationships(self):
         with ConnClosing(self.snowflake_hook.get_conn()) as conn, conn.cursor() as cur:
@@ -109,9 +111,13 @@ class AtlanRelationshipOperator(BaseOperator):
                           FROM edw.reference.object_relationships"""
             result = pd.read_sql(sql_cmd, con=conn)
             for index, row in result.iterrows():
-                current_table = f"""edw/{row['FK_SCHEMA_NAME']}/{row['FK_TABLE_NAME']}"""
+                current_table = (
+                    f"""edw/{row['FK_SCHEMA_NAME']}/{row['FK_TABLE_NAME']}"""
+                )
                 ref_table = f"""edw/{row['PK_SCHEMA_NAME']}/{row['PK_TABLE_NAME']}"""
-                api_body = self.body_for_relationship('AtlanTable', current_table, ref_table)
+                api_body = self.body_for_relationship(
+                    "AtlanTable", current_table, ref_table
+                )
                 print("Creating:", api_body)
                 r = self.create_atlan_relationship(api_body)
                 if r.status_code == 200:
@@ -128,11 +134,15 @@ class AtlanRelationshipOperator(BaseOperator):
             for index, row in result.iterrows():
                 current_col = f"""edw/{row['FK_SCHEMA_NAME']}/{row['FK_TABLE_NAME']}/{row['FK_COLUMN_NAME']}"""
                 ref_col = f"""edw/{row['PK_SCHEMA_NAME']}/{row['PK_TABLE_NAME']}/{row['PK_COLUMN_NAME']}"""
-                api_body = self.body_for_relationship('AtlanColumn', current_col, ref_col)
+                api_body = self.body_for_relationship(
+                    "AtlanColumn", current_col, ref_col
+                )
                 print("Creating:", api_body)
                 r = self.create_atlan_relationship(api_body)
                 if r.status_code == 200:
-                    print(f"Successfully created new relationship for {current_col} to {ref_col}")
+                    print(
+                        f"Successfully created new relationship for {current_col} to {ref_col}"
+                    )
 
     def execute(self, context=None):
         self.update_atlan_relationships()
@@ -156,7 +166,9 @@ class AtlanBaseOperator(BaseOperator):
 
     @cached_property
     def atlan_hook(self):
-        return AtlanHook(conn_id=self.hook_conn_id) if self.hook_conn_id else AtlanHook()
+        return (
+            AtlanHook(conn_id=self.hook_conn_id) if self.hook_conn_id else AtlanHook()
+        )
 
 
 class AtlanUpdateStatusOperator(AtlanBaseOperator):
@@ -180,26 +192,29 @@ class AtlanUpdateStatusOperator(AtlanBaseOperator):
                 "where dependent_table_name is null"
             )
             df = pd.read_sql(sql, con=conn)
-            df['TABLE_NAME'] = df['TABLE_NAME'].str.split('.').str[1].str.upper()
+            df["TABLE_NAME"] = df["TABLE_NAME"].str.split(".").str[1].str.upper()
             return df
 
     def update_status(self, df):
-        table_names = list(df['TABLE_NAME'])
+        table_names = list(df["TABLE_NAME"])
         # Get guid values from Atlan
-        resp = self.atlan_hook.make_request('POST', '/search/basic', json=atlan_get_assets)
-        entities_stg = resp.json()['entities']
+        resp = self.atlan_hook.make_request(
+            "POST", "/search/basic", json=atlan_get_assets
+        )
+        entities_stg = resp.json()["entities"]
 
         # Update the metadata in Atlan
         for entity in entities_stg:
-            if entity['attributes']['name'].upper() in table_names:
-                row = df[df.TABLE_NAME.eq(entity['attributes']['name'].upper())]
-                timestamp = row.iloc[0]['HIGH_WATERMARK_DATETIME']
+            if entity["attributes"]["name"].upper() in table_names:
+                row = df[df.TABLE_NAME.eq(entity["attributes"]["name"].upper())]
+                timestamp = row.iloc[0]["HIGH_WATERMARK_DATETIME"]
                 epoch_timestamp = int(timestamp.timestamp() * 1000)
 
-                body_update = {'ETL Details': {'Last Update Date': epoch_timestamp}}
+                body_update = {"ETL Details": {"Last Update Date": epoch_timestamp}}
                 self.atlan_hook.make_request(
-                    'POST',
-                    f'/entity/guid/{entity["guid"]}/' 'businessmetadata?isOverwrite=true',
+                    "POST",
+                    f'/entity/guid/{entity["guid"]}/'
+                    'businessmetadata?isOverwrite=true',
                     json=body_update,
                 )
 

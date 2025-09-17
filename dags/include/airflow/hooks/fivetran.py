@@ -12,7 +12,10 @@ class FivetranHook(BaseHook):
 
     @cached_property
     def session(self):
-        headers = {"Authorization": f'Basic {self.api_key}', 'Content-Type': 'application/json'}
+        headers = {
+            "Authorization": f"Basic {self.api_key}",
+            "Content-Type": "application/json",
+        }
         session = requests.session()
         session.headers = headers
         return session
@@ -26,7 +29,11 @@ class FivetranHook(BaseHook):
         files: dict = None,
     ):
         response = self.session.request(
-            method=method, url=self.url + '/' + path, params=params, data=data, files=files
+            method=method,
+            url=self.url + "/" + path,
+            params=params,
+            data=data,
+            files=files,
         )
         response.raise_for_status()
         return response

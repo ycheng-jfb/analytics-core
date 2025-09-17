@@ -14,18 +14,18 @@ from include.config import conn_ids, email_lists, owners, s3_buckets
 from include.utils.context_managers import ConnClosing
 
 default_args = {
-    'start_date': pendulum.datetime(2020, 1, 1, tz='America/Los_Angeles'),
-    'retries': 1,
-    'owner': owners.data_integrations,
-    'email': email_lists.data_integration_support,
-    'on_failure_callback': slack_failure_gsc,
+    "start_date": pendulum.datetime(2020, 1, 1, tz="America/Los_Angeles"),
+    "retries": 1,
+    "owner": owners.data_integrations,
+    "email": email_lists.data_integration_support,
+    "on_failure_callback": slack_failure_gsc,
 }
 
 
 dag = DAG(
-    dag_id='global_apps_outbound_sps_freight_processor',
+    dag_id="global_apps_outbound_sps_freight_processor",
     default_args=default_args,
-    schedule='0 22 * * *',
+    schedule="0 22 * * *",
     catchup=False,
     max_active_tasks=6,
     max_active_runs=1,
@@ -47,7 +47,7 @@ class MSSQLXMLtoExternal(BaseOperator):
         s3_prefix: target s3 location
     """
 
-    template_fields = ['file_name', 's3_prefix']
+    template_fields = ["file_name", "s3_prefix"]
 
     def __init__(
         self,
@@ -76,7 +76,7 @@ class MSSQLXMLtoExternal(BaseOperator):
     @staticmethod
     def get_xml_to_file(cur, local_path):
         with open(local_path, "wb") as f:
-            xml_result: str = ''
+            xml_result: str = ""
             while True:
                 result = cur.fetchone()
                 if not result:
@@ -96,8 +96,10 @@ class MSSQLXMLtoExternal(BaseOperator):
 
     def upload_to_ftp(self, local_path):
         ftp_hook = FTPHook(ftp_conn_id=self.ftp_conn_id)
-        remote_file = self.remote_dir + '/' + self.file_name
-        ftp_hook.store_file(remote_full_path=remote_file, local_full_path_or_buffer=str(local_path))
+        remote_file = self.remote_dir + "/" + self.file_name
+        ftp_hook.store_file(
+            remote_full_path=remote_file, local_full_path_or_buffer=str(local_path)
+        )
 
     def upload_to_s3(self, local_path):
         s3_hook = S3Hook(self.s3_conn_id)
@@ -112,25 +114,27 @@ class MSSQLXMLtoExternal(BaseOperator):
         with tempfile.TemporaryDirectory() as td:
             local_path = Path(td, "tmp")
             print(f"running... {self.mssql_proc_name}")
-            self.export_to_file(mssql_stored_proc=self.mssql_proc_name, local_path=local_path)
+            self.export_to_file(
+                mssql_stored_proc=self.mssql_proc_name, local_path=local_path
+            )
             self.upload_to_ftp(local_path=local_path)
             self.upload_to_s3(local_path=local_path)
 
 
 date = "{{ data_interval_start.strftime('%Y%m%d%H%M%S') }}"
 with dag:
-    brand_list = ['JFB', 'FL', 'SXF']
+    brand_list = ["JFB", "FL", "SXF"]
     for brand in brand_list:
         file_name = f"TFG_{brand}_PurchaseOrder_{date}.xml"
         sql_xml_to_external = MSSQLXMLtoExternal(
             brand=brand,
             mssql_conn_id=conn_ids.MsSql.dbp40_app_airflow_rw,
-            mssql_proc_name='ultrawarehouse.dbo.pr_xml_for_transmit_freight_forwarder_sel',
-            remote_dir='/ftp_justfab/in/',
+            mssql_proc_name="ultrawarehouse.dbo.pr_xml_for_transmit_freight_forwarder_sel",
+            remote_dir="/ftp_justfab/in/",
             file_name=file_name,
             ftp_conn_id=conn_ids.SFTP.ftp_booking_data,
             task_id=f"oocl_outbound_transmit_freight_forwarder_sel_sql_external_{brand}",
             s3_conn_id=conn_ids.S3.tsos_da_int_prod,
             bucket=s3_buckets.tsos_da_int_inbound,
-            s3_prefix=f'lake/transmit_freight_forwarder/v2/{file_name}',
+            s3_prefix=f"lake/transmit_freight_forwarder/v2/{file_name}",
         )

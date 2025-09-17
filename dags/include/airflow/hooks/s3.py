@@ -20,7 +20,7 @@ class S3Hook(BaseS3Hook):
     @staticmethod
     def raise_for_status(response):
         try:
-            response_code = response['ResponseMetadata']['HTTPStatusCode']
+            response_code = response["ResponseMetadata"]["HTTPStatusCode"]
         except Exception as e:
             print("unexpected result")
             print(response)
@@ -40,14 +40,21 @@ class S3Hook(BaseS3Hook):
 
         """
         for chunk in chunk_list(keys, size=500):
-            object_list = [{'Key': key} for key in chunk]
-            response = self.client.delete_objects(Bucket=bucket, Delete={'Objects': object_list})
+            object_list = [{"Key": key} for key in chunk]
+            response = self.client.delete_objects(
+                Bucket=bucket, Delete={"Objects": object_list}
+            )
             if response:
                 pprint(response)
                 self.raise_for_status(response=response)
 
     def copy(
-        self, source_bucket, target_bucket, source_key, target_key, acl='bucket-owner-full-control'
+        self,
+        source_bucket,
+        target_bucket,
+        source_key,
+        target_key,
+        acl="bucket-owner-full-control",
     ):
         """
         Copies key from ``source_key`` to ``target_key`` and raises if unsuccessful
@@ -58,14 +65,14 @@ class S3Hook(BaseS3Hook):
         """
 
         copy_source = {
-            'Bucket': source_bucket,
-            'Key': source_key,
+            "Bucket": source_bucket,
+            "Key": source_key,
         }
         response = self.client.copy(
             Bucket=target_bucket,
             Key=target_key,
             CopySource=copy_source,
-            ExtraArgs={'ACL': acl},
+            ExtraArgs={"ACL": acl},
         )
         if response:
             self.raise_for_status(response=response)
@@ -77,7 +84,7 @@ class S3Hook(BaseS3Hook):
         bucket_name=None,
         replace=False,
         encrypt=False,
-        acl='bucket-owner-full-control',
+        acl="bucket-owner-full-control",
     ):
         """
         Loads a local file to S3
@@ -100,9 +107,9 @@ class S3Hook(BaseS3Hook):
 
         extra_args = {}
         if encrypt:
-            extra_args['ServerSideEncryption'] = "AES256"
+            extra_args["ServerSideEncryption"] = "AES256"
         if acl:
-            extra_args['ACL'] = acl
+            extra_args["ACL"] = acl
 
         client = self.get_conn()
         client.upload_file(filename, bucket_name, key, ExtraArgs=extra_args)

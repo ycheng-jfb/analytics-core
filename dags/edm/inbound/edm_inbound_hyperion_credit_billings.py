@@ -17,42 +17,64 @@ from include.utils.snowflake import Column, CopyConfigCsv
 sheets = {
     "eu_data": SheetConfig(
         sheet_name=0,
-        schema='fpa',
-        table='eu_fpa_forecast',
+        schema="fpa",
+        table="eu_fpa_forecast",
         s3_replace=False,
         header_rows=1,
         column_list=[
-            Column('store_name', 'varchar', source_name='Store Name'),
-            Column('total_credit_billings', 'number(38,10)', source_name='total credit billings'),
-            Column('m2_tenure_vips', 'number(38,10)', source_name='m2 tenure vips'),
-            Column('m2_plus_vips', 'number(38,10)', source_name='m2 + tenure vips '),
-            Column('m2_credit_billings', 'number(38,10)', source_name='m2 credit billings'),
-            Column('m2_plus_credit_billings', 'number(38,10)', source_name='m2+ credit billings'),
-            Column('m2_billing_rate', 'number(38,10)', source_name='m2 billing rate'),
-            Column('m2_plus_billing_rate', 'number(38,10)', source_name='m2+ billing rate'),
-            Column('billing_month', 'DATE'),
+            Column("store_name", "varchar", source_name="Store Name"),
+            Column(
+                "total_credit_billings",
+                "number(38,10)",
+                source_name="total credit billings",
+            ),
+            Column("m2_tenure_vips", "number(38,10)", source_name="m2 tenure vips"),
+            Column("m2_plus_vips", "number(38,10)", source_name="m2 + tenure vips "),
+            Column(
+                "m2_credit_billings", "number(38,10)", source_name="m2 credit billings"
+            ),
+            Column(
+                "m2_plus_credit_billings",
+                "number(38,10)",
+                source_name="m2+ credit billings",
+            ),
+            Column("m2_billing_rate", "number(38,10)", source_name="m2 billing rate"),
+            Column(
+                "m2_plus_billing_rate", "number(38,10)", source_name="m2+ billing rate"
+            ),
+            Column("billing_month", "DATE"),
         ],
     ),
     "na_data": SheetConfig(
         sheet_name=0,
-        schema='fpa',
-        table='na_fpa_forecast',
+        schema="fpa",
+        table="na_fpa_forecast",
         s3_replace=False,
         header_rows=1,
         column_list=[
-            Column('store_name', 'varchar', source_name='Store Name'),
-            Column('total_credit_billings', 'number(38,10)', source_name='total credit billings'),
-            Column('m2_tenure_vips', 'number(38,10)', source_name='m2 tenure vips'),
-            Column('m2_plus_vips', 'number(38,10)', source_name='m2 + tenure vips '),
-            Column('m2_credit_billings', 'number(38,10)', source_name='m2 credit billings'),
-            Column('m2_plus_credit_billings', 'number(38,10)', source_name='m2+ credit billings'),
-            Column('billing_month', 'DATE'),
+            Column("store_name", "varchar", source_name="Store Name"),
+            Column(
+                "total_credit_billings",
+                "number(38,10)",
+                source_name="total credit billings",
+            ),
+            Column("m2_tenure_vips", "number(38,10)", source_name="m2 tenure vips"),
+            Column("m2_plus_vips", "number(38,10)", source_name="m2 + tenure vips "),
+            Column(
+                "m2_credit_billings", "number(38,10)", source_name="m2 credit billings"
+            ),
+            Column(
+                "m2_plus_credit_billings",
+                "number(38,10)",
+                source_name="m2+ credit billings",
+            ),
+            Column("billing_month", "DATE"),
         ],
     ),
 }
 
-smb_path = 'Inbound/airflow.finance_ingestions'
-share_name = 'BI'
+smb_path = "Inbound/airflow.finance_ingestions"
+share_name = "BI"
 
 
 class ExcelSMBToS3BatchHyperionFinanceOperator(ExcelSMBToS3BatchOperator):
@@ -60,7 +82,7 @@ class ExcelSMBToS3BatchHyperionFinanceOperator(ExcelSMBToS3BatchOperator):
         self,
         get_billing_month: bool = True,
         usecols: str = "",
-        billing_month_col: str = 'C',
+        billing_month_col: str = "C",
         **kwargs,
     ):
         self.get_billing_month = get_billing_month
@@ -71,9 +93,13 @@ class ExcelSMBToS3BatchHyperionFinanceOperator(ExcelSMBToS3BatchOperator):
     def set_billing_month(self, smb_client, file_name):
         with tempfile.TemporaryDirectory() as td:
             local_excel_path = (Path(td) / Path(file_name).name).as_posix()
-            with open(local_excel_path, 'wb') as file:
-                smb_client.retrieveFile(service_name=self.share_name, path=file_name, file_obj=file)
-            print('Downloaded file to get billing month details: ', Path(file_name).name)
+            with open(local_excel_path, "wb") as file:
+                smb_client.retrieveFile(
+                    service_name=self.share_name, path=file_name, file_obj=file
+                )
+            print(
+                "Downloaded file to get billing month details: ", Path(file_name).name
+            )
 
             for sheet in self.sheet_configs:
                 df = pd.read_excel(
@@ -85,17 +111,19 @@ class ExcelSMBToS3BatchHyperionFinanceOperator(ExcelSMBToS3BatchOperator):
                     nrows=1,
                 )
 
-                if 1 in df.columns or '1' in df.columns:
+                if 1 in df.columns or "1" in df.columns:
                     bm = df[1].dt.normalize()[0]
                     bm = bm.replace(day=1)
-                    df['billing_month'] = bm
+                    df["billing_month"] = bm
                 else:
                     bm = df[2].dt.normalize()[0]
                     bm = bm.replace(day=1)
-                    df['billing_month'] = bm
-                sheet.add_meta_cols = {'billing_month': df['billing_month'][0]}
+                    df["billing_month"] = bm
+                sheet.add_meta_cols = {"billing_month": df["billing_month"][0]}
 
-    def read_excel(self, local_excel_path, sheet_name, usecols, header, dtype, skip_footer):
+    def read_excel(
+        self, local_excel_path, sheet_name, usecols, header, dtype, skip_footer
+    ):
         usecols = self.usecols
         return pd.read_excel(
             local_excel_path,
@@ -158,7 +186,7 @@ class ExcelConfig:
             usecols=self.usecols,
             remove_header_new_lines=False,
             billing_month_col=self.billing_month_col,
-            default_schema_version='v2',
+            default_schema_version="v2",
         )
 
     @property
@@ -172,15 +200,15 @@ class ExcelConfig:
     def to_snowflake(self):
         return SnowflakeInsertOperator(
             task_id=f"{self.task_id}_s3_to_snowflake",
-            database='lake',
+            database="lake",
             schema=self.sheet_config.schema,
             table=self.sheet_config.table,
-            staging_database='lake_stg',
-            view_database='lake_view',
+            staging_database="lake_stg",
+            view_database="lake_view",
             snowflake_conn_id=conn_ids.Snowflake.default,
             column_list=self.sheet_config.column_list,
             files_path=f"{stages.tsos_da_int_inbound}/lake/{self.sheet_config.schema}.{self.sheet_config.table}/v2/",
-            copy_config=CopyConfigCsv(header_rows=1, field_delimiter='|'),
+            copy_config=CopyConfigCsv(header_rows=1, field_delimiter="|"),
         )
 
 
@@ -189,31 +217,31 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id='edm_inbound_hyperion_credit_billings',
+    dag_id="edm_inbound_hyperion_credit_billings",
     default_args=default_args,
-    start_date=pendulum.datetime(2021, 10, 1, tz='America/Los_Angeles'),
+    start_date=pendulum.datetime(2021, 10, 1, tz="America/Los_Angeles"),
     catchup=False,
-    schedule='0 6,8,10,12 2 * *',
+    schedule="0 6,8,10,12 2 * *",
 )
 
 na_data_config = ExcelConfig(
-    task_id='hyperion_credit_billings_na',
+    task_id="hyperion_credit_billings_na",
     smb_dir=f"{smb_path}/lake.fpa.na_credit_billing_forecast",
-    sheet_config=sheets['na_data'],
-    file_pattern_list=['*.xls*'],
-    procedure_name='fpa.na_fpa_forecast.sql',
-    usecols='A:F',
-    billing_month_col='B',
+    sheet_config=sheets["na_data"],
+    file_pattern_list=["*.xls*"],
+    procedure_name="fpa.na_fpa_forecast.sql",
+    usecols="A:F",
+    billing_month_col="B",
 )
 
 eu_data_config = ExcelConfig(
-    task_id='hyperion_credit_billings_eu',
+    task_id="hyperion_credit_billings_eu",
     smb_dir=f"{smb_path}/lake.fpa.eu_credit_billing_forecast",
-    sheet_config=sheets['eu_data'],
-    file_pattern_list=['*.xls*'],
-    procedure_name='fpa.eu_fpa_forecast.sql',
-    usecols='A,C,E:J',
-    billing_month_col='C',
+    sheet_config=sheets["eu_data"],
+    file_pattern_list=["*.xls*"],
+    procedure_name="fpa.eu_fpa_forecast.sql",
+    usecols="A,C,E:J",
+    billing_month_col="C",
 )
 
 with dag:

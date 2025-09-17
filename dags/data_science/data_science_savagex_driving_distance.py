@@ -9,7 +9,7 @@ from include.config import conn_ids, owners, s3_buckets, stages
 from include.utils.snowflake import Column, CopyConfigCsv
 
 bucket_name = s3_buckets.tsos_da_int_inbound
-file_key = 'data_science/sxf_retail_driving_distance.csv.gz'
+file_key = "data_science/sxf_retail_driving_distance.csv.gz"
 number_of_threads = 3
 sql_query = """SELECT DISTINCT
                 store_state,
@@ -71,10 +71,10 @@ sql_query = """SELECT DISTINCT
 
 default_args = {
     "start_date": pendulum.datetime(2020, 1, 1, 7, tz="America/Los_Angeles"),
-    'owner': owners.data_science,
-    "email": 'datascience@techstyle.com',
-    "on_failure_callback": SlackFailureCallback('slack_alert_data_science'),
-    'execution_timeout': timedelta(hours=2),
+    "owner": owners.data_science,
+    "email": "datascience@techstyle.com",
+    "on_failure_callback": SlackFailureCallback("slack_alert_data_science"),
+    "execution_timeout": timedelta(hours=2),
 }
 
 dag = DAG(
@@ -87,25 +87,25 @@ dag = DAG(
 )
 
 column_list = [
-    Column('store_state', 'VARCHAR(50)', uniqueness=True),
-    Column('store_zip', 'VARCHAR(50)', uniqueness=True),
-    Column('store_state_zip', 'VARCHAR(50)', uniqueness=True),
-    Column('vip_state', 'VARCHAR(50)', uniqueness=True),
-    Column('vip_zip', 'VARCHAR(50)', uniqueness=True),
-    Column('vip_state_zip', 'VARCHAR(50)', uniqueness=True),
-    Column('distance', 'DOUBLE'),
-    Column('duration', 'DOUBLE'),
+    Column("store_state", "VARCHAR(50)", uniqueness=True),
+    Column("store_zip", "VARCHAR(50)", uniqueness=True),
+    Column("store_state_zip", "VARCHAR(50)", uniqueness=True),
+    Column("vip_state", "VARCHAR(50)", uniqueness=True),
+    Column("vip_zip", "VARCHAR(50)", uniqueness=True),
+    Column("vip_state_zip", "VARCHAR(50)", uniqueness=True),
+    Column("distance", "DOUBLE"),
+    Column("duration", "DOUBLE"),
 ]
 
 
 with dag:
     zip_50_miles_sxf_retail = SnowflakeProcedureOperator(
-        procedure='data_science.zip_50_miles_sxf_retail.sql',
-        database='reporting_base_prod',
+        procedure="data_science.zip_50_miles_sxf_retail.sql",
+        database="reporting_base_prod",
     )
 
     sxf_google_map_api_driving_time = DrivingTime(
-        task_id='google_map_api_driving_time_sxf',
+        task_id="google_map_api_driving_time_sxf",
         number_of_threads=number_of_threads,
         file_key=file_key,
         bucket_name=bucket_name,
@@ -115,12 +115,16 @@ with dag:
 
     update_file_to_snowflake = SnowflakeIncrementalLoadOperator(
         task_id="snowflake_load_sxf_retail_driving_distance",
-        files_path=f'{stages.tsos_da_int_inbound}/{file_key}',
-        database='reporting_base_prod',
-        schema='data_science',
-        table='sxf_retail_driving_distance',
+        files_path=f"{stages.tsos_da_int_inbound}/{file_key}",
+        database="reporting_base_prod",
+        schema="data_science",
+        table="sxf_retail_driving_distance",
         column_list=column_list,
-        copy_config=CopyConfigCsv(field_delimiter=',', header_rows=1, skip_pct=1),
+        copy_config=CopyConfigCsv(field_delimiter=",", header_rows=1, skip_pct=1),
     )
 
-    zip_50_miles_sxf_retail >> sxf_google_map_api_driving_time >> update_file_to_snowflake
+    (
+        zip_50_miles_sxf_retail
+        >> sxf_google_map_api_driving_time
+        >> update_file_to_snowflake
+    )

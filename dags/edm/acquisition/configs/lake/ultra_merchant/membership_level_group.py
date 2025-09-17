@@ -2,15 +2,15 @@ from include.utils.acquisition.table_config import TableConfig
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    database='ultramerchant',
-    schema='dbo',
-    table='membership_level_group',
-    watermark_column='datetime_added',
-    schema_version_prefix='v2',
+    database="ultramerchant",
+    schema="dbo",
+    table="membership_level_group",
+    watermark_column="datetime_added",
+    schema_version_prefix="v2",
     column_list=[
-        Column('membership_level_group_id', 'INT', uniqueness=True),
-        Column('label', 'VARCHAR(100)'),
-        Column('membership_level_group_bit', 'INT'),
-        Column('datetime_added', 'TIMESTAMP_NTZ(3)', delta_column=0),
+        Column("membership_level_group_id", "INT", uniqueness=True),
+        Column("label", "VARCHAR(100)"),
+        Column("membership_level_group_bit", "INT"),
+        Column("datetime_added", "TIMESTAMP_NTZ(3)", delta_column=0),
     ],
 )

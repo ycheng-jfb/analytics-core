@@ -6,11 +6,11 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    schema='gdpr',
-    table='statuscode',
+    schema="gdpr",
+    table="statuscode",
     column_list=[
-        Column('statuscode', 'INT', uniqueness=True),
-        Column('label', 'VARCHAR(50)'),
+        Column("statuscode", "INT", uniqueness=True),
+        Column("label", "VARCHAR(50)"),
     ],
-    watermark_column='statuscode',
+    watermark_column="statuscode",
 )

@@ -43,7 +43,7 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2024, 4, 1, 1, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "execution_timeout": timedelta(hours=2),
@@ -63,7 +63,7 @@ class Config:
 
     @property
     def store_group(self):
-        return f'{config.stores.replace(",", "_").replace(" ", "")}'.replace("'", '')
+        return f'{config.stores.replace(",", "_").replace(" ", "")}'.replace("'", "")
 
     @staticmethod
     def sql_cmd(stores):
@@ -89,9 +89,9 @@ class Config:
     @staticmethod
     def get_macros(stores):
         return {
-            'DATE_START': Config.date_start,
-            'DATE_END': Config.date_end,
-            'STRING_LIST_STORE_BRAND_NAME': f"{stores}",
+            "DATE_START": Config.date_start,
+            "DATE_END": Config.date_end,
+            "STRING_LIST_STORE_BRAND_NAME": f"{stores}",
         }
 
 
@@ -117,12 +117,12 @@ with dag:
         table=table,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}",
-        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=1, skip_pct=1),
+        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=1, skip_pct=1),
         trigger_rule="all_done",
     )
     for config in configs:
         get_facebook = FacebookAdvancedAnalyticsToS3OperatorNew(
-            task_id=f'load_{config.template_id}_{config.store_group}_to_s3',
+            task_id=f"load_{config.template_id}_{config.store_group}_to_s3",
             facebook_conn_id=conn_ids.Facebook.na,
             macros=config.get_macros(config.stores),
             template_id=config.template_id,

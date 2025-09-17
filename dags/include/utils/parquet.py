@@ -25,43 +25,45 @@ from pyarrow import parquet as pq
 from include.utils.snowflake import Column
 
 
-def sql_to_arrow_mapper(type_name, column_size, decimal_digits, timezone=None, **kwargs):
+def sql_to_arrow_mapper(
+    type_name, column_size, decimal_digits, timezone=None, **kwargs
+):
     def dt_prec_map(num):
         if num > 6:
-            return 'ns'
+            return "ns"
         if num > 3:
-            return 'us'
+            return "us"
         if num > 0:
-            return 'ms'
-        return 's'
+            return "ms"
+        return "s"
 
     try:
-        if 'varchar' in type_name:
+        if "varchar" in type_name:
             return pa.string()
-        if type_name in ('bigint', 'bigint identity'):
+        if type_name in ("bigint", "bigint identity"):
             return pa.int64()
-        if type_name in ('int', 'int identity'):
+        if type_name in ("int", "int identity"):
             return pa.int32()
-        if type_name in ('bit', 'boolean'):
+        if type_name in ("bit", "boolean"):
             return pa.bool_()
-        if type_name in ('money', 'number', 'numeric', 'decimal'):
+        if type_name in ("money", "number", "numeric", "decimal"):
             return pa.decimal128(column_size, decimal_digits)
-        if type_name in ('float',):
+        if type_name in ("float",):
             return pa.float32()
-        if type_name in ('double',):
+        if type_name in ("double",):
             return pa.float64()
-        if type_name in ('binary', 'varbinary', 'uniqueidentifier'):
+        if type_name in ("binary", "varbinary", "uniqueidentifier"):
             return pa.string()
-        if type_name == 'date':
+        if type_name == "date":
             return pa.date32()
         if type_name in (
-            'smalldatetime',
-            'datetime',
-            'datetime2',
-            'timestamp_ntz',
-            'timestamp_ltz',
-            'timestamp_tz',
-            'timestamp',
+            "smalldatetime",
+            "datetime",
+            "datetime2",
+            "timestamp_ntz",
+            "timestamp_ltz",
+            "timestamp_tz",
+            "timestamp",
         ):
             return pa.timestamp(unit=dt_prec_map(column_size), tz=timezone)
     except Exception:
@@ -74,16 +76,20 @@ def get_table_schema(cur, database, schema, table):
     col_list = cur.columns(catalog=database, schema=schema, table=table).fetchall()
     col_names = [x[0] for x in cur.description]
     col_list = [dict(zip(col_names, row)) for row in col_list]
-    attr_subset = {'column_name', 'type_name', 'column_size', 'decimal_digits'}
+    attr_subset = {"column_name", "type_name", "column_size", "decimal_digits"}
     col_list = [{k: v for k, v in row.items() if k in attr_subset} for row in col_list]
     return col_list
 
 
-def get_parquet_schema_from_table(cur, database, schema, table, column_subset=None, timezone=None):
+def get_parquet_schema_from_table(
+    cur, database, schema, table, column_subset=None, timezone=None
+):
     col_list = get_table_schema(cur, database, schema, table)
     type_list = []
     for row in col_list:
-        type_list.append((row['column_name'], sql_to_arrow_mapper(**row, timezone=timezone)))
+        type_list.append(
+            (row["column_name"], sql_to_arrow_mapper(**row, timezone=timezone))
+        )
 
     if not column_subset:
         return pa.schema(type_list)
@@ -117,11 +123,13 @@ class BatchedParquetWriter(pq.ParquetWriter):
         while True:
             try:
                 table = pa.Table.from_arrays(
-                    arrays=np.transpose(cur.fetchmany(batch_size) or self.raise_stop_iteration()),
+                    arrays=np.transpose(
+                        cur.fetchmany(batch_size) or self.raise_stop_iteration()
+                    ),
                     schema=self.schema,
                 )
                 batch_num += 1
-                print('batch num ', batch_num)
+                print("batch num ", batch_num)
                 self.write_table(table)
             except StopIteration:
                 print("no more rows")
@@ -131,14 +139,16 @@ class BatchedParquetWriter(pq.ParquetWriter):
 class BatchedPandasParquetWriter(pq.ParquetWriter):
     def write_all(self, cnx, sql, batch_size=30000):
         batch_num = 0
-        for df in pd.read_sql_query(sql=sql, con=cnx, coerce_float=False, chunksize=batch_size):
+        for df in pd.read_sql_query(
+            sql=sql, con=cnx, coerce_float=False, chunksize=batch_size
+        ):
             batch_num += 1
             print(f"batch_num: {batch_num}")
             self.write_table(pa.Table.from_pandas(df=df, schema=self.schema))
 
 
 class BatchedTurbodbcParquetWriter:
-    def __init__(self, cur, filename, flavor='spark', version='2.0'):
+    def __init__(self, cur, filename, flavor="spark", version="2.0"):
         self.cur = cur
         self.filename = filename
         self.flavor = flavor
@@ -149,7 +159,7 @@ class BatchedTurbodbcParquetWriter:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if hasattr(self.writer, 'close'):
+        if hasattr(self.writer, "close"):
             self.writer.close()
 
     def write_all(self, cur):
@@ -157,9 +167,12 @@ class BatchedTurbodbcParquetWriter:
         batch_num = 0
         for batch in arr_data:
             batch_num += 1
-            print('batch num: ', batch_num)
+            print("batch num: ", batch_num)
             if not self.writer:
                 self.writer = pq.ParquetWriter(
-                    self.filename, batch.schema, flavor=self.flavor, version=self.version
+                    self.filename,
+                    batch.schema,
+                    flavor=self.flavor,
+                    version=self.version,
                 )
             self.writer.write_table(batch)

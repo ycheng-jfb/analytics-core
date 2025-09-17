@@ -6,13 +6,13 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    schema='gdpr',
-    table='request_type',
+    schema="gdpr",
+    table="request_type",
     column_list=[
-        Column('request_type_id', 'INT', uniqueness=True),
-        Column('label', 'VARCHAR(255)'),
-        Column('datetime_added', 'TIMESTAMP_NTZ(3)'),
-        Column('datetime_modified', 'TIMESTAMP_NTZ(3)'),
+        Column("request_type_id", "INT", uniqueness=True),
+        Column("label", "VARCHAR(255)"),
+        Column("datetime_added", "TIMESTAMP_NTZ(3)"),
+        Column("datetime_modified", "TIMESTAMP_NTZ(3)"),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

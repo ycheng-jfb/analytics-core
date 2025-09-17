@@ -48,7 +48,7 @@ class AsknicelyResponsesToS3Operator(BaseRowsToS3CsvOperator):
         )
 
     def xstr(s):
-        return '' if s is None else str(s)
+        return "" if s is None else str(s)
 
     @exponential_backoff(10)
     def get_rows(self):
@@ -56,43 +56,47 @@ class AsknicelyResponsesToS3Operator(BaseRowsToS3CsvOperator):
         self.process_end_date = pendulum.parse(self.process_end_date).date()
 
         asknicely_hook = AsknicelyHook(self.asknicely_conn_id)
-        request_uri = asknicely_hook.get_request_uri(self.process_start_date, self.process_end_date)
+        request_uri = asknicely_hook.get_request_uri(
+            self.process_start_date, self.process_end_date
+        )
         response_data = requests.get(
             request_uri, headers={"X-apikey": asknicely_hook.api_key}
         ).json()
         updated_at = pendulum.DateTime.utcnow().isoformat()
 
-        for data in response_data['data']:
+        for data in response_data["data"]:
             business_unit = asknicely_hook.domain_key.upper()
 
-            if data['country_c'] is None:
-                country = ''
-            elif data['country_c'].upper() == 'GB':
-                country = 'UK'
+            if data["country_c"] is None:
+                country = ""
+            elif data["country_c"].upper() == "GB":
+                country = "UK"
             else:
-                country = data['country_c'].upper()
+                country = data["country_c"].upper()
 
-            response_id = int(data['response_id'])
+            response_id = int(data["response_id"])
 
-            response_date = datetime.fromtimestamp(int(data['responded'])).strftime(
-                '%Y-%m-%d %H:%M:%S'
+            response_date = datetime.fromtimestamp(int(data["responded"])).strftime(
+                "%Y-%m-%d %H:%M:%S"
             )
 
-            sent_date = datetime.fromtimestamp(int(data['sent'])).strftime('%Y-%m-%d %H:%M:%S')
+            sent_date = datetime.fromtimestamp(int(data["sent"])).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
 
-            comment = data['comment']
+            comment = data["comment"]
 
-            del data['comment']
+            del data["comment"]
             asknicely_responses_data = str(data)
 
             yield {
                 **data,
-                'business_unit': business_unit,
-                'country': country,
-                'response_id': response_id,
-                'response_date': response_date,
-                'sent_date': sent_date,
-                'comment': comment,
-                'asknicely_responses_data': asknicely_responses_data,
-                'updated_at': updated_at,
+                "business_unit": business_unit,
+                "country": country,
+                "response_id": response_id,
+                "response_date": response_date,
+                "sent_date": sent_date,
+                "comment": comment,
+                "asknicely_responses_data": asknicely_responses_data,
+                "updated_at": updated_at,
             }

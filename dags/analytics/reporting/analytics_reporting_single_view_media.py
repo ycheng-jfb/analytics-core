@@ -10,12 +10,12 @@ from include.config import owners
 from include.config.email_lists import analytics_support
 
 default_args = {
-    'depends_on_past': False,
-    'start_date': pendulum.datetime(2019, 1, 1, 7, tz='America/Los_Angeles'),
-    'retries': 1,
-    'owner': owners.analytics_engineering,
-    'max_active_tis_per_dag': 2,
-    'email': analytics_support,
+    "depends_on_past": False,
+    "start_date": pendulum.datetime(2019, 1, 1, 7, tz="America/Los_Angeles"),
+    "retries": 1,
+    "owner": owners.analytics_engineering,
+    "max_active_tis_per_dag": 2,
+    "email": analytics_support,
     "on_failure_callback": slack_failure_edm,
 }
 
@@ -30,36 +30,36 @@ dag = DAG(
 
 with dag:
     svm_session_ids_stg = SnowflakeProcedureOperator(
-        procedure='shared.svm_session_ids_stg.sql',
-        database='reporting_base_prod',
-        warehouse='DA_WH_ETL_HEAVY',
+        procedure="shared.svm_session_ids_stg.sql",
+        database="reporting_base_prod",
+        warehouse="DA_WH_ETL_HEAVY",
     )
     session_refresh_base = SnowflakeProcedureOperator(
-        procedure='shared.session_refresh_base.sql',
-        database='reporting_base_prod',
-        warehouse='DA_WH_ETL_HEAVY',
+        procedure="shared.session_refresh_base.sql",
+        database="reporting_base_prod",
+        warehouse="DA_WH_ETL_HEAVY",
     )
     session_single_view_media = SnowflakeProcedureOperator(
-        procedure='shared.session_single_view_media.sql',
-        database='reporting_base_prod',
-        warehouse='DA_WH_ETL_HEAVY',
+        procedure="shared.session_single_view_media.sql",
+        database="reporting_base_prod",
+        warehouse="DA_WH_ETL_HEAVY",
     )
     single_view_media = SnowflakeProcedureOperator(
-        procedure='shared.single_view_media.sql',
-        database='reporting_prod',
-        warehouse='DA_WH_ETL_HEAVY',
+        procedure="shared.single_view_media.sql",
+        database="reporting_prod",
+        warehouse="DA_WH_ETL_HEAVY",
     )
 
     tableau_refresh_single_view_media = TableauRefreshOperator(
-        task_id='tableau_refresh_single_view_media',
-        data_source_name='SINGLE_VIEW_MEDIA_V2',
+        task_id="tableau_refresh_single_view_media",
+        data_source_name="SINGLE_VIEW_MEDIA_V2",
         wait_till_complete=True,
     )
 
     trigger_media_tff = TFGTriggerDagRunOperator(
-        task_id='trigger_media_transform_friction_finder',
-        trigger_dag_id='media_transform_friction_finder',
-        execution_date='{{ data_interval_end }}',
+        task_id="trigger_media_transform_friction_finder",
+        trigger_dag_id="media_transform_friction_finder",
+        execution_date="{{ data_interval_end }}",
     )
     chain_tasks(
         svm_session_ids_stg,

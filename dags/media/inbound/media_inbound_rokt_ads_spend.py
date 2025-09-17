@@ -38,16 +38,16 @@ column_list = [
     Column("campaignId", "NUMBER", uniqueness=True),
 ]
 
-Config = namedtuple('Config', ['store', 'account_id', 'campaign_id'])
+Config = namedtuple("Config", ["store", "account_id", "campaign_id"])
 
 items = [
-    Config('FL', 3124040317978028205, 3266180594207425112),
+    Config("FL", 3124040317978028205, 3266180594207425112),
 ]
 
 default_args = {
     "start_date": pendulum.datetime(2021, 8, 23, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "sla": timedelta(hours=2),
@@ -96,7 +96,7 @@ with dag:
         table=table,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}",
-        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=3),
+        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=3),
         trigger_rule="all_done",
     )
     for item in items:

@@ -3,7 +3,11 @@ from airflow.models import DAG
 
 from include.airflow.callbacks.slack import slack_failure_media
 from include.airflow.operators.creatoriq import CreatorIQToS3Operator
-from include.airflow.operators.snowflake_load import Column, CopyConfigCsv, SnowflakeScdOperator
+from include.airflow.operators.snowflake_load import (
+    Column,
+    CopyConfigCsv,
+    SnowflakeScdOperator,
+)
 from include.config import owners, s3_buckets, stages
 from include.config.email_lists import airflow_media_support
 from include.config import conn_ids
@@ -165,7 +169,7 @@ column_list = [
 default_args = {
     "start_date": pendulum.datetime(2020, 11, 13, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }
@@ -206,9 +210,9 @@ class CreatorIQPullCampaignActivityToS3Operator(CreatorIQToS3Operator):
         ids = self.get_sql_data()
         for id in ids:
             response = self.hook.make_request(
-                url=f'https://api.creatoriq.com/api/public/campaign/{id[0]}/activity'
+                url=f"https://api.creatoriq.com/api/public/campaign/{id[0]}/activity"
             )
-            data = response.json()['CampaignActivity']['items']
+            data = response.json()["CampaignActivity"]["items"]
             yield from data
             print(f"pulled for id:{id[0]} fetched {len(data)} records")
         print("completed fetching data")
@@ -222,7 +226,7 @@ with dag:
         table=table,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{S3_PREFIX}",
-        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0),
+        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0),
     )
     op = CreatorIQPullCampaignActivityToS3Operator(
         task_id="get_ciq_data",

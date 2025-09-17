@@ -9,7 +9,9 @@ from google.ads.googleads.errors import GoogleAdsException
 
 
 class GoogleConversionsExportOperator(SnowflakeWatermarkSqlOperator):
-    def __init__(self, customer_id, conversion_action_id, store, country, *args, **kwargs):
+    def __init__(
+        self, customer_id, conversion_action_id, store, country, *args, **kwargs
+    ):
         super().__init__(sql_or_path="", *args, **kwargs)
         self.customer_id = customer_id
         self.conversion_action_id = conversion_action_id
@@ -36,7 +38,6 @@ class GoogleConversionsExportOperator(SnowflakeWatermarkSqlOperator):
         ad_user_data_consent=None,
         ad_personalization_consent=None,
     ):
-
         offline_user_data_job_service = client.get_service("OfflineUserDataJobService")
 
         # Create an offline user data job for uploading transactions.
@@ -86,7 +87,6 @@ class GoogleConversionsExportOperator(SnowflakeWatermarkSqlOperator):
         partner_id,
         custom_key,
     ):
-
         offline_user_data_job = client.get_type("OfflineUserDataJob")
         offline_user_data_job.type_ = offline_user_data_job_type
         if external_id is not None:
@@ -110,7 +110,9 @@ class GoogleConversionsExportOperator(SnowflakeWatermarkSqlOperator):
             store_sales_third_party_metadata.valid_transaction_fraction = 1.0
             store_sales_third_party_metadata.partner_match_fraction = 1.0
             store_sales_third_party_metadata.partner_upload_fraction = 1.0
-            store_sales_third_party_metadata.bridge_map_version_id = bridge_map_version_id
+            store_sales_third_party_metadata.bridge_map_version_id = (
+                bridge_map_version_id
+            )
             store_sales_third_party_metadata.partner_id = partner_id
 
         create_offline_user_data_job_response = (
@@ -118,7 +120,9 @@ class GoogleConversionsExportOperator(SnowflakeWatermarkSqlOperator):
                 customer_id=customer_id, job=offline_user_data_job
             )
         )
-        offline_user_data_job_resource_name = create_offline_user_data_job_response.resource_name
+        offline_user_data_job_resource_name = (
+            create_offline_user_data_job_response.resource_name
+        )
         print(
             "Created an offline user data job with resource name "
             f"'{offline_user_data_job_resource_name}'."
@@ -170,7 +174,9 @@ class GoogleConversionsExportOperator(SnowflakeWatermarkSqlOperator):
         if response.partial_failure_error:
             self.print_google_ads_failures(client, response.partial_failure_error)
         else:
-            print(f"Successfully added {len(operations)} to the offline user data " "job.")
+            print(
+                f"Successfully added {len(operations)} to the offline user data " "job."
+            )
 
         # Print the message for any warnings that are returned.
         if response.warning:
@@ -225,14 +231,20 @@ class GoogleConversionsExportOperator(SnowflakeWatermarkSqlOperator):
         operations = []
 
         for row in rows:
-            user_data_with_email_address_operation = client.get_type("OfflineUserDataJobOperation")
+            user_data_with_email_address_operation = client.get_type(
+                "OfflineUserDataJobOperation"
+            )
             user_data_with_email_address = user_data_with_email_address_operation.create
             email_identifier = client.get_type("UserIdentifier")
             email_identifier.hashed_email = self.normalize_and_hash(row[0])
 
             address_identifier = client.get_type("UserIdentifier")
-            address_identifier.address_info.hashed_first_name = self.normalize_and_hash(row[1])
-            address_identifier.address_info.hashed_last_name = self.normalize_and_hash(row[2])
+            address_identifier.address_info.hashed_first_name = self.normalize_and_hash(
+                row[1]
+            )
+            address_identifier.address_info.hashed_last_name = self.normalize_and_hash(
+                row[2]
+            )
             address_identifier.address_info.country_code = row[5]
             address_identifier.address_info.postal_code = row[4]
             address_identifier.address_info.state = row[3]
@@ -259,7 +271,9 @@ class GoogleConversionsExportOperator(SnowflakeWatermarkSqlOperator):
     def normalize_and_hash(self, s):
         return hashlib.sha256(s.strip().lower().encode()).hexdigest()
 
-    def check_job_status(self, client, customer_id, offline_user_data_job_resource_name):
+    def check_job_status(
+        self, client, customer_id, offline_user_data_job_resource_name
+    ):
         # Get the GoogleAdsService client.
         googleads_service = client.get_service("GoogleAdsService")
 

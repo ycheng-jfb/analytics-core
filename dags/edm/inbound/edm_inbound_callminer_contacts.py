@@ -8,7 +8,14 @@ from include.airflow.operators.callminer import CallMinerContacts
 from include.airflow.operators.callminer_bulk import CallMinerBulkConversation
 from include.airflow.operators.snowflake import SnowflakeProcedureOperator
 from include.airflow.operators.snowflake_load import SnowflakeIncrementalLoadOperator
-from include.config import conn_ids, email_lists, owners, s3_buckets, snowflake_roles, stages
+from include.config import (
+    conn_ids,
+    email_lists,
+    owners,
+    s3_buckets,
+    snowflake_roles,
+    stages,
+)
 from include.utils.snowflake import CopyConfigCsv
 from task_configs.dag_config.callminer_config import contacts_config as cfg
 from task_configs.dag_config.callminer_config import transcripts_config as t_cfg
@@ -19,7 +26,7 @@ default_args = {
     "start_date": pendulum.datetime(2022, 10, 31, tz="America/Los_Angeles"),
     "owner": owners.data_integrations,
     "email": email_lists.data_integration_support,
-    'on_failure_callback': slack_failure_edm,
+    "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
@@ -33,10 +40,9 @@ dag = DAG(
 
 yr_mth = "{{macros.datetime.now().strftime('%Y%m')}}"
 with dag:
-
     contacts_to_s3 = CallMinerContacts(
-        task_id='contacts_to_s3',
-        key=f'{cfg.s3_prefix}/{yr_mth}/{cfg.schema}_{cfg.table}_{{{{ ts_nodash }}}}.csv.gz',
+        task_id="contacts_to_s3",
+        key=f"{cfg.s3_prefix}/{yr_mth}/{cfg.schema}_{cfg.table}_{{{{ ts_nodash }}}}.csv.gz",
         bucket=s3_buckets.tsos_da_int_inbound,
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
         column_list=[x.source_name for x in cfg.column_list],
@@ -47,46 +53,51 @@ with dag:
     )
 
     contacts_to_snowflake = SnowflakeIncrementalLoadOperator(
-        task_id='contacts_to_snowflake',
+        task_id="contacts_to_snowflake",
         database=cfg.database,
         schema=cfg.schema,
         table=cfg.table,
-        staging_database='lake_stg',
-        view_database='lake_view',
+        staging_database="lake_stg",
+        view_database="lake_view",
         snowflake_conn_id=conn_ids.Snowflake.default,
         role=snowflake_roles.etl_service_account,
         column_list=cfg.column_list,
-        files_path=f'{stages.tsos_da_int_inbound}/{cfg.s3_prefix}/',
-        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=1),
+        files_path=f"{stages.tsos_da_int_inbound}/{cfg.s3_prefix}/",
+        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=1),
     )
 
     contact_categories = SnowflakeProcedureOperator(
-        procedure='callminer.contact_categories.sql',
-        database='lake',
-        warehouse='DA_WH_ETL_LIGHT',
+        procedure="callminer.contact_categories.sql",
+        database="lake",
+        warehouse="DA_WH_ETL_LIGHT",
     )
 
     contact_scores = SnowflakeProcedureOperator(
-        procedure='callminer.contact_scores.sql',
-        database='lake',
-        warehouse='DA_WH_ETL_LIGHT',
+        procedure="callminer.contact_scores.sql",
+        database="lake",
+        warehouse="DA_WH_ETL_LIGHT",
     )
 
     contact_score_components = SnowflakeProcedureOperator(
-        procedure='callminer.contact_score_components.sql',
-        database='lake',
-        warehouse='DA_WH_ETL_LIGHT',
+        procedure="callminer.contact_score_components.sql",
+        database="lake",
+        warehouse="DA_WH_ETL_LIGHT",
     )
 
     @task
     def check_pending_transcripts_jobs(namespace, process_name, initial_load_value):
-        job_status = CallMinerBulkConversation.check_job_status('callminer_bulk_default')
+        job_status = CallMinerBulkConversation.check_job_status(
+            "callminer_bulk_default"
+        )
 
-        task_state_val = ProcessState.get_value(namespace=namespace, process_name=process_name)
+        task_state_val = ProcessState.get_value(
+            namespace=namespace, process_name=process_name
+        )
         low_watermark = task_state_val or initial_load_value
         new_data = list(
             filter(
-                lambda x: x["JobCompletionTime"] > low_watermark and x["Status"] == "Completed",
+                lambda x: x["JobCompletionTime"] > low_watermark
+                and x["Status"] == "Completed",
                 job_status.json(),
             )
         )
@@ -109,29 +120,31 @@ with dag:
         ]
 
     transcripts_to_s3 = CallMinerBulkConversation.partial(
-        task_id='transcripts_to_s3',
+        task_id="transcripts_to_s3",
         s3_bucket=s3_buckets.tsos_da_int_inbound,
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
-        callminer_bulk_conn_id='callminer_bulk_default',
+        callminer_bulk_conn_id="callminer_bulk_default",
         namespace=t_cfg.schema,
         process_name=t_cfg.table,
         initial_load_value="1900-01-01T00:00:00.000Z",
         max_active_tis_per_dagrun=1,
     ).expand_kwargs(
-        check_pending_transcripts_jobs(t_cfg.schema, t_cfg.table, "1900-01-01T00:00:00.000Z")
+        check_pending_transcripts_jobs(
+            t_cfg.schema, t_cfg.table, "1900-01-01T00:00:00.000Z"
+        )
     )
 
     transcripts_to_snowflake = SnowflakeIncrementalLoadOperator(
-        task_id='transcripts_to_snowflake',
+        task_id="transcripts_to_snowflake",
         database=t_cfg.database,
         schema=t_cfg.schema,
         table=t_cfg.table,
-        staging_database='lake_stg',
-        view_database='lake_view',
+        staging_database="lake_stg",
+        view_database="lake_view",
         snowflake_conn_id=conn_ids.Snowflake.default,
         role=snowflake_roles.etl_service_account,
         column_list=t_cfg.column_list,
-        files_path=f'{stages.tsos_da_int_inbound}/{t_cfg.s3_prefix}/',
+        files_path=f"{stages.tsos_da_int_inbound}/{t_cfg.s3_prefix}/",
         copy_config=CopyConfigCsv(header_rows=1, null_if="'null'"),
     )
 

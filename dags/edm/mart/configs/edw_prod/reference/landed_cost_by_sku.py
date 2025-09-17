@@ -3,5 +3,5 @@ from include.airflow.operators.snowflake import SnowflakeEdwProcedureOperator
 
 def get_mart_operator():
     return SnowflakeEdwProcedureOperator(
-        procedure='reference.landed_cost_by_sku.sql', database='edw_prod'
+        procedure="reference.landed_cost_by_sku.sql", database="edw_prod"
     )

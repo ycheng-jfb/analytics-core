@@ -6,18 +6,18 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table='shipping_option',
+    table="shipping_option",
     column_list=[
-        Column('shipping_option_id', 'INT', uniqueness=True),
-        Column('type', 'VARCHAR(25)'),
-        Column('label', 'VARCHAR(50)'),
-        Column('cost', 'NUMBER(19, 4)'),
-        Column('amount', 'NUMBER(19, 4)'),
-        Column('description', 'VARCHAR(255)'),
+        Column("shipping_option_id", "INT", uniqueness=True),
+        Column("type", "VARCHAR(25)"),
+        Column("label", "VARCHAR(50)"),
+        Column("cost", "NUMBER(19, 4)"),
+        Column("amount", "NUMBER(19, 4)"),
+        Column("description", "VARCHAR(255)"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
     ],
-    watermark_column='datetime_added',
+    watermark_column="datetime_added",
 )

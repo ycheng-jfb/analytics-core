@@ -15,7 +15,7 @@ data_interval_start = "{{ data_interval_end.strftime('%Y%m%d') }}"
 default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2019, 9, 16, tz="America/Los_Angeles"),
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }
@@ -30,16 +30,16 @@ dag = DAG(
     max_active_runs=1,
 )
 
-SftpPath = namedtuple('SftpPath', ['name'])
-res = [SftpPath('gdpr'), SftpPath('ccpa')]
+SftpPath = namedtuple("SftpPath", ["name"])
+res = [SftpPath("gdpr"), SftpPath("ccpa")]
 
 with dag:
     execute_ccpa_gdpr_requests = SnowflakeProcedureOperator(
-        procedure='dbo.ccpa_gdpr_requests.sql',
-        database='reporting_media_prod',
+        procedure="dbo.ccpa_gdpr_requests.sql",
+        database="reporting_media_prod",
     )
     for item in res:
-        if item.name == 'gdpr':
+        if item.name == "gdpr":
             sql = """
                     SELECT edw_prod.stg.udf_unconcat_brand(customer_id),
                            email1,
@@ -83,7 +83,7 @@ with dag:
             sftp_conn_id=SFTP.sftp_techstyle_optout,
             filename=f"techstyle_opt_out_deletions_{data_interval_start}.csv",
             sftp_dir=f"/secure_reports/{item.name}_requests/",
-            field_delimiter=',',
+            field_delimiter=",",
             header=True,
         )
         execute_ccpa_gdpr_requests >> post_to_sftp

@@ -15,19 +15,21 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2021, 7, 1, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.data_integrations,
+    "owner": owners.data_integrations,
     "email": data_integration_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 
 def from_ds(data_interval_start):
-    exec_date = pendulum.instance(data_interval_start).replace(tzinfo=None).format('YYYYMMDD')
+    exec_date = (
+        pendulum.instance(data_interval_start).replace(tzinfo=None).format("YYYYMMDD")
+    )
     return str(exec_date)
 
 
 dag = DAG(
-    dag_id='edm_outbound_mssql_sftp_storeforce_realtime',
+    dag_id="edm_outbound_mssql_sftp_storeforce_realtime",
     default_args=default_args,
     schedule="2/30 * * * *",
     catchup=False,
@@ -137,10 +139,10 @@ ORDER BY CONCAT('SXF-',STORE_CODE),
     DATE;
 """
 
-fl_s3_key = 'lake/storeforce/fabletics'
-sxf_s3_key = 'lake/storeforce/savagex'
+fl_s3_key = "lake/storeforce/fabletics"
+sxf_s3_key = "lake/storeforce/savagex"
 
-date_param = '{{ from_ds(data_interval_start) }}'
+date_param = "{{ from_ds(data_interval_start) }}"
 
 export_sql_cmd = r"""
 DELETE FROM lake_stg.storeforce.{store_brand_abbr}_store_level_intraday_feed_stg;
@@ -265,23 +267,23 @@ SET
 
 
 def check_time(**context):
-    execution_time = context['data_interval_end'].in_timezone('America/Los_Angeles')
+    execution_time = context["data_interval_end"].in_timezone("America/Los_Angeles")
     if execution_time.hour == 3 and execution_time.minute < 30:
         return [to_fl_snowflake_export.task_id, to_sxf_snowflake_export.task_id]
     return []
 
 
 with dag:
-    with TaskGroup(group_id='fl-storeforce') as tg1:
+    with TaskGroup(group_id="fl-storeforce") as tg1:
         fl_storeforce_mssql = MsSqlOperator(
-            sql='[analytic].[dbo].[usp_store_force]',
-            task_id='fl_mssql_procedure_store_force',
+            sql="[analytic].[dbo].[usp_store_force]",
+            task_id="fl_mssql_procedure_store_force",
             mssql_conn_id=conn_ids.MsSql.fabletics_app_airflow,
             priority_weight=990,
             sla=timedelta(minutes=25),
         )
         fl_store_level_sftp = MssqlToSFTPOperator(
-            task_id='fl_store_level_grain_source_sftp_export',
+            task_id="fl_store_level_grain_source_sftp_export",
             sql_or_path=fl_store_level_grain_source_sql,
             mssql_conn_id=conn_ids.MsSql.fabletics_app_airflow,
             sftp_conn_id=conn_ids.SFTP.sftp_storeforce,
@@ -293,7 +295,7 @@ with dag:
         )
 
         fl_associate_level_sftp = MssqlToSFTPOperator(
-            task_id='fl_associate_level_grain_source_sftp_export',
+            task_id="fl_associate_level_grain_source_sftp_export",
             sql_or_path=fl_associate_level_grain_source_sql,
             mssql_conn_id=conn_ids.MsSql.fabletics_app_airflow,
             sftp_conn_id=conn_ids.SFTP.sftp_storeforce,
@@ -307,20 +309,20 @@ with dag:
         # fl_storeforce_mssql >> fl_store_level_sftp >> fl_associate_level_sftp
 
         fl_store_level_to_s3 = MsSqlToS3Operator(
-            task_id='fl_store_level_grain_source_s3_export',
+            task_id="fl_store_level_grain_source_s3_export",
             sql=fl_store_level_grain_source_sql,
             bucket=s3_buckets.tsos_da_int_inbound,
-            key=f'{fl_s3_key}/daily_pos_{{{{ ts_nodash }}}}.csv.gz',
+            key=f"{fl_s3_key}/daily_pos_{{{{ ts_nodash }}}}.csv.gz",
             mssql_conn_id=conn_ids.MsSql.fabletics_app_airflow,
             s3_conn_id=conn_ids.S3.tsos_da_int_prod,
             s3_replace=False,
         )
 
         fl_associate_level_to_s3 = MsSqlToS3Operator(
-            task_id='fl_associate_level_grain_source_s3_export',
+            task_id="fl_associate_level_grain_source_s3_export",
             sql=fl_associate_level_grain_source_sql,
             bucket=s3_buckets.tsos_da_int_inbound,
-            key=f'{fl_s3_key}/daily_employeesales_{{{{ ts_nodash }}}}.csv.gz',
+            key=f"{fl_s3_key}/daily_employeesales_{{{{ ts_nodash }}}}.csv.gz",
             mssql_conn_id=conn_ids.MsSql.fabletics_app_airflow,
             s3_conn_id=conn_ids.S3.tsos_da_int_prod,
             s3_replace=False,
@@ -334,15 +336,15 @@ with dag:
             >> fl_associate_level_to_s3
         )
 
-    with TaskGroup(group_id='sxf-storeforce') as tg2:
+    with TaskGroup(group_id="sxf-storeforce") as tg2:
         sxf_storeforce_mssql = MsSqlOperator(
-            sql='[analytic].[dbo].[usp_store_force]',
-            task_id='sxf_mssql_procedure_store_force',
+            sql="[analytic].[dbo].[usp_store_force]",
+            task_id="sxf_mssql_procedure_store_force",
             mssql_conn_id=conn_ids.MsSql.savagex_app_airflow,
             priority_weight=990,
         )
         sxf_store_level_sftp = MssqlToSFTPOperator(
-            task_id='sxf_store_level_grain_source_sftp_export',
+            task_id="sxf_store_level_grain_source_sftp_export",
             sql_or_path=sxf_store_level_grain_source_sql,
             mssql_conn_id=conn_ids.MsSql.savagex_app_airflow,
             sftp_conn_id=conn_ids.SFTP.sftp_storeforce_sxf,
@@ -353,7 +355,7 @@ with dag:
         )
 
         sxf_associate_level_sftp = MssqlToSFTPOperator(
-            task_id='sxf_associate_level_grain_source_sftp_export',
+            task_id="sxf_associate_level_grain_source_sftp_export",
             sql_or_path=sxf_associate_level_grain_source_sql,
             mssql_conn_id=conn_ids.MsSql.savagex_app_airflow,
             sftp_conn_id=conn_ids.SFTP.sftp_storeforce_sxf,
@@ -364,20 +366,20 @@ with dag:
         )
 
         sxf_store_level_to_s3 = MsSqlToS3Operator(
-            task_id='sxf_store_level_grain_source_s3_export',
+            task_id="sxf_store_level_grain_source_s3_export",
             sql=sxf_store_level_grain_source_sql,
             bucket=s3_buckets.tsos_da_int_inbound,
-            key=f'{sxf_s3_key}/daily_pos_{{{{ ts_nodash }}}}.csv.gz',
+            key=f"{sxf_s3_key}/daily_pos_{{{{ ts_nodash }}}}.csv.gz",
             mssql_conn_id=conn_ids.MsSql.savagex_app_airflow,
             s3_conn_id=conn_ids.S3.tsos_da_int_prod,
             s3_replace=False,
         )
 
         sxf_associate_level_to_s3 = MsSqlToS3Operator(
-            task_id='sxf_associate_level_grain_source_s3_export',
+            task_id="sxf_associate_level_grain_source_s3_export",
             sql=sxf_associate_level_grain_source_sql,
             bucket=s3_buckets.tsos_da_int_inbound,
-            key=f'{sxf_s3_key}/daily_employeesales_{{{{ ts_nodash }}}}.csv.gz',
+            key=f"{sxf_s3_key}/daily_employeesales_{{{{ ts_nodash }}}}.csv.gz",
             mssql_conn_id=conn_ids.MsSql.savagex_app_airflow,
             s3_conn_id=conn_ids.S3.tsos_da_int_prod,
             s3_replace=False,
@@ -394,21 +396,21 @@ with dag:
     check_eod = BranchPythonOperator(task_id="check_time", python_callable=check_time)
 
     to_fl_snowflake_export = SnowflakeSqlOperator(
-        task_id='to_fl_snowflake_export',
+        task_id="to_fl_snowflake_export",
         sql_or_path=export_sql_cmd.format(
-            store_brand_abbr='fl', s3_key=fl_s3_key, date_param=date_param
+            store_brand_abbr="fl", s3_key=fl_s3_key, date_param=date_param
         ),
-        database='lake',
-        warehouse='DA_WH_ETL_LIGHT',
+        database="lake",
+        warehouse="DA_WH_ETL_LIGHT",
     )
 
     to_sxf_snowflake_export = SnowflakeSqlOperator(
-        task_id='to_sxf_snowflake_export',
+        task_id="to_sxf_snowflake_export",
         sql_or_path=export_sql_cmd.format(
-            store_brand_abbr='sxf', s3_key=sxf_s3_key, date_param=date_param
+            store_brand_abbr="sxf", s3_key=sxf_s3_key, date_param=date_param
         ),
-        database='lake',
-        warehouse='DA_WH_ETL_LIGHT',
+        database="lake",
+        warehouse="DA_WH_ETL_LIGHT",
     )
 
     (

@@ -205,12 +205,12 @@ class SnapchatConversionsExportOperator(SnowflakeWatermarkSqlOperator):
         hook = SnapchatAdsHook(snapchat_conn_id=conn_ids.Snapchat.conversions_default)
         conn = hook.get_conn_for_conversions_api()
         response = conn.request(
-            method='POST', url='https://tr.snapchat.com/v2/conversion', json=json_data
+            method="POST", url="https://tr.snapchat.com/v2/conversion", json=json_data
         )
         if response.status_code == 200:
             try:
                 response_raw = response.json()
-                if response_raw['status'] != "SUCCESS":
+                if response_raw["status"] != "SUCCESS":
                     raise ValueError(f"POST request failed with('{response_raw}').")
                 print(response_raw)
             except Exception as e:

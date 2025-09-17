@@ -17,6 +17,7 @@
 # specific language governing permissions and limitations
 # under the License.
 """Hook for SSH connections."""
+
 import getpass
 import os
 import warnings
@@ -177,7 +178,8 @@ class SSHHook(BaseHook):
             client.load_system_host_keys()
         if self.no_host_key_check:
             self.log.warning(
-                "No Host Key Verification. This wont protect " "against Man-In-The-Middle attacks"
+                "No Host Key Verification. This wont protect "
+                "against Man-In-The-Middle attacks"
             )
             # Default is RejectPolicy
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())

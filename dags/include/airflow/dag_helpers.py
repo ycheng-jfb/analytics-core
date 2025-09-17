@@ -11,11 +11,11 @@ class TFGControlOperator(BaseOperator):
     The task is evaluated by the scheduler but never processed by the executor.
     """
 
-    ui_color = '#e8f7e4'
+    ui_color = "#e8f7e4"
     inherits_from_dummy_operator = True
 
     def __init__(self, **kwargs) -> None:
-        super().__init__(task_id='support_control_task', **kwargs)
+        super().__init__(task_id="support_control_task", **kwargs)
 
     def execute(self, context):
         pass

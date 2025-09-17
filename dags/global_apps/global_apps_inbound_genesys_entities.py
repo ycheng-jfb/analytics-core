@@ -6,7 +6,10 @@ from airflow.models import DAG
 
 from include.airflow.callbacks.slack import slack_failure_gsc
 from include.airflow.operators.genesys import GenesysEntitiesToS3Operator
-from include.airflow.operators.snowflake_load import Column, SnowflakeIncrementalLoadOperator
+from include.airflow.operators.snowflake_load import (
+    Column,
+    SnowflakeIncrementalLoadOperator,
+)
 from include.config import conn_ids, email_lists, owners, s3_buckets, stages
 from include.utils.snowflake import CopyConfigCsv
 
@@ -59,7 +62,7 @@ objects_config = [
             Column("updated_at", "TIMESTAMP_LTZ", delta_column=True),
         ],
         endpoint="users",
-        extra_params={'expand': "groups,locations,employerInfo"},
+        extra_params={"expand": "groups,locations,employerInfo"},
     ),
     GenesysObjects(
         table_name="genesys_group",

@@ -37,10 +37,12 @@ class TikTokShopBaseOperator(BaseOperator):
         response = self.hook.make_request(
             url=self.url, path="/authorization/202309/shops", method="GET"
         )
-        shops = response['shops']
+        shops = response["shops"]
 
         if len(shops) > 1:
-            raise Exception("Multiple shops found, current implementation only supports one shop")
+            raise Exception(
+                "Multiple shops found, current implementation only supports one shop"
+            )
         return shops[0]
 
     def list_objects(self, path, params, data=None):
@@ -54,12 +56,14 @@ class TikTokShopBaseOperator(BaseOperator):
             )
 
             yield response
-            if not response.get('next_page_token'):
+            if not response.get("next_page_token"):
                 break
-            next_token = response['next_page_token']
+            next_token = response["next_page_token"]
 
 
-class TiktokShopEndpointToS3Operator(BaseRowsToS3CsvWatermarkOperator, TikTokShopBaseOperator):
+class TiktokShopEndpointToS3Operator(
+    BaseRowsToS3CsvWatermarkOperator, TikTokShopBaseOperator
+):
     def __init__(
         self,
         endpoint: str,
@@ -74,7 +78,7 @@ class TiktokShopEndpointToS3Operator(BaseRowsToS3CsvWatermarkOperator, TikTokSho
 
     def get_rows(self):
         shop = self.get_authorized_shops()
-        shop_cipher = shop['cipher']
+        shop_cipher = shop["cipher"]
 
         params = {
             "shop_cipher": shop_cipher,
@@ -82,18 +86,24 @@ class TiktokShopEndpointToS3Operator(BaseRowsToS3CsvWatermarkOperator, TikTokSho
             "page_size": self.page_size,
         }
 
-        body = {"update_time_ge": int(self.low_watermark)} if self.low_watermark != 'None' else {}
+        body = (
+            {"update_time_ge": int(self.low_watermark)}
+            if self.low_watermark != "None"
+            else {}
+        )
 
         for obj in self.list_objects(self.endpoint, params, body):
             if obj.get(self.response_obj):
                 for data in obj[self.response_obj]:
-                    yield {**data, 'shop_name': shop["name"]}
+                    yield {**data, "shop_name": shop["name"]}
 
     def get_high_watermark(self) -> str:
         return str(int(pendulum.DateTime.utcnow().timestamp()))
 
 
-class TiktokShopProductToS3Operator(BaseRowsToS3CsvWatermarkOperator, TikTokShopBaseOperator):
+class TiktokShopProductToS3Operator(
+    BaseRowsToS3CsvWatermarkOperator, TikTokShopBaseOperator
+):
     def __init__(
         self,
         *args,
@@ -104,7 +114,7 @@ class TiktokShopProductToS3Operator(BaseRowsToS3CsvWatermarkOperator, TikTokShop
 
     def get_rows(self):
         shop = self.get_authorized_shops()
-        shop_cipher = shop['cipher']
+        shop_cipher = shop["cipher"]
 
         params = {
             "shop_cipher": shop_cipher,
@@ -112,19 +122,25 @@ class TiktokShopProductToS3Operator(BaseRowsToS3CsvWatermarkOperator, TikTokShop
             "page_size": self.page_size,
         }
 
-        body = {"update_time_ge": int(self.low_watermark)} if self.low_watermark != 'None' else {}
+        body = (
+            {"update_time_ge": int(self.low_watermark)}
+            if self.low_watermark != "None"
+            else {}
+        )
 
-        for products_obj in self.list_objects("/product/202312/products/search", params, body):
+        for products_obj in self.list_objects(
+            "/product/202312/products/search", params, body
+        ):
             if products_obj.get("products"):
                 for product in products_obj["products"]:
                     response = self.hook.make_request(
                         url=self.url,
                         path=f"/product/202309/products/{product['id']}",
                         method="GET",
-                        params={"shop_cipher": shop['cipher']},
+                        params={"shop_cipher": shop["cipher"]},
                         data=None,
                     )
-                    yield {**response, 'shop_name': shop["name"]}
+                    yield {**response, "shop_name": shop["name"]}
 
     def get_high_watermark(self) -> str:
         return str(int(pendulum.DateTime.utcnow().timestamp()))
@@ -133,7 +149,7 @@ class TiktokShopProductToS3Operator(BaseRowsToS3CsvWatermarkOperator, TikTokShop
 class TiktokShopInventoryToS3Operator(TikTokShopBaseOperator, BaseRowsToS3CsvOperator):
     def get_rows(self):
         shop = self.get_authorized_shops()
-        shop_cipher = shop['cipher']
+        shop_cipher = shop["cipher"]
 
         params = {
             "shop_cipher": shop_cipher,
@@ -141,9 +157,11 @@ class TiktokShopInventoryToS3Operator(TikTokShopBaseOperator, BaseRowsToS3CsvOpe
             "page_size": self.page_size,
         }
 
-        for product in self.list_objects("/product/202312/products/search", params, None):
+        for product in self.list_objects(
+            "/product/202312/products/search", params, None
+        ):
             if product.get("products"):
-                product_ids = list(map(lambda x: x['id'], product['products']))
+                product_ids = list(map(lambda x: x["id"], product["products"]))
 
                 inventory_params = {"shop_cipher": shop_cipher}
                 inventory_data = {"product_ids": product_ids}
@@ -156,5 +174,5 @@ class TiktokShopInventoryToS3Operator(TikTokShopBaseOperator, BaseRowsToS3CsvOpe
                     data=inventory_data,
                 )
 
-                for inventory in response['inventory']:
-                    yield {**inventory, 'shop_name': shop["name"]}
+                for inventory in response["inventory"]:
+                    yield {**inventory, "shop_name": shop["name"]}

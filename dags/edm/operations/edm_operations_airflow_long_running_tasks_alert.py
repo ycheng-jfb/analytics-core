@@ -22,7 +22,7 @@ default_args = {
 dag = DAG(
     dag_id="edm_operations_airflow_long_running_tasks_alert",
     default_args=default_args,
-    schedule='0 * * * *',
+    schedule="0 * * * *",
     catchup=False,
     max_active_runs=1,
 )
@@ -98,13 +98,11 @@ class MWAALongRunningDags(BaseOperator):
         slack_message = self.format_slack_message(max_minutes, long_running_tasks)
 
         # sends the slack notification to data_integrations channel
-        send_slack_message(message=slack_message, conn_id='slack_data_integrations')
+        send_slack_message(message=slack_message, conn_id="slack_data_integrations")
 
     @staticmethod
     def format_slack_message(max_minutes, long_running_tasks):
-        message = (
-            f"*Alert:* The following tasks have been running for more than {max_minutes} minutes:\n"
-        )
+        message = f"*Alert:* The following tasks have been running for more than {max_minutes} minutes:\n"
         for row in long_running_tasks:
             task_name = row[0]
             dag_name = row[1]
@@ -116,7 +114,7 @@ class MWAALongRunningDags(BaseOperator):
         with create_session() as session:
             threshold_time = pendulum.now("UTC").subtract(minutes=self.max_minutes)
             query = session.query(*self.column_entities).filter(
-                self.state == 'running', self.table.start_date <= threshold_time
+                self.state == "running", self.table.start_date <= threshold_time
             )
             all_rows = query.all()
             if len(all_rows) > 0:
@@ -126,9 +124,11 @@ class MWAALongRunningDags(BaseOperator):
                     email_to_list=email_lists.data_integration_support,
                     email_cc_list=[],
                 )
-                self.send_slack_alert(max_minutes=self.max_minutes, long_running_tasks=all_rows)
+                self.send_slack_alert(
+                    max_minutes=self.max_minutes, long_running_tasks=all_rows
+                )
             else:
-                print('currently no tasks are long running')
+                print("currently no tasks are long running")
 
 
 column_list = [
@@ -159,7 +159,6 @@ column_list = [
 ]
 
 with dag:
-
     list_dags = MWAALongRunningDags(
         task_id="list_tasks",
         table=TaskInstance,

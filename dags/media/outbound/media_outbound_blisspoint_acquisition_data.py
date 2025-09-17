@@ -22,7 +22,7 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2019, 4, 3, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }

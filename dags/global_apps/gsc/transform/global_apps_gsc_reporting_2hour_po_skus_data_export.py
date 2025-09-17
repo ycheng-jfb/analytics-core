@@ -6,16 +6,16 @@ from include.airflow.operators.snowflake_to_mssql import SnowflakeToMsSqlBCPOper
 from include.config import email_lists, owners, conn_ids
 
 default_args = {
-    'depends_on_past': False,
-    'start_date': pendulum.datetime(2019, 1, 1, 7, tz='America/Los_Angeles'),
-    'retries': 1,
-    'owner': owners.global_apps_analytics,
-    'email': email_lists.global_applications,
-    'on_failure_callback': slack_failure_gsc,
+    "depends_on_past": False,
+    "start_date": pendulum.datetime(2019, 1, 1, 7, tz="America/Los_Angeles"),
+    "retries": 1,
+    "owner": owners.global_apps_analytics,
+    "email": email_lists.global_applications,
+    "on_failure_callback": slack_failure_gsc,
 }
 
 dag = DAG(
-    dag_id='global_apps_gsc_reporting_2hour_po_skus_data_export',
+    dag_id="global_apps_gsc_reporting_2hour_po_skus_data_export",
     default_args=default_args,
     schedule=None,
     catchup=False,

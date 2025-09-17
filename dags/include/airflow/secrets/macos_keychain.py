@@ -4,12 +4,14 @@ from airflow.secrets.base_secrets import BaseSecretsBackend
 
 
 class MacOSKeychainSecretsBackend(BaseSecretsBackend):
-    def __init__(self, account='airflow', **kwargs):
+    def __init__(self, account="airflow", **kwargs):
         self.account = account
         super().__init__(**kwargs)
 
     def get_secret(self, account, key):
-        cmd = ' '.join(["security", "find-generic-password", f"-a {account} -s {key} -w"])
+        cmd = " ".join(
+            ["security", "find-generic-password", f"-a {account} -s {key} -w"]
+        )
         with os.popen(cmd) as p:
             s = p.read()
         return s

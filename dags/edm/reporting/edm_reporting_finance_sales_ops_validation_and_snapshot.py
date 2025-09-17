@@ -2,7 +2,10 @@ import pendulum
 from airflow.models import DAG
 
 from include.airflow.callbacks.slack import slack_failure_edm
-from include.airflow.operators.snowflake import SnowflakeAlertOperator, SnowflakeProcedureOperator
+from include.airflow.operators.snowflake import (
+    SnowflakeAlertOperator,
+    SnowflakeProcedureOperator,
+)
 from include.config import email_lists, owners
 from airflow.operators.python import BranchPythonOperator
 
@@ -25,7 +28,7 @@ dag = DAG(
 
 
 def check_weekly_snapshot_time(**kwargs):
-    execution_time = kwargs['data_interval_end'].in_timezone('America/Los_Angeles')
+    execution_time = kwargs["data_interval_end"].in_timezone("America/Los_Angeles")
     if execution_time.hour == 1 and execution_time.day_of_week == 0:
         return fso_weekly_snapshot.task_id
     else:
@@ -53,7 +56,9 @@ ORDER BY ABS(variance) DESC
 LIMIT 10;
 """
 
-variance_mail_body = """Below are the top 10 variances between FSO and fact/dim tables"""
+variance_mail_body = (
+    """Below are the top 10 variances between FSO and fact/dim tables"""
+)
 
 with dag:
     fso_validation = SnowflakeProcedureOperator(
@@ -69,18 +74,18 @@ with dag:
         database="edw_prod",
     )
     fso_variance_alert = SnowflakeAlertOperator(
-        task_id='send_fso_variance_alert',
+        task_id="send_fso_variance_alert",
         sql_or_path=variance_mail_sql,
-        database='edw_prod',
+        database="edw_prod",
         distribution_list=[
-            'yyoruk@techstyle.com',
-            'kogata@techstyle.com',
-            'dragan@techstyle.com',
-            'rmukherjee@techstyle.com',
-            'eschroder@JustFab.com',
-            'lasplund@techstyle.com',
+            "yyoruk@techstyle.com",
+            "kogata@techstyle.com",
+            "dragan@techstyle.com",
+            "rmukherjee@techstyle.com",
+            "eschroder@JustFab.com",
+            "lasplund@techstyle.com",
         ],
-        subject='Alert: FSO Variance Against Fact Tables',
+        subject="Alert: FSO Variance Against Fact Tables",
         body=variance_mail_body,
     )
     check_weekly_snapshot = BranchPythonOperator(

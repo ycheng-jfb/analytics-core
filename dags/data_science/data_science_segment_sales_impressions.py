@@ -6,7 +6,9 @@ from airflow import DAG
 
 from include.airflow.callbacks.slack import slack_failure_data_science
 from include.airflow.operators.snowflake import SnowflakeProcedureOperator
-from include.airflow.operators.snowflake_to_mssql import SnowflakeSqlToMSSqlWatermarkOperator
+from include.airflow.operators.snowflake_to_mssql import (
+    SnowflakeSqlToMSSqlWatermarkOperator,
+)
 from include.config import conn_ids, owners
 from include.utils.copy_paste_helper import TableConfig
 from include.utils.snowflake import Column
@@ -34,7 +36,9 @@ class Config:
         return conn_id_map[self.server]
 
 
-class SnowflakeSqlToMSSqlWatermarkOperatorWithCompanyID(SnowflakeSqlToMSSqlWatermarkOperator):
+class SnowflakeSqlToMSSqlWatermarkOperatorWithCompanyID(
+    SnowflakeSqlToMSSqlWatermarkOperator
+):
     def __init__(self, company_id: Optional[int] = None, **kwargs) -> None:
         self.company_id = company_id
         super().__init__(**kwargs)
@@ -49,8 +53,8 @@ class SnowflakeSqlToMSSqlWatermarkOperatorWithCompanyID(SnowflakeSqlToMSSqlWater
 default_args = {
     "start_date": pendulum.datetime(2022, 3, 1, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.data_science,
-    "email": 'datascience@techstyle.com',
+    "owner": owners.data_science,
+    "email": "datascience@techstyle.com",
     "on_failure_callback": slack_failure_data_science,
 }
 
@@ -65,47 +69,47 @@ dag = DAG(
 )
 
 config_list = [
-    Config(server='db166'),
-    Config(server='justfab', company_id=10),
-    Config(server='fabletics', company_id=20),
-    Config(server='savagex', company_id=30),
-    Config(server='jfdev', company_id=10),
-    Config(server='fldev', company_id=20),
+    Config(server="db166"),
+    Config(server="justfab", company_id=10),
+    Config(server="fabletics", company_id=20),
+    Config(server="savagex", company_id=30),
+    Config(server="jfdev", company_id=10),
+    Config(server="fldev", company_id=20),
 ]
 
 table_config = TableConfig(
-    database='reporting_prod',
-    schema='data_science',
-    target_database='ultraimport',
-    target_schema='dbo',
-    table='export_postreg_segment_spi_ranking',
-    initial_load_value='2023-03-01',
-    watermark_column='meta_update_datetime',
+    database="reporting_prod",
+    schema="data_science",
+    target_database="ultraimport",
+    target_schema="dbo",
+    table="export_postreg_segment_spi_ranking",
+    initial_load_value="2023-03-01",
+    watermark_column="meta_update_datetime",
     column_list=[
-        Column('mpid', 'BIGINT', uniqueness=True),
+        Column("mpid", "BIGINT", uniqueness=True),
         Column(
-            'impressions_date',
-            'DATETIME',
+            "impressions_date",
+            "DATETIME",
             uniqueness=True,
-            source_name='impressions_date::DATETIME',
+            source_name="impressions_date::DATETIME",
         ),
-        Column('grid_name', 'VARCHAR(50)', uniqueness=True),
-        Column('total_impressions', 'BIGINT'),
-        Column('lead_impressions', 'BIGINT'),
-        Column('vip_impressions', 'BIGINT'),
-        Column('total_sales', 'BIGINT'),
-        Column('lead_sales', 'BIGINT'),
-        Column('vip_sales', 'BIGINT'),
+        Column("grid_name", "VARCHAR(50)", uniqueness=True),
+        Column("total_impressions", "BIGINT"),
+        Column("lead_impressions", "BIGINT"),
+        Column("vip_impressions", "BIGINT"),
+        Column("total_sales", "BIGINT"),
+        Column("lead_sales", "BIGINT"),
+        Column("vip_sales", "BIGINT"),
         Column(
-            'src_meta_create_datetime',
-            'DATETIME',
-            source_name='meta_create_datetime',
+            "src_meta_create_datetime",
+            "DATETIME",
+            source_name="meta_create_datetime",
             delta_column=1,
         ),
         Column(
-            'src_meta_update_datetime',
-            'DATETIME',
-            source_name='meta_update_datetime',
+            "src_meta_update_datetime",
+            "DATETIME",
+            source_name="meta_update_datetime",
             delta_column=0,
         ),
     ],
@@ -145,7 +149,7 @@ with dag:
         snowflake_to_sql = SnowflakeSqlToMSSqlWatermarkOperatorWithCompanyID(
             task_id=cfg.task_id,
             mssql_conn_id=cfg.conn_id,
-            if_exists='append',
+            if_exists="append",
             column_list=table_config.column_list,
             watermark_column=table_config.watermark_column,
             initial_load_value=table_config.initial_load_value,
@@ -154,7 +158,7 @@ with dag:
             src_table=table_config.table,
             tgt_database=table_config.target_database,
             tgt_schema=table_config.target_schema,
-            tgt_table='import_product_impression_by_page_segment',
+            tgt_table="import_product_impression_by_page_segment",
             strict_inequality=table_config.strict_inequality,
             company_id=cfg.company_id,
         )

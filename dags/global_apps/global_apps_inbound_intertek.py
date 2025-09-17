@@ -9,15 +9,15 @@ from include.config import conn_ids, email_lists, owners, s3_buckets, stages
 from include.utils.snowflake import Column, CopyConfigCsv
 
 default_args = {
-    'start_date': pendulum.datetime(2023, 5, 1, tz='America/Los_Angeles'),
-    'retries': 2,
-    'owner': owners.data_integrations,
-    'email': email_lists.data_integration_support,
-    'on_failure_callback': slack_failure_gsc,
+    "start_date": pendulum.datetime(2023, 5, 1, tz="America/Los_Angeles"),
+    "retries": 2,
+    "owner": owners.data_integrations,
+    "email": email_lists.data_integration_support,
+    "on_failure_callback": slack_failure_gsc,
 }
 
 dag = DAG(
-    dag_id='global_apps_inbound_intertek',
+    dag_id="global_apps_inbound_intertek",
     default_args=default_args,
     schedule="0 8 * * *",
     catchup=False,
@@ -25,9 +25,9 @@ dag = DAG(
 )
 
 sheet_config = SheetConfig(
-    sheet_name='TechStyle Custom Inherent Risk',
-    schema='excel',
-    table='intertek_inherent_risk',
+    sheet_name="TechStyle Custom Inherent Risk",
+    schema="excel",
+    table="intertek_inherent_risk",
     header_rows=1,
     column_list=[
         Column(
@@ -36,20 +36,28 @@ sheet_config = SheetConfig(
             source_name="Supplier Program Relationship",
         ),
         Column(name="campaign", type="VARCHAR", source_name="Campaign"),
-        Column(name="assignment_name", type="VARCHAR", source_name="Assignment: Assignment Name"),
+        Column(
+            name="assignment_name",
+            type="VARCHAR",
+            source_name="Assignment: Assignment Name",
+        ),
         Column(name="completed_date", type="DATE", source_name="Completed Date"),
         Column(
             name="numeric_score",
             type="NUMBER(38, 5)",
             source_name="Numeric Score",
         ),
-        Column(name="result_color_name", type="VARCHAR", source_name="Result Color Name"),
+        Column(
+            name="result_color_name", type="VARCHAR", source_name="Result Color Name"
+        ),
         Column(name="risk_source", type="VARCHAR", source_name="Risk Source"),
-        Column(name="risk_ref_data_name", type="VARCHAR", source_name="Risk Ref Data: Name"),
+        Column(
+            name="risk_ref_data_name", type="VARCHAR", source_name="Risk Ref Data: Name"
+        ),
         Column(name="score", type="NUMBER", source_name="Score"),
         Column(name="supplier_name", type="VARCHAR", source_name="Supplier Name"),
     ],
-    default_schema_version='v2',
+    default_schema_version="v2",
 )
 
 with dag:
@@ -74,11 +82,11 @@ with dag:
         sheet_configs=[sheet_config],
         remove_header_new_lines=True,
         skip_downstream_if_no_files=True,
-        default_schema_version='v2',
+        default_schema_version="v2",
     )
     files_path = (
-        f'{stages.tsos_da_int_inbound}/lake/{sheet_config.schema}.{sheet_config.table}/'
-        f'{sheet_config.default_schema_version}/'
+        f"{stages.tsos_da_int_inbound}/lake/{sheet_config.schema}.{sheet_config.table}/"
+        f"{sheet_config.default_schema_version}/"
     )
     to_snowflake = SnowflakeIncrementalLoadOperator(
         task_id="inherent_risk.s3_to_snowflake",

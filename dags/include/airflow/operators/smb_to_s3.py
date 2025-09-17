@@ -28,7 +28,7 @@ class SMBToS3Operator(BaseOperator):
         compression: If 'gzip', will gzip compress files not ending in '.gz'
     """
 
-    template_fields = ('s3_key', 'remote_path')
+    template_fields = ("s3_key", "remote_path")
 
     def __init__(
         self,
@@ -49,14 +49,14 @@ class SMBToS3Operator(BaseOperator):
         self.share_name = share_name
         self.s3_conn_id = s3_conn_id
         self.compression = compression
-        if self.compression not in (None, 'gzip'):
+        if self.compression not in (None, "gzip"):
             raise ValueError("compression may only be None or 'gzip'")
-        if self.compression and remote_path.endswith('.gz'):
-            raise ValueError('file already compressed')
+        if self.compression and remote_path.endswith(".gz"):
+            raise ValueError("file already compressed")
 
     @property
     def open_func(self):
-        if self.compression == 'gzip':
+        if self.compression == "gzip":
             return gzip.open
         else:
             return open
@@ -105,7 +105,7 @@ class SMBToS3BatchOperator(SMBToS3Operator):
         s3_replace=True,
         **kwargs,
     ):
-        super().__init__(s3_key=None, remote_path='', **kwargs)
+        super().__init__(s3_key=None, remote_path="", **kwargs)
         self.remote_dir = remote_dir
         self.s3_prefix = s3_prefix
         self.file_pattern_list = file_pattern_list
@@ -114,7 +114,9 @@ class SMBToS3BatchOperator(SMBToS3Operator):
         self.s3_replace = s3_replace
 
     def get_file_list(self, smb_client):
-        file_list = [f.filename for f in smb_client.listPath(self.share_name, self.remote_dir)]
+        file_list = [
+            f.filename for f in smb_client.listPath(self.share_name, self.remote_dir)
+        ]
 
         remote_file_list = []
         for file_pattern in self.file_pattern_list:
@@ -133,9 +135,14 @@ class SMBToS3BatchOperator(SMBToS3Operator):
                 s3_key = f"{self.s3_prefix}/{remote_file}.gz"
             else:
                 utc_time = (
-                    pendulum.DateTime.utcnow().isoformat()[0:-6].replace("-", "").replace(":", "")
+                    pendulum.DateTime.utcnow()
+                    .isoformat()[0:-6]
+                    .replace("-", "")
+                    .replace(":", "")
                 )
-                s3_file_name = f"{Path(remote_file).stem}_{utc_time}{Path(remote_file).suffix}.gz"
+                s3_file_name = (
+                    f"{Path(remote_file).stem}_{utc_time}{Path(remote_file).suffix}.gz"
+                )
                 s3_key = f"{self.s3_prefix}/{s3_file_name}"
 
             s3_hook.load_file(
@@ -146,12 +153,21 @@ class SMBToS3BatchOperator(SMBToS3Operator):
             )
 
     def archive_file(self, smb_client, remote_filename):
-        utc_time = pendulum.DateTime.utcnow().isoformat()[0:-6].replace("-", "").replace(":", "")
-        archive_filename = f"{Path(remote_filename).stem}_{utc_time}{Path(remote_filename).suffix}"
+        utc_time = (
+            pendulum.DateTime.utcnow()
+            .isoformat()[0:-6]
+            .replace("-", "")
+            .replace(":", "")
+        )
+        archive_filename = (
+            f"{Path(remote_filename).stem}_{utc_time}{Path(remote_filename).suffix}"
+        )
         smb_client.rename(
             service_name=self.share_name,
             old_path=Path(self.remote_dir, remote_filename).as_posix(),
-            new_path=Path(self.remote_dir, self.archive_folder, archive_filename).as_posix(),
+            new_path=Path(
+                self.remote_dir, self.archive_folder, archive_filename
+            ).as_posix(),
         )
 
     def execute(self, context=None):
@@ -162,8 +178,12 @@ class SMBToS3BatchOperator(SMBToS3Operator):
             remote_files = self.get_file_list(smb_client)
 
             for remote_file in remote_files:
-                self.load_file(s3_hook=s3_hook, smb_client=smb_client, remote_file=remote_file)
+                self.load_file(
+                    s3_hook=s3_hook, smb_client=smb_client, remote_file=remote_file
+                )
 
             if self.archive_remote_files:
                 for remote_filename in remote_files:
-                    self.archive_file(smb_client=smb_client, remote_filename=remote_filename)
+                    self.archive_file(
+                        smb_client=smb_client, remote_filename=remote_filename
+                    )

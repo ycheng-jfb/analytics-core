@@ -33,7 +33,9 @@ def delete_old_dag(metastore_conn_id, dag_id, database="airflow"):
         and c.table_schema = '{database}'
     """
     )
-    sql_batch = "; ".join([f"DELETE FROM {x[0]} WHERE dag_id = %(dag_id)s" for x in tables])
+    sql_batch = "; ".join(
+        [f"DELETE FROM {x[0]} WHERE dag_id = %(dag_id)s" for x in tables]
+    )
     hook.run(sql_batch, parameters={"dag_id": dag_id})
 
 

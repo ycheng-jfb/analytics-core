@@ -54,7 +54,7 @@ class MssqlToGCSOperator(BaseOperator):
             json_str = ""
             for record in records:
                 json_str += record[0] + "\n"
-            with open(local_path, 'w') as file:
+            with open(local_path, "w") as file:
                 file.write(json_str)
 
     def upload_to_gcs(self, local_path):

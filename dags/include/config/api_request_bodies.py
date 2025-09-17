@@ -10,7 +10,11 @@ atlan_get_assets = {
     "entityFilters": {
         "condition": "AND",
         "criterion": [
-            {"attributeName": "updatedSource", "attributeValue": "lineage", "operator": "neq"},
+            {
+                "attributeName": "updatedSource",
+                "attributeValue": "lineage",
+                "operator": "neq",
+            },
             {
                 "condition": "OR",
                 "criterion": [
@@ -29,8 +33,16 @@ atlan_get_assets = {
             {
                 "condition": "OR",
                 "criterion": [
-                    {"attributeName": "typeName", "attributeValue": "AtlanTable", "operator": "eq"},
-                    {"attributeName": "typeName", "attributeValue": "AtlanView", "operator": "eq"},
+                    {
+                        "attributeName": "typeName",
+                        "attributeValue": "AtlanTable",
+                        "operator": "eq",
+                    },
+                    {
+                        "attributeName": "typeName",
+                        "attributeValue": "AtlanView",
+                        "operator": "eq",
+                    },
                 ],
             },
         ],

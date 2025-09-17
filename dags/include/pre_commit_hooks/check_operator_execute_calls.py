@@ -16,7 +16,7 @@ class DAGVariableDefinitionVisitor(cst.CSTVisitor):
     METADATA_DEPENDENCIES = (cst.metadata.PositionProvider,)
 
     def __init__(self):
-        self.dag_var = ''
+        self.dag_var = ""
         self.lineno = 0
         super().__init__()
 
@@ -36,10 +36,12 @@ class DAGVariableDefinitionVisitor(cst.CSTVisitor):
         if (
             isinstance(node.value, cst.Call)
             and isinstance(node.value.func, cst.Name)
-            and node.value.func.value == 'DAG'
+            and node.value.func.value == "DAG"
         ):
             self.dag_var = node.targets[0].target.value  # type: ignore
-            self.lineno = self.get_metadata(cst.metadata.PositionProvider, node).start.line
+            self.lineno = self.get_metadata(
+                cst.metadata.PositionProvider, node
+            ).start.line
 
 
 class DAGContextManagerVisitor(cst.CSTVisitor):
@@ -70,13 +72,17 @@ class DAGContextManagerVisitor(cst.CSTVisitor):
         if self.dag_var:
             for item in node.items:
                 if isinstance(item.item, cst.Name) and item.item.value == self.dag_var:
-                    self.lineno = self.get_metadata(cst.metadata.PositionProvider, node).start.line
+                    self.lineno = self.get_metadata(
+                        cst.metadata.PositionProvider, node
+                    ).start.line
                     break
         # else, search for `with DAG()` line
         else:
             for item in node.items:
-                if isinstance(item.item, cst.Call) and item.item.func.value == 'DAG':
-                    self.lineno = self.get_metadata(cst.metadata.PositionProvider, node).start.line
+                if isinstance(item.item, cst.Call) and item.item.func.value == "DAG":
+                    self.lineno = self.get_metadata(
+                        cst.metadata.PositionProvider, node
+                    ).start.line
                     break
 
 
@@ -109,7 +115,7 @@ class OperatorExecuteCallRemover(cst.CSTTransformer):
             if (
                 isinstance(node.value, cst.Call)  # type: ignore
                 and isinstance(node.value.func, cst.Attribute)  # type: ignore
-                and node.value.func.attr.value == 'execute'  # type: ignore
+                and node.value.func.attr.value == "execute"  # type: ignore
             ):
                 self.warn_list.append((cst.Module([]).code_for_node(node), lineno))
                 # cst.RemoveFromParent() -> tells the CST parser that this node will be removed
@@ -157,7 +163,9 @@ class CheckOperatorExecuteCalls:
         new_tree = tree.visit(execute_call_remover)
 
         if execute_call_remover.warn_list:
-            warn_list = [(f'{file}', i[0], i[1]) for i in execute_call_remover.warn_list]
+            warn_list = [
+                (f"{file}", i[0], i[1]) for i in execute_call_remover.warn_list
+            ]
             file.write_text(new_tree.code)
 
         return warn_list
@@ -173,22 +181,22 @@ class CheckOperatorExecuteCalls:
             warn_list.extend(self._validate_file(file))
 
         if warn_list:
-            print('.execute() calls found! Removing...')
+            print(".execute() calls found! Removing...")
             for file_name, code, lineno in warn_list:
-                print(f'{file_name} - at line {lineno} - {code}')
+                print(f"{file_name} - at line {lineno} - {code}")
             return 1
         return 0
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description='Flag and remove any manual operator.execute() calls in DAG files'
+        description="Flag and remove any manual operator.execute() calls in DAG files"
     )
-    parser.add_argument('filenames', nargs='*', help='Filenames to check')
+    parser.add_argument("filenames", nargs="*", help="Filenames to check")
     args = parser.parse_args(argv)
 
     return CheckOperatorExecuteCalls(files=args.filenames).validate_files()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())

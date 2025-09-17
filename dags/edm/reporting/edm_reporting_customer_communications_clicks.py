@@ -9,7 +9,7 @@ default_args = {
     "start_date": pendulum.datetime(2023, 1, 5, tz="America/Los_Angeles"),
     "owner": owners.data_integrations,
     "email": email_lists.data_integration_support,
-    'on_failure_callback': slack_failure_edm,
+    "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
@@ -21,13 +21,13 @@ dag = DAG(
 
 with dag:
     customer_communications_proc = SnowflakeProcedureOperator(
-        procedure='shared.marketing_channels_customer_communications.sql',
-        database='reporting_prod',
-        warehouse='DA_WH_ETL_LIGHT',
+        procedure="shared.marketing_channels_customer_communications.sql",
+        database="reporting_prod",
+        warehouse="DA_WH_ETL_LIGHT",
     )
 
     customer_clicks_proc = SnowflakeProcedureOperator(
-        procedure='shared.marketing_channels_customer_clicks.sql',
-        database='reporting_prod',
-        warehouse='DA_WH_ETL_LIGHT',
+        procedure="shared.marketing_channels_customer_clicks.sql",
+        database="reporting_prod",
+        warehouse="DA_WH_ETL_LIGHT",
     )

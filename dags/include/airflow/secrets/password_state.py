@@ -28,33 +28,35 @@ class PasswordStateSecretsBackend(BaseSecretsBackend):
 
     def __init__(self, api_key, list_id, list_name, **kwargs):
         self.session = requests.Session()
-        self.session.headers = {'APIKey': api_key}
-        self.base_url = 'https://secrets.techstyle.net/api'
+        self.session.headers = {"APIKey": api_key}
+        self.base_url = "https://secrets.techstyle.net/api"
         self.list_id = list_id
         self.list_name = list_name
         super().__init__(**kwargs)
 
-    def make_request(self, rel_url, params=None, json=None, method='GET'):
+    def make_request(self, rel_url, params=None, json=None, method="GET"):
         r = self.session.request(
             method=method, url=f"{self.base_url}/{rel_url}", params=params, json=json
         )
         return r
 
     def search_title(self, title):
-        response = self.make_request(f'searchpasswords/{self.list_id}?title={title.lower()}')
+        response = self.make_request(
+            f"searchpasswords/{self.list_id}?title={title.lower()}"
+        )
         data = response.json()
         if not data:
             return
-        if 'errors' in data[0]:
+        if "errors" in data[0]:
             return
         for row in data:
-            if row['Title'].lower() == title.lower():
+            if row["Title"].lower() == title.lower():
                 return row
 
     def get_conn_value(self, conn_id):
         row = self.search_title(conn_id)
         if row:
-            return row['Password']
+            return row["Password"]
 
     def get_conn_uri(self, conn_id):
         """Deprecated in favor of get_conn_value"""
@@ -62,7 +64,7 @@ class PasswordStateSecretsBackend(BaseSecretsBackend):
 
     def set_password(self, title, value):
         if not self.list_id:
-            raise ValueError('password_list_id is not set')
+            raise ValueError("password_list_id is not set")
         row = self.search_title(title)
         json_data = {
             "Title": title.lower(),
@@ -70,13 +72,13 @@ class PasswordStateSecretsBackend(BaseSecretsBackend):
         }
         if row:
             print(f"password '{title}' exists; updating")
-            method = 'PUT'
-            json_data["PasswordID"] = row['PasswordID']
+            method = "PUT"
+            json_data["PasswordID"] = row["PasswordID"]
         else:
             print(f"password '{title}' not found; adding")
-            method = 'POST'
+            method = "POST"
             json_data["PasswordListID"] = self.list_id
-        r = self.make_request(rel_url='passwords', json=json_data, method=method)
+        r = self.make_request(rel_url="passwords", json=json_data, method=method)
         r.raise_for_status()
         return r
 
@@ -125,7 +127,10 @@ class CompositePasswordStateSecretsBackend(BaseSecretsBackend):
         self.password_state_backend_dict: Dict[str, PasswordStateSecretsBackend] = {
             x.list_name: x for x in self.password_state_backend_list
         }
-        self.backend_list = [EnvironmentVariablesBackend(), *self.password_state_backend_list]
+        self.backend_list = [
+            EnvironmentVariablesBackend(),
+            *self.password_state_backend_list,
+        ]
 
     def get_conn_value(self, conn_id):
         for backend in self.backend_list:
@@ -149,7 +154,7 @@ class CompositePasswordStateSecretsBackend(BaseSecretsBackend):
         """
         from airflow.configuration import conf
 
-        kwargs_list = json.loads(conf.get('secrets', 'backend_kwargs'))['kwargs_list']
+        kwargs_list = json.loads(conf.get("secrets", "backend_kwargs"))["kwargs_list"]
         return cls(kwargs_list)
 
     def get_variable(self, key):
@@ -164,9 +169,9 @@ def parse_connections_from_file(filename):
 
     conns = {}
     for line in Path(filename).read_text().splitlines():
-        prefix = 'export AIRFLOW_CONN_'
+        prefix = "export AIRFLOW_CONN_"
         if not line.startswith(prefix):
             continue
-        conn_id, conn_uri = line.replace(prefix, '').split('=', maxsplit=1)
+        conn_id, conn_uri = line.replace(prefix, "").split("=", maxsplit=1)
         conns[conn_id.lower()] = conn_uri.strip("'")
     return conns

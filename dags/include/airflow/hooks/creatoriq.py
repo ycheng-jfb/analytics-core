@@ -43,7 +43,6 @@ class CreatorIQHook(BaseHook):
         return response
 
     def get_dict_rows_to_file(self, filename, column_list, rows, compression="gzip"):
-
         open_func = gzip.open if compression == "gzip" else open
         with open_func(filename, "at") as f:
             writer = csv.DictWriter(

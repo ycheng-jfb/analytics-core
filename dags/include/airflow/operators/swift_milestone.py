@@ -29,14 +29,15 @@ class DepreciatedSwiftMilestoneToSMBOperator(BaseOperator):
         imap_hook = ImapHook(imap_conn_id=self.imap_conn_id)
         subjects = ["File For Bill To: 835033", "Swift / Just Fab tracking report"]
         queries = [
-            f'(FROM "christine_kloos@swifttrans.com" SUBJECT "{sub}" UNSEEN)' for sub in subjects
+            f'(FROM "christine_kloos@swifttrans.com" SUBJECT "{sub}" UNSEEN)'
+            for sub in subjects
         ]
         results = [imap_hook.search_messages(search_query=q) for q in queries]
 
         with tempfile.TemporaryDirectory() as td:
             for messages in results:
                 for message in messages:
-                    mail_time = pendulum.parse(message['Date']).strftime("_%Y%m%d_%H%M")
+                    mail_time = pendulum.parse(message["Date"]).strftime("_%Y%m%d_%H%M")
                     file_name = f"CustomerShipments{mail_time}.CSV"
                     for message_part in imap_hook.iterate_attachments(message):
                         data_bytes = message_part.get_payload(decode=True)
@@ -76,7 +77,7 @@ class SwiftMilestoneToSMBOperator(BaseOperator):
         smb_conn_id: str,
         resource_address: str,
         from_address: str,
-        msgraph_conn_id: str = 'msgraph_default',
+        msgraph_conn_id: str = "msgraph_default",
         share_name: str = "",
         subjects: list = None,
         attachments_list: list = None,
@@ -86,7 +87,7 @@ class SwiftMilestoneToSMBOperator(BaseOperator):
     ):
         super().__init__(*args, **kwargs)
         if file_extensions is None:
-            file_extensions = ['xls', 'xlsx']
+            file_extensions = ["xls", "xlsx"]
         self.remote_path = remote_path
         self.smb_conn_id = smb_conn_id
         self.resource_address = resource_address
@@ -109,7 +110,7 @@ class SwiftMilestoneToSMBOperator(BaseOperator):
         with tempfile.TemporaryDirectory() as td:
             msgraph_hook.download_attachments(file_path=td)
             for filename in os.listdir(td):
-                file_parts = filename.rsplit('_', 2)
+                file_parts = filename.rsplit("_", 2)
                 remotefilename = f"CustomerShipments_{file_parts[1]}_{file_parts[2]}"
                 smb_hook = SMBHook(smb_conn_id=self.smb_conn_id)
                 smb_hook.upload(

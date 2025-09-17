@@ -57,7 +57,7 @@ class ElasticsearchGetBase(BaseRowsToS3CsvWatermarkOperator):
         pass
 
     def get_rows(self, context=None):
-        body = {'query': self.es_get_query_func(self), 'sort': self.es_sort}
+        body = {"query": self.es_get_query_func(self), "sort": self.es_sort}
         results = self.es_hook.search_all(index=self.es_index, body=body)
         for result in results:
             formatted_result = self.format_result(result)
@@ -65,14 +65,15 @@ class ElasticsearchGetBase(BaseRowsToS3CsvWatermarkOperator):
 
 
 class ElasticsearchGetSam(ElasticsearchGetBase):
-
     def get_high_watermark(self):
-        body = {"aggs": {"max_datetime_modified": {"max": {"field": "datetime_modified"}}}}
+        body = {
+            "aggs": {"max_datetime_modified": {"max": {"field": "datetime_modified"}}}
+        }
         result = self.es_hook.conn.search(index=self.es_index, body=body)
-        return result['aggregations']['max_datetime_modified']['value_as_string']
+        return result["aggregations"]["max_datetime_modified"]["value_as_string"]
 
     def format_result(self, result):
         flatten_result = flatten_json(result)
-        flatten_result['json_blob'] = result
+        flatten_result["json_blob"] = result
         scrub_nones(flatten_result)
         return flatten_result

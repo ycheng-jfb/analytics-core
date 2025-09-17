@@ -6,7 +6,7 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.OBJECT_COLUMN_NULL_AND_NAME_VALUE,
-    table='customer_quiz_detail',
+    table="customer_quiz_detail",
     company_join_sql="""
       SELECT DISTINCT
           L.customer_quiz_detail_id,
@@ -19,21 +19,21 @@ table_config = TableConfig(
       INNER JOIN {database}.{source_schema}.customer_quiz_detail AS L
       ON CQ.CUSTOMER_QUIZ_ID = L.CUSTOMER_QUIZ_ID """,
     column_list=[
-        Column('customer_quiz_detail_id', 'INT', uniqueness=True, key=True),
-        Column('customer_quiz_id', 'INT', key=True),
-        Column('object', 'VARCHAR(255)'),
-        Column('object_id', 'INT'),
-        Column('name', 'VARCHAR(50)'),
-        Column('value', 'VARCHAR(255)'),
+        Column("customer_quiz_detail_id", "INT", uniqueness=True, key=True),
+        Column("customer_quiz_id", "INT", key=True),
+        Column("object", "VARCHAR(255)"),
+        Column("object_id", "INT"),
+        Column("name", "VARCHAR(50)"),
+        Column("value", "VARCHAR(255)"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
         Column(
-            'datetime_modified',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_modified",
+            "TIMESTAMP_NTZ(3)",
         ),
-        Column('quiz_question_id', 'INT', key=True),
+        Column("quiz_question_id", "INT", key=True),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

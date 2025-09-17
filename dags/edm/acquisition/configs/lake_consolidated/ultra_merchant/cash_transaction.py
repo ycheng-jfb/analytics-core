@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table='cash_transaction',
+    table="cash_transaction",
     company_join_sql="""
      SELECT DISTINCT
          L.CASH_TRANSACTION_ID,
@@ -15,24 +15,24 @@ table_config = TableConfig(
      INNER JOIN {database}.{source_schema}.cash_transaction AS L
      ON L.CASH_DRAWER_ID=CD.CASH_DRAWER_ID """,
     column_list=[
-        Column('cash_transaction_id', 'INT', uniqueness=True, key=True),
-        Column('amount', 'NUMBER(19, 4)'),
-        Column('balance', 'NUMBER(19, 4)'),
-        Column('object', 'VARCHAR(50)'),
-        Column('object_id', 'INT'),
-        Column('parent_cash_transaction_id', 'INT', key=True),
-        Column('administrator_id', 'INT'),
-        Column('cash_drawer_id', 'INT', key=True),
-        Column('statuscode', 'INT'),
-        Column('memo', 'VARCHAR(255)'),
+        Column("cash_transaction_id", "INT", uniqueness=True, key=True),
+        Column("amount", "NUMBER(19, 4)"),
+        Column("balance", "NUMBER(19, 4)"),
+        Column("object", "VARCHAR(50)"),
+        Column("object_id", "INT"),
+        Column("parent_cash_transaction_id", "INT", key=True),
+        Column("administrator_id", "INT"),
+        Column("cash_drawer_id", "INT", key=True),
+        Column("statuscode", "INT"),
+        Column("memo", "VARCHAR(255)"),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
         Column(
-            'datetime_modified',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_modified",
+            "TIMESTAMP_NTZ(3)",
         ),
     ],
-    watermark_column='datetime_modified',
+    watermark_column="datetime_modified",
 )

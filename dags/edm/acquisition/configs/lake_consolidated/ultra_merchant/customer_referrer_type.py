@@ -6,10 +6,10 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table='customer_referrer_type',
+    table="customer_referrer_type",
     column_list=[
-        Column('customer_referrer_type_id', 'INT', uniqueness=True),
-        Column('label', 'VARCHAR(50)'),
-        Column('description', 'VARCHAR'),
+        Column("customer_referrer_type_id", "INT", uniqueness=True),
+        Column("label", "VARCHAR(50)"),
+        Column("description", "VARCHAR"),
     ],
 )

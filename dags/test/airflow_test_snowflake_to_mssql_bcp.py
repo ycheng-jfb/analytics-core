@@ -53,7 +53,9 @@ class SnowflakeToMsSql(BaseOperator):
 
     @cached_property
     def mssql_hook(self) -> MsSqlOdbcHook:
-        return MsSqlOdbcHook(mssql_conn_id=self.mssql_conn_id, database=self.mssql_target_database)
+        return MsSqlOdbcHook(
+            mssql_conn_id=self.mssql_conn_id, database=self.mssql_target_database
+        )
 
     @property
     def mssql_full_table_name(self) -> str:
@@ -61,7 +63,9 @@ class SnowflakeToMsSql(BaseOperator):
 
     @property
     def snowflake_full_table_name(self) -> str:
-        return f"{self.snowflake_database}.{self.snowflake_schema}.{self.snowflake_table}"
+        return (
+            f"{self.snowflake_database}.{self.snowflake_schema}.{self.snowflake_table}"
+        )
 
     @cached_property
     def column_list(self) -> List[str]:
@@ -120,7 +124,7 @@ class SnowflakeToMsSql(BaseOperator):
                             delimiter="\x01",
                             lineterminator="\x02",
                             quoting=csv.QUOTE_NONE,
-                            escapechar='\\',
+                            escapechar="\\",
                         )
                         writer.writerows(rows)
                         batch_count += 1
@@ -133,8 +137,8 @@ class SnowflakeToMsSql(BaseOperator):
                         server=self.mssql_hook.conn.host,
                         login=self.mssql_hook.conn.login,
                         password=self.mssql_hook.conn.password,
-                        field_delimiter='0x01',
-                        record_delimiter='0x02',
+                        field_delimiter="0x01",
+                        record_delimiter="0x02",
                     )
                     self.bash_hook.run_command(bash_command=bcp_command)
 
@@ -148,14 +152,14 @@ class SnowflakeToMsSql(BaseOperator):
 
 
 default_args = {
-    'start_date': pendulum.datetime(2019, 11, 19, tz='America/Los_Angeles'),
-    'retries': 0,
-    'owner': owners.data_integrations,
-    'email': data_integration_support,
+    "start_date": pendulum.datetime(2019, 11, 19, tz="America/Los_Angeles"),
+    "retries": 0,
+    "owner": owners.data_integrations,
+    "email": data_integration_support,
 }
 
 dag = DAG(
-    dag_id='airflow_test_snowflake_to_mssql_bcp',
+    dag_id="airflow_test_snowflake_to_mssql_bcp",
     default_args=default_args,
     schedule=None,
     catchup=False,
@@ -164,12 +168,12 @@ dag = DAG(
 
 with dag:
     oocl_shipment_to_mssql = SnowflakeToMsSql(
-        task_id='oocl_shipment_dataset_to_mssql',
+        task_id="oocl_shipment_dataset_to_mssql",
         snowflake_database="reporting_base",
         snowflake_schema="gsc",
         snowflake_table="lc_oocl_shipment_dataset",
-        mssql_target_table='oocl_shipment_dataset',
-        mssql_target_database='ultrawarehouse',
-        mssql_target_schema='rpt',
+        mssql_target_table="oocl_shipment_dataset",
+        mssql_target_database="ultrawarehouse",
+        mssql_target_schema="rpt",
         mssql_conn_id=conn_ids.MsSql.dbp40_app_airflow_rw,
     )

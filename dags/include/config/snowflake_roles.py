@@ -1,1 +1,1 @@
-etl_service_account = 'ACCOUNTADMIN'
+etl_service_account = "ACCOUNTADMIN"

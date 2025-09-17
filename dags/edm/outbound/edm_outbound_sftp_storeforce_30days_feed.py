@@ -146,13 +146,13 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2021, 7, 1, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.data_integrations,
+    "owner": owners.data_integrations,
     "email": data_integration_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
-    dag_id='edm_outbound_sftp_storeforce_30days_feed',
+    dag_id="edm_outbound_sftp_storeforce_30days_feed",
     default_args=default_args,
     schedule="0 4 * * *",
     catchup=False,
@@ -162,10 +162,12 @@ dag = DAG(
 
 with dag:
     realtime_edw = SnowflakeProcedureOperator(
-        procedure='retail.realtime_edw.sql', database='reporting_prod', autocommit=False
+        procedure="retail.realtime_edw.sql", database="reporting_prod", autocommit=False
     )
     fl_store_level_grain_snapshot = SnowflakeProcedureOperator(
-        procedure='retail.fl_pos_snapshot.sql', database='reporting_prod', autocommit=False
+        procedure="retail.fl_pos_snapshot.sql",
+        database="reporting_prod",
+        autocommit=False,
     )
     fl_store_level_grain_edw = SnowflakeToSFTPOperator(
         task_id="fl_store_level_grain_edw",
@@ -176,8 +178,8 @@ with dag:
         field_delimiter=",",
     )
     fl_associate_level_grain_snapshot = SnowflakeProcedureOperator(
-        procedure='retail.fl_employeesales_snapshot.sql',
-        database='reporting_prod',
+        procedure="retail.fl_employeesales_snapshot.sql",
+        database="reporting_prod",
         autocommit=False,
     )
     fl_associate_level_grain_edw = SnowflakeToSFTPOperator(
@@ -189,7 +191,9 @@ with dag:
         field_delimiter=",",
     )
     sxf_store_level_grain_snapshot = SnowflakeProcedureOperator(
-        procedure='retail.sxf_pos_snapshot.sql', database='reporting_prod', autocommit=False
+        procedure="retail.sxf_pos_snapshot.sql",
+        database="reporting_prod",
+        autocommit=False,
     )
     sxf_store_level_grain_edw = SnowflakeToSFTPOperator(
         task_id="sxf_store_level_grain_edw",
@@ -201,8 +205,8 @@ with dag:
     )
 
     sxf_associate_level_grain_snapshot = SnowflakeProcedureOperator(
-        procedure='retail.sxf_employeesales_snapshot.sql',
-        database='reporting_prod',
+        procedure="retail.sxf_employeesales_snapshot.sql",
+        database="reporting_prod",
         autocommit=False,
     )
     sxf_associate_level_grain_edw = SnowflakeToSFTPOperator(
@@ -214,8 +218,8 @@ with dag:
         field_delimiter=",",
     )
     realtime_edw_product_classification = SnowflakeProcedureOperator(
-        procedure='retail.realtime_edw_product_classification.sql',
-        database='reporting_prod',
+        procedure="retail.realtime_edw_product_classification.sql",
+        database="reporting_prod",
         autocommit=False,
     )
     fl_store_level_grain_edw_product_classification = SnowflakeToSFTPOperator(
@@ -236,4 +240,7 @@ with dag:
         sxf_associate_level_grain_snapshot,
         sxf_associate_level_grain_edw,
     ]
-    realtime_edw_product_classification >> fl_store_level_grain_edw_product_classification
+    (
+        realtime_edw_product_classification
+        >> fl_store_level_grain_edw_product_classification
+    )

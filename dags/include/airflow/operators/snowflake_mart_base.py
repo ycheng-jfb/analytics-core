@@ -6,24 +6,33 @@ from typing import Any, List, Optional, Union
 
 from include import SQL_DIR
 from include.airflow.hooks.snowflake import SnowflakeHook
-from include.airflow.operators.snowflake import BaseSnowflakeOperator, get_effective_database
+from include.airflow.operators.snowflake import (
+    BaseSnowflakeOperator,
+    get_effective_database,
+)
 from include.config import conn_ids, snowflake_roles
-from include.utils.snowflake import ForeignKey, generate_query_tag_cmd, get_snowflake_warehouse
+from include.utils.snowflake import (
+    ForeignKey,
+    generate_query_tag_cmd,
+    get_snowflake_warehouse,
+)
 from include.utils.string import camel_to_snake, indent, unindent_auto
 from snowflake.connector import DictCursor
 
-MART_VIEW_DATABASE = 'edw_prod'
-MART_VIEW_SCHEMA = 'data_model'
-MART_DATABASE = 'edw_prod'
-MART_SCHEMA = 'stg'
-MART_EXCEPTION_SCHEMA = 'excp'
+MART_VIEW_DATABASE = "edw_prod"
+MART_VIEW_SCHEMA = "data_model"
+MART_DATABASE = "edw_prod"
+MART_SCHEMA = "stg"
+MART_EXCEPTION_SCHEMA = "excp"
 
 
 class MissingViewException(Exception):
     """when view is missing from source control, this exception is raised"""
 
     def __init__(self, table_name):
-        message = f"view for table {table_name} is missing from source control.  please add."
+        message = (
+            f"view for table {table_name} is missing from source control.  please add."
+        )
         super().__init__(message)
 
 
@@ -31,21 +40,21 @@ def create_unknown_record(hook, full_table_name, database, dryrun=True):
     if hook is None:
         return
     type_map = {
-        'BOOLEAN': 'NULL',
-        'TIMESTAMP_TZ': "'1900-01-01'",
-        'TEXT': "'Unknown'",
-        'TIMESTAMP_NTZ': "'1900-01-01'",
-        'TIMESTAMP_LTZ': "'1900-01-01'",
-        'DATE': "'1900-01-01'",
-        'NUMBER': '-1',
+        "BOOLEAN": "NULL",
+        "TIMESTAMP_TZ": "'1900-01-01'",
+        "TEXT": "'Unknown'",
+        "TIMESTAMP_NTZ": "'1900-01-01'",
+        "TIMESTAMP_LTZ": "'1900-01-01'",
+        "DATE": "'1900-01-01'",
+        "NUMBER": "-1",
     }
 
     def get_unknown_val(col_name, dtype):
         if dtype not in type_map:
             raise Exception(f"dtype '{dtype}' is unmapped")
-        elif col_name.lower().endswith('is_current'):
-            return 'TRUE'
-        elif col_name.lower() == 'effective_end_datetime':
+        elif col_name.lower().endswith("is_current"):
+            return "TRUE"
+        elif col_name.lower() == "effective_end_datetime":
             return "'9999-12-31'"
         else:
             return type_map[dtype]
@@ -57,10 +66,10 @@ def create_unknown_record(hook, full_table_name, database, dryrun=True):
     )
 
     def get_insert_cmd(column_list, table):
-        first_col = column_list[0]['COLUMN_NAME']
-        col_list = ', '.join([x['COLUMN_NAME'].lower() for x in column_list])
-        values_list = ', '.join(
-            [get_unknown_val(x['COLUMN_NAME'], x['DATA_TYPE']) for x in column_list]
+        first_col = column_list[0]["COLUMN_NAME"]
+        col_list = ", ".join([x["COLUMN_NAME"].lower() for x in column_list])
+        values_list = ", ".join(
+            [get_unknown_val(x["COLUMN_NAME"], x["DATA_TYPE"]) for x in column_list]
         )
         return insert_template.format(
             first_col=first_col,
@@ -71,7 +80,7 @@ def create_unknown_record(hook, full_table_name, database, dryrun=True):
 
     with hook.get_conn() as cnx:
         cur = cnx.cursor(DictCursor)
-        db, schema, table = full_table_name.split('.')
+        db, schema, table = full_table_name.split(".")
         cur.execute(
             f"""
         select
@@ -121,7 +130,9 @@ class KeyLookupJoin:
         lookup_column: column name from look up table in lookup key join condition
     """
 
-    def __init__(self, stg_column: str, stg_column_type: str, lookup_column: str = None):
+    def __init__(
+        self, stg_column: str, stg_column_type: str, lookup_column: str = None
+    ):
         self.stg_column = stg_column
         self.stg_column_type = stg_column_type
         self.lookup_column = lookup_column or stg_column
@@ -280,13 +291,13 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
 
     """
 
-    DATABASE_CONFIG_VARIABLE_KEY = 'database_config'
+    DATABASE_CONFIG_VARIABLE_KEY = "database_config"
     ROLE = snowflake_roles.etl_service_account
-    EFF_START_TIMESTAMP_COL_TYPE = 'TIMESTAMP_LTZ'
-    DEFAULT_TIMEZONE = 'America/Los_Angeles'
-    STR_INDENT = ''
-    NAMESPACE = 'edw_load'
-    VIEWS_FOLDER = SQL_DIR / MART_VIEW_DATABASE / 'views'
+    EFF_START_TIMESTAMP_COL_TYPE = "TIMESTAMP_LTZ"
+    DEFAULT_TIMEZONE = "America/Los_Angeles"
+    STR_INDENT = ""
+    NAMESPACE = "edw_load"
+    VIEWS_FOLDER = SQL_DIR / MART_VIEW_DATABASE / "views"
 
     def __init__(
         self,
@@ -294,7 +305,7 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
         column_list: List[Column],
         watermark_tables: List[str],
         transform_proc_list: list,
-        initial_load_value: str = '1900-01-01',
+        initial_load_value: str = "1900-01-01",
         use_surrogate_key: bool = True,
         skip_param_validation: bool = False,
         cluster_by: str = None,
@@ -312,10 +323,10 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
         self.skip_param_validation = skip_param_validation
         self.watermark_tables = watermark_tables
         self.cluster_by = cluster_by
-        self._command_debug_log = ''
+        self._command_debug_log = ""
         if not self.skip_param_validation:
             self.validate_column_list()
-        if 'database' in kwargs:
+        if "database" in kwargs:
             raise Exception(
                 f"key `database` found in kwargs.  target database should be configured"
                 f" using variable named `{self.DATABASE_CONFIG_VARIABLE_KEY}`"
@@ -350,31 +361,31 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
 
     @property
     def surrogate_key_name(self):
-        return re.sub('.*(fact|dim)_', '', self.table_name) + '_key'
+        return re.sub(".*(fact|dim)_", "", self.table_name) + "_key"
 
     @property
     def unique_cols_str(self) -> str:
-        unique_cols_str = ', '.join(self.column_list.unique_col_names)
+        unique_cols_str = ", ".join(self.column_list.unique_col_names)
         return unique_cols_str
 
     @property
     def table_name(self) -> str:
-        table = camel_to_snake(self.table.strip('[').strip(']').strip())
+        table = camel_to_snake(self.table.strip("[").strip("]").strip())
         return table
 
     @property
     def target_full_table_name(self):
-        return self.target_database + '.' + MART_SCHEMA + '.' + self.table_name
+        return self.target_database + "." + MART_SCHEMA + "." + self.table_name
 
     @property
     def view_full_table_name(self):
-        return self.target_database + '.' + MART_VIEW_SCHEMA + '.' + self.table_name
+        return self.target_database + "." + MART_VIEW_SCHEMA + "." + self.table_name
 
     @property
     def watermark_param(self):
         return f"{MART_SCHEMA}.{self.table_name}"
 
-    def _get_temp_table_name(self, suffix=''):
+    def _get_temp_table_name(self, suffix=""):
         """
         To get delta and excp  temp table names by providing suffix value
 
@@ -385,19 +396,19 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
 
     @property
     def stg_table_name(self):
-        return self.stg_database + '.' + MART_SCHEMA + '.' + self.table_name + '_stg'
+        return self.stg_database + "." + MART_SCHEMA + "." + self.table_name + "_stg"
 
     @property
     def excp_table_name(self):
-        return self.stg_database + '.' + MART_EXCEPTION_SCHEMA + '.' + self.table_name
+        return self.stg_database + "." + MART_EXCEPTION_SCHEMA + "." + self.table_name
 
     @property
     def delta_table_name(self):
-        return self._get_temp_table_name('delta')
+        return self._get_temp_table_name("delta")
 
     @property
     def excp_tmp_table_name(self):
-        return self._get_temp_table_name('excp')
+        return self._get_temp_table_name("excp")
 
     @property
     def base_table_meta_cols(self) -> List[Column]:
@@ -456,7 +467,7 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
 
     @staticmethod
     def get_hash_column(column_name, data_type):
-        if data_type.lower()[0:11] in ('timestamp_l', 'timestamp_t'):
+        if data_type.lower()[0:11] in ("timestamp_l", "timestamp_t"):
             return f"{column_name}::timestamp_ntz"
         else:
             return column_name
@@ -471,8 +482,11 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
             ON s.is_activating = dim_order_detail_order_detail_key.is_activating
             AND s.is_ecomm = dim_order_detail_order_detail_key.is_ecomm
         """
-        return '\nAND '.join(
-            [f"s.{x.stg_column} = {lookup_table_alias}.{x.lookup_column}" for x in key_lookup_list]
+        return "\nAND ".join(
+            [
+                f"s.{x.stg_column} = {lookup_table_alias}.{x.lookup_column}"
+                for x in key_lookup_list
+            ]
         )
 
     @staticmethod
@@ -492,7 +506,7 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
             AND dim_store_store_key.effective_end_datetime
         """
         meta_datetime_join_cond = None
-        if lookup_table_name.lower() != 'dim_date':
+        if lookup_table_name.lower() != "dim_date":
             _key_lookup_join_datetime_column = (
                 f"s.{key_lookup_join_datetime_column}"
                 if key_lookup_join_datetime_column
@@ -535,7 +549,7 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
 
     @staticmethod
     def _get_base_col_ddls(column_list) -> str:
-        return ',\n            '.join(
+        return ",\n            ".join(
             [f"{x.name} {x.type}{x.nullability}" for x in column_list if not x.stg_only]
         )
 
@@ -549,7 +563,7 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
             else:
                 cols.append(f"{x.source_name} {x.type}{x.default_value}")
 
-        return ',\n            '.join(cols)
+        return ",\n            ".join(cols)
 
     @property
     def primary_key_col_ddl(self):
@@ -570,24 +584,24 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
     def base_table_meta_col_ddls(self) -> str:
         base_table_meta_col_ddls = self._get_base_col_ddls(self.base_table_meta_cols)
         if base_table_meta_col_ddls:
-            base_table_meta_col_ddls = ',\n            ' + base_table_meta_col_ddls
-        return base_table_meta_col_ddls or ''
+            base_table_meta_col_ddls = ",\n            " + base_table_meta_col_ddls
+        return base_table_meta_col_ddls or ""
 
     @property
     def stg_table_meta_col_ddls(self):
         stg_table_meta_col_ddls = self._get_stg_col_ddls(self.stg_table_meta_cols)
         if stg_table_meta_col_ddls:
-            stg_table_meta_col_ddls = ',\n            ' + stg_table_meta_col_ddls
-        return stg_table_meta_col_ddls or ''
+            stg_table_meta_col_ddls = ",\n            " + stg_table_meta_col_ddls
+        return stg_table_meta_col_ddls or ""
 
     @property
     def transform_proc_file_list(self):
         """This will return list of transform procedure's file path"""
         transform_proc_filepath = []
         for proc in self.transform_proc_list:
-            schema, name, ext = proc.split('.')
+            schema, name, ext = proc.split(".")
             transform_proc_filepath.append(
-                Path(SQL_DIR, 'edw_prod', 'procedures', f"{schema}.{name}.{ext}")
+                Path(SQL_DIR, "edw_prod", "procedures", f"{schema}.{name}.{ext}")
             )
         return transform_proc_filepath
 
@@ -599,8 +613,12 @@ class BaseSnowflakeMartOperator(BaseSnowflakeOperator):
             if x.uniqueness and x.stg_only:
                 raise Exception("uniqueness column should not be stg only column")
 
-            if x.key_lookup_list and (not x.lookup_table_name or not x.lookup_table_key):
-                raise Exception("Lookup table or lookup table key is missing for key lookup")
+            if x.key_lookup_list and (
+                not x.lookup_table_name or not x.lookup_table_key
+            ):
+                raise Exception(
+                    "Lookup table or lookup table key is missing for key lookup"
+                )
 
     def is_initial_load(self, dryrun=False) -> bool:
         cmd = f"""
@@ -637,7 +655,7 @@ LIMIT 1;
             OR customer_id IS NULL
             OR store_id IS NULL
         """
-        return '\n    OR '.join(
+        return "\n    OR ".join(
             [
                 f"{x.source_name} IS NULL"
                 for x in self.column_list
@@ -646,7 +664,7 @@ LIMIT 1;
         )
 
     def print(self, val):
-        self._command_debug_log += val + '\n'
+        self._command_debug_log += val + "\n"
         if not self.is_test:
             print(val)
 
@@ -686,9 +704,11 @@ LIMIT 1;
         return unindent_auto(cmd)
 
     def create_base_table(self) -> str:
-        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ''
-        surr_key_name = self.surrogate_key_name if self.use_surrogate_key else ''
-        surr_key_ddl = f"{surr_key_name} INT IDENTITY UNIQUE,\n    " if surr_key_name else ''
+        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ""
+        surr_key_name = self.surrogate_key_name if self.use_surrogate_key else ""
+        surr_key_ddl = (
+            f"{surr_key_name} INT IDENTITY UNIQUE,\n    " if surr_key_name else ""
+        )
         cmd = f"""
         CREATE TABLE IF NOT EXISTS {self.target_full_table_name} (
             {surr_key_ddl}{self._get_base_col_ddls(self.column_list)}{self.base_table_meta_col_ddls}{self.primary_key_col_ddl}{self.foreign_key_ref_ddl}
@@ -697,7 +717,7 @@ LIMIT 1;
         return unindent_auto(cmd)
 
     def create_stg_table(self) -> str:
-        create_command = 'CREATE TABLE IF NOT EXISTS'
+        create_command = "CREATE TABLE IF NOT EXISTS"
         cmd = f"""
         {create_command} {self.stg_table_name} (
             id INT IDENTITY,
@@ -718,23 +738,28 @@ LIMIT 1;
         return unindent_auto(cmd)
 
     def default_view_ddl(self) -> str:
-        view_name = MART_VIEW_SCHEMA + '.' + self.table_name
+        view_name = MART_VIEW_SCHEMA + "." + self.table_name
         type_2_meta_cols_list = (
-            ['effective_start_datetime', 'effective_end_datetime', 'is_current']
+            ["effective_start_datetime", "effective_end_datetime", "is_current"]
             if self.column_list.is_type_2_load
             else []
         )
-        meta_cols_list = type_2_meta_cols_list + ['meta_create_datetime', 'meta_update_datetime']
-        meta_cols = ',\n\t\t\t' + ',\n\t\t\t'.join(meta_cols_list)
-        view_cols = ',\n\t\t\t'.join(
+        meta_cols_list = type_2_meta_cols_list + [
+            "meta_create_datetime",
+            "meta_update_datetime",
+        ]
+        meta_cols = ",\n\t\t\t" + ",\n\t\t\t".join(meta_cols_list)
+        view_cols = ",\n\t\t\t".join(
             [
                 f"{x.name} COMMENT '{x.comment}'" if x.comment else x.name
                 for x in self.column_list
                 if not x.stg_only
             ]
         )
-        full_col_select_list = ',\n\t\t\t'.join(self.insert_names_list)
-        surr_key = f"{self.surrogate_key_name},\n\t\t\t" if self.use_surrogate_key else ''
+        full_col_select_list = ",\n\t\t\t".join(self.insert_names_list)
+        surr_key = (
+            f"{self.surrogate_key_name},\n\t\t\t" if self.use_surrogate_key else ""
+        )
         cmd = f"""
         CREATE VIEW IF NOT EXISTS {view_name}
         (
@@ -759,10 +784,12 @@ LIMIT 1;
     def load_excp_table(self) -> str:
         """To load data from temp excp table to persistent excp table after all excp validations"""
         stg_col_list = [
-            x for x in self.stg_col_name_list if x != 'meta_data_quality' and x != 'excp_message'
+            x
+            for x in self.stg_col_name_list
+            if x != "meta_data_quality" and x != "excp_message"
         ]
-        insert_list_str = ',\n\t'.join(stg_col_list)
-        select_col_str = ',\n\t'.join([f"s.{x}" for x in stg_col_list])
+        insert_list_str = ",\n\t".join(stg_col_list)
+        select_col_str = ",\n\t".join([f"s.{x}" for x in stg_col_list])
 
         cmd = f"""
         INSERT INTO {self.excp_table_name}
@@ -811,7 +838,7 @@ LIMIT 1;
 
     @cached_property
     def is_test(self):
-        return self.table_name.startswith('test')
+        return self.table_name.startswith("test")
 
     def get_view_ddl(self):
         if self.is_test:
@@ -837,7 +864,6 @@ LIMIT 1;
         self.execute_cmd(cmd=cmd, dryrun=dryrun)
 
     def pre_stg_table_load(self, dryrun):
-
         cmd = self.clear_stg_table()
         self.execute_cmd(cmd=cmd, dryrun=dryrun)
 
@@ -850,12 +876,14 @@ LIMIT 1;
             proc_list.extend(self.initial_load_proc_list)
         proc_list.extend(self.transform_proc_list)
         for proc_name in proc_list:
-            sql_path = Path(SQL_DIR, 'edw_prod', 'procedures', proc_name)
+            sql_path = Path(SQL_DIR, "edw_prod", "procedures", proc_name)
             cmd = self.get_sql_cmd(sql_or_path=sql_path)
             if dryrun:
                 self.print(cmd)
             else:
-                hook.execute_multiple_with_cnx(cnx=self.cnx, sql=cmd, parameters=self.parameters)
+                hook.execute_multiple_with_cnx(
+                    cnx=self.cnx, sql=cmd, parameters=self.parameters
+                )
 
     def validate_stg_table(self, dryrun):
         cmd = self.stg_dups_validation()
@@ -921,7 +949,9 @@ LIMIT 1;
 
         with self.cnx.cursor() as cur:
             cur.execute("USE WAREHOUSE COMPUTE_WH")
-            cur.execute(f"USE DATABASE {self.target_database}")  # ⚠️ 注意这里去掉了参数化
+            cur.execute(
+                f"USE DATABASE {self.target_database}"
+            )  # ⚠️ 注意这里去掉了参数化
             cur.execute(f"USE SCHEMA {self.schema}")  # ⚠️ 这里也一样
 
         print(f"Snowflake SessionId: {self.cnx.session_id}")
@@ -930,7 +960,9 @@ LIMIT 1;
     def watermark_execute(self, context=None):
         initial_load = self.is_initial_load()
         with self.get_snowflake_cnx():
-            self.etl_execute(initial_load=initial_load, dryrun=False, hook=self.snowflake_hook)
+            self.etl_execute(
+                initial_load=initial_load, dryrun=False, hook=self.snowflake_hook
+            )
 
     def dry_run(self):
         self.is_initial_load(dryrun=True)
@@ -939,15 +971,15 @@ LIMIT 1;
         self.update_high_watermark(dryrun=True)
 
     def get_high_watermark_cmd(self, table_name):
-        database, schema, table = table_name.split('.')
-        if 'lake.ultra_warehouse.inventory_rollup' in table_name.lower():
-            delta_column = 'meta_update_datetime'
-        elif 'lake.ultra_warehouse' in table_name.lower():
-            delta_column = 'hvr_change_time'
-        elif 'lake_jfb.ultra_partner' in table_name.lower():
-            delta_column = 'hvr_change_time'
+        database, schema, table = table_name.split(".")
+        if "lake.ultra_warehouse.inventory_rollup" in table_name.lower():
+            delta_column = "meta_update_datetime"
+        elif "lake.ultra_warehouse" in table_name.lower():
+            delta_column = "hvr_change_time"
+        elif "lake_jfb.ultra_partner" in table_name.lower():
+            delta_column = "hvr_change_time"
         else:
-            delta_column = 'meta_update_datetime'
+            delta_column = "meta_update_datetime"
         hwm_command = f"""
         SELECT
             '{table_name}' AS dependent_table_name,
@@ -957,7 +989,9 @@ LIMIT 1;
         return unindent_auto(hwm_command)
 
     def get_table_high_watermark_cmd(self, initial_load):
-        command_list = [self.get_high_watermark_cmd(dep) for dep in self.watermark_tables]
+        command_list = [
+            self.get_high_watermark_cmd(dep) for dep in self.watermark_tables
+        ]
         if initial_load:
             self_table_cmd = f"""
             SELECT
@@ -966,7 +1000,7 @@ LIMIT 1;
 
             command_list.append(unindent_auto(self_table_cmd))
         else:
-            full_table_name = MART_DATABASE + '.' + MART_SCHEMA + '.' + self.table_name
+            full_table_name = MART_DATABASE + "." + MART_SCHEMA + "." + self.table_name
             command_list.append(self.get_high_watermark_cmd(full_table_name))
 
         union = "\n\t\t\t\t\tUNION\n".join([indent(x, 20) for x in command_list])
@@ -1093,8 +1127,10 @@ class BaseSnowflakeMartUpsertOperator(BaseSnowflakeMartOperator):
                 else:
                     unique_col_names.append(x.source_name)
 
-        unique_cols_str = ', '.join(unique_col_names)
-        uniqueness_join = '\n    AND '.join([f"equal_null(t.{x}, s.{x})" for x in unique_col_names])
+        unique_cols_str = ", ".join(unique_col_names)
+        uniqueness_join = "\n    AND ".join(
+            [f"equal_null(t.{x}, s.{x})" for x in unique_col_names]
+        )
         cmd = f"""
             -- Identifying duplicate business keys
             INSERT INTO {self.excp_tmp_table_name}
@@ -1118,16 +1154,16 @@ class BaseSnowflakeMartUpsertOperator(BaseSnowflakeMartOperator):
     @property
     def stg_table_meta_cols(self) -> List[Column]:
         stg_table_meta_cols = [
-            Column('meta_data_quality', 'VARCHAR(10)'),
+            Column("meta_data_quality", "VARCHAR(10)"),
             Column(
-                'meta_create_datetime',
-                'TIMESTAMP_LTZ',
-                default_value='current_timestamp',
+                "meta_create_datetime",
+                "TIMESTAMP_LTZ",
+                default_value="current_timestamp",
             ),
             Column(
-                'meta_update_datetime',
-                'TIMESTAMP_LTZ',
-                default_value='current_timestamp',
+                "meta_update_datetime",
+                "TIMESTAMP_LTZ",
+                default_value="current_timestamp",
             ),
         ]
         return stg_table_meta_cols
@@ -1158,24 +1194,28 @@ class BaseSnowflakeMartUpsertOperator(BaseSnowflakeMartOperator):
 
     @staticmethod
     def is_timestamp_col(data_type) -> bool:
-        return data_type.lower()[0:4] in ('date', 'time')
+        return data_type.lower()[0:4] in ("date", "time")
 
     @property
     def merge_update_names_str(self) -> str:
-        update_names_str = ',\n\t'.join([f"t.{x} = s.{x}" for x in self.insert_names_list])
+        update_names_str = ",\n\t".join(
+            [f"t.{x} = s.{x}" for x in self.insert_names_list]
+        )
         return update_names_str
 
     def _merge_order_by(self, col_list, alias=None) -> str:
-        curr_order_by = ''
+        curr_order_by = ""
         delta_col_list = sorted(col_list, key=lambda x: x.delta_column)  # type: ignore
-        full_alias = alias + '.' if alias else ''
+        full_alias = alias + "." if alias else ""
         if delta_col_list:
             first_dc = delta_col_list[0]
             if self.is_timestamp_col(first_dc.type):
-                null_repl = '1900-01-01'
+                null_repl = "1900-01-01"
             else:
-                null_repl = '0'
-            col_list_str = ', '.join(f"{full_alias}{x.source_name}" for x in delta_col_list)
+                null_repl = "0"
+            col_list_str = ", ".join(
+                f"{full_alias}{x.source_name}" for x in delta_col_list
+            )
             curr_order_by = f"coalesce({col_list_str}, '{null_repl}')"
         return curr_order_by
 
@@ -1185,19 +1225,23 @@ class BaseSnowflakeMartUpsertOperator(BaseSnowflakeMartOperator):
         We will use this to check whether data in stg table is latest data compared to final table.
         This will be used only if delta column is provided in config table.
         """
-        col_list = [x for x in self.column_list if x.delta_column is not False and not x.stg_only]
-        source_coalesce = self._merge_order_by(col_list, 's')
+        col_list = [
+            x
+            for x in self.column_list
+            if x.delta_column is not False and not x.stg_only
+        ]
+        source_coalesce = self._merge_order_by(col_list, "s")
         if not source_coalesce:
-            return ''
+            return ""
         else:
-            target_coalesce = self._merge_order_by(col_list, 't')
+            target_coalesce = self._merge_order_by(col_list, "t")
             return f"\n    AND {source_coalesce} > {target_coalesce}"
 
     def merge_into_base_table(self) -> str:
-        uniqueness_join = '\n    AND '.join(
+        uniqueness_join = "\n    AND ".join(
             [f"equal_null(t.{x}, s.{x})" for x in self.column_list.unique_col_names]
         )
-        full_col_select_list = ', '.join(
+        full_col_select_list = ", ".join(
             self.insert_names_list + [x.name for x in self.base_table_meta_cols]
         )
         cmd = f"""
@@ -1228,7 +1272,6 @@ class BaseSnowflakeMartUpsertOperator(BaseSnowflakeMartOperator):
         return unindent_auto(cmd)
 
     def post_stg_table_load(self, dryrun):
-
         cmd = self.create_temp_excp_table()
         self.execute_cmd(cmd=cmd, dryrun=dryrun)
 

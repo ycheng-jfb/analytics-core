@@ -6,25 +6,27 @@ from include.airflow.operators.snowflake_export import SnowflakeToSMBExcelOperat
 from include.config import conn_ids, email_lists, owners
 
 default_args = {
-    'start_date': pendulum.datetime(2020, 10, 1, tz='America/Los_Angeles'),
-    'retries': 1,
-    'owner': owners.global_apps_analytics,
-    'email': email_lists.global_applications,
+    "start_date": pendulum.datetime(2020, 10, 1, tz="America/Los_Angeles"),
+    "retries": 1,
+    "owner": owners.global_apps_analytics,
+    "email": email_lists.global_applications,
     "on_failure_callback": slack_failure_gsc,
 }
 
 
 dag = DAG(
-    dag_id='global_apps_gsc_pipeline_detail_sheet',
+    dag_id="global_apps_gsc_pipeline_detail_sheet",
     default_args=default_args,
-    schedule='21 */3 * * *',
+    schedule="21 */3 * * *",
     catchup=False,
     max_active_tasks=100,
     max_active_runs=1,
 )
 
 with dag:
-    date_param = "{{macros.tfgdt.to_pst(macros.datetime.now()).strftime('%Y%m%d-%H%M%S')}}"
+    date_param = (
+        "{{macros.tfgdt.to_pst(macros.datetime.now()).strftime('%Y%m%d-%H%M%S')}}"
+    )
 
     to_file = SnowflakeToSMBExcelOperator(
         task_id="global_apps_export_gsc.pipeline_detail_sheet",

@@ -92,15 +92,21 @@ java_jf_schema = StructType(
                                 [
                                     StructField("bundle_alias", StringType(), True),
                                     StructField("bundle_name", StringType(), True),
-                                    StructField("bundle_product_id", StringType(), True),
+                                    StructField(
+                                        "bundle_product_id", StringType(), True
+                                    ),
                                     StructField("bundle_quantity", LongType(), True),
-                                    StructField("bundle_retail_price", DoubleType(), True),
+                                    StructField(
+                                        "bundle_retail_price", DoubleType(), True
+                                    ),
                                     StructField("bundle_sale_price", LongType(), True),
                                     StructField("bundle_url", StringType(), True),
                                     StructField("bundle_vip_price", DoubleType(), True),
                                     StructField("category", StringType(), True),
                                     StructField("image_url", StringType(), True),
-                                    StructField("inventory_availability", LongType(), True),
+                                    StructField(
+                                        "inventory_availability", LongType(), True
+                                    ),
                                     StructField("inventory_count", LongType(), True),
                                     StructField("is_bundle", BooleanType(), True),
                                     StructField("list_id", StringType(), True),

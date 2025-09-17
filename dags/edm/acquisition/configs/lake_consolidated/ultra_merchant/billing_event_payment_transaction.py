@@ -6,7 +6,7 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.REGULAR,
-    table='billing_event_payment_transaction',
+    table="billing_event_payment_transaction",
     company_join_sql="""
             SELECT DISTINCT
             l.billing_event_id,
@@ -20,12 +20,12 @@ table_config = TableConfig(
                  JOIN {database}.REFERENCE.DIM_STORE ds
                       ON o.store_id = ds.store_id""",
     column_list=[
-        Column('billing_event_id', 'INT', uniqueness=True, key=True),
-        Column('payment_transaction_id', 'INT', uniqueness=True, key=True),
+        Column("billing_event_id", "INT", uniqueness=True, key=True),
+        Column("payment_transaction_id", "INT", uniqueness=True, key=True),
         Column(
-            'datetime_added',
-            'TIMESTAMP_NTZ(3)',
+            "datetime_added",
+            "TIMESTAMP_NTZ(3)",
         ),
     ],
-    watermark_column='datetime_added',
+    watermark_column="datetime_added",
 )

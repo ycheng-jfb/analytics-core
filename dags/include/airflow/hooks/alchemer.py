@@ -9,9 +9,9 @@ from include.config import conn_ids
 class AlchemerHook(BaseWebApiHook):
     def __init__(
         self,
-        conn_id='alchemer_default',
-        host='https://api.alchemer.com',
-        version='v5',
+        conn_id="alchemer_default",
+        host="https://api.alchemer.com",
+        version="v5",
     ):
         super().__init__(
             conn_id=conn_id,
@@ -22,17 +22,19 @@ class AlchemerHook(BaseWebApiHook):
     @cached_property
     def auth_params(self):
         return {
-            'api_token': self.extras.get("api_token"),
-            'api_token_secret': self.extras.get("api_token_secret"),
+            "api_token": self.extras.get("api_token"),
+            "api_token_secret": self.extras.get("api_token_secret"),
         }
 
     def get_base_url(self):
-        return f'{self.host}/{self.version}'
+        return f"{self.host}/{self.version}"
 
     def get_base_headers(self):
         return {}
 
-    def make_request(self, method, endpoint, headers=None, params=None, json=None, data=None):
+    def make_request(
+        self, method, endpoint, headers=None, params=None, json=None, data=None
+    ):
         params = params if params else {}
         count = 0
         while True:
@@ -57,12 +59,18 @@ class AlchemerHook(BaseWebApiHook):
         return r
 
     def make_get_request_all(
-        self, endpoint, list_name='data', headers=None, params=None, json=None, data=None
+        self,
+        endpoint,
+        list_name="data",
+        headers=None,
+        params=None,
+        json=None,
+        data=None,
     ):
         params = params if params else {}
         while True:
             r = self.make_request(
-                'get', endpoint, headers=headers, params=params, json=json, data=data
+                "get", endpoint, headers=headers, params=params, json=json, data=data
             )
             data = r.json()
             if list_name:
@@ -71,10 +79,14 @@ class AlchemerHook(BaseWebApiHook):
             else:
                 for obj in data:
                     yield obj
-            if data.get('page') and data.get('total_pages') and data['page'] < data['total_pages']:
+            if (
+                data.get("page")
+                and data.get("total_pages")
+                and data["page"] < data["total_pages"]
+            ):
                 params = {
                     **params,
-                    'page': data['page'] + 1,
+                    "page": data["page"] + 1,
                 }
             else:
                 break

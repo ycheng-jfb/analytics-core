@@ -39,15 +39,16 @@ def copy_json_into_existing_table(
     copy_options: Optional[dict] = None,
     block: bool = True,
 ):
-
     # TODO validate that copy options doesn't include explicitly defined options below
     # Create a local copy of copy_options to avoid mutating input dictionary
     local_copy_options = dict(copy_options) if copy_options is not None else {}
-    local_copy_options['MATCH_BY_COLUMN_NAME'] = 'CASE_INSENSITIVE'
+    local_copy_options["MATCH_BY_COLUMN_NAME"] = "CASE_INSENSITIVE"
     if include_metadata:
-        formatted_string = ', '.join(f"{key}={value}" for key, value in include_metadata.items())
+        formatted_string = ", ".join(
+            f"{key}={value}" for key, value in include_metadata.items()
+        )
         formatted_string = f"({formatted_string})"
-        local_copy_options['INCLUDE_METADATA'] = RawSqlExpression(formatted_string)
+        local_copy_options["INCLUDE_METADATA"] = RawSqlExpression(formatted_string)
 
     # noinspection PyTypeChecker
     df = DataFrame(
@@ -77,13 +78,17 @@ def copy_json_into_existing_table(
 
 def unquote_columns(input_df: DataFrame) -> DataFrame:
     # Create a dictionary to map old column names to new column names without single quotes
-    renamed_columns = {column: column.strip("\"").strip("'") for column in input_df.columns}
+    renamed_columns = {
+        column: column.strip('"').strip("'") for column in input_df.columns
+    }
     # Use the rename method to update column names
     return input_df.rename(renamed_columns)
 
 
 def columns_to_uppercase(input_df: DataFrame) -> DataFrame:
-    return input_df.select([F.col(column).as_(column.upper()) for column in input_df.columns])
+    return input_df.select(
+        [F.col(column).as_(column.upper()) for column in input_df.columns]
+    )
 
 
 def wait_for_async_jobs(session, job_id_async_job_tuples):
@@ -101,9 +106,13 @@ def wait_for_async_jobs(session, job_id_async_job_tuples):
                     )
                     failed_job_ids.append(job_id)
                 else:
-                    LOGGER.info(f"Job {job_id} succeeded, query_id: {async_job.query_id}")
+                    LOGGER.info(
+                        f"Job {job_id} succeeded, query_id: {async_job.query_id}"
+                    )
             else:
-                LOGGER.info(f"Job {job_id} is still running, query_id: {async_job.query_id}")
+                LOGGER.info(
+                    f"Job {job_id} is still running, query_id: {async_job.query_id}"
+                )
         time.sleep(1)
     LOGGER.info("All async jobs have finished")
     return failed_job_ids
@@ -125,13 +134,13 @@ def table_exists(session: Session, database, schema, table):
     schema = schema.strip('"').upper()
     table = table.strip('"').upper()
     query = f"SELECT EXISTS (SELECT * FROM {database.upper()}.INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '{schema}' AND TABLE_NAME = '{table}') AS TABLE_EXISTS"
-    return session.sql(query).collect()[0].as_dict().get('TABLE_EXISTS')
+    return session.sql(query).collect()[0].as_dict().get("TABLE_EXISTS")
 
 
 def create_table_with_schema(session, table_name, schema: StructType):
-    session.create_dataframe([[None] * len(schema.names)], schema=schema).na.drop().write.mode(
-        'overwrite'
-    ).save_as_table(table_name)
+    session.create_dataframe(
+        [[None] * len(schema.names)], schema=schema
+    ).na.drop().write.mode("overwrite").save_as_table(table_name)
 
 
 def struct_typemap(c):
@@ -161,8 +170,10 @@ def struct_typemap(c):
         return "NUMBER"
 
 
-def evolve_schema_if_necessary(session: Session, target_table: str, src_df: DataFrame) -> bool:
-    target_table_parts = target_table.split('.')
+def evolve_schema_if_necessary(
+    session: Session, target_table: str, src_df: DataFrame
+) -> bool:
+    target_table_parts = target_table.split(".")
     if not table_exists(
         session, target_table_parts[0], target_table_parts[1], target_table_parts[2]
     ):
@@ -171,7 +182,9 @@ def evolve_schema_if_necessary(session: Session, target_table: str, src_df: Data
     results_cols = src_df.columns
     diff_col_names = [x for x in results_cols if x not in cols]
     if len(diff_col_names):
-        LOGGER.info(f"Altering target table: {target_table}, adding columns: {diff_col_names}")
+        LOGGER.info(
+            f"Altering target table: {target_table}, adding columns: {diff_col_names}"
+        )
         diff_cols = [x for x in src_df.schema.fields if x.name in diff_col_names]
         for x in diff_cols:
             LOGGER.info(f"Adding column: {x.name}")
@@ -193,10 +206,12 @@ def flatten_struct(
         fields = struct.element_type
 
     for field in fields:
-        name = prefix + '_' + field.name if prefix else field.name
+        name = prefix + "_" + field.name if prefix else field.name
         dtype = field.datatype
         if isinstance(dtype, StructType):
-            output += flatten_struct(dtype, prefix=name, explode_column_list=explode_column_list)
+            output += flatten_struct(
+                dtype, prefix=name, explode_column_list=explode_column_list
+            )
         else:
             if normalize_name_func:
                 name = normalize_name_func(name)
@@ -245,7 +260,9 @@ def struct_select(
             and not isinstance(field_type, MapType)
         ):
             expressions.append(
-                F.try_cast(F.col(field_name).cast(StringType()), field_type).as_(field_name)
+                F.try_cast(F.col(field_name).cast(StringType()), field_type).as_(
+                    field_name
+                )
             )
         else:
             expressions.append(F.col(field_name).cast(field_type).as_(field_name))
@@ -253,7 +270,9 @@ def struct_select(
     if unmapped_fields_col_name:
         LOGGER.info(f"Storing unmapped fields in column: {unmapped_fields_col_name}")
         unmapped_field_names = [
-            field_name for field_name in input_field_names if field_name not in mapped_field_names
+            field_name
+            for field_name in input_field_names
+            if field_name not in mapped_field_names
         ]
         rescue_kv = []
         for field_name in unmapped_field_names:

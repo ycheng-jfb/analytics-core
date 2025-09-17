@@ -12,7 +12,9 @@ print_ = lambda x: print(json.dumps(x, indent=2))
 
 class SnapchatAdsHook(BaseHook):
     def __init__(
-        self, snapchat_conn_id=conn_ids.Snapchat.default, s3_conn_id=conn_ids.AWS.tfg_default
+        self,
+        snapchat_conn_id=conn_ids.Snapchat.default,
+        s3_conn_id=conn_ids.AWS.tfg_default,
     ):
         self.snapchat_conn_id = snapchat_conn_id
         self.s3_conn_id = s3_conn_id
@@ -41,7 +43,9 @@ class SnapchatAdsHook(BaseHook):
             "client_id": self.client_id,
             "client_secret": self.client_secret,
         }
-        r = requests.post("https://accounts.snapchat.com/login/oauth2/access_token", params=params)
+        r = requests.post(
+            "https://accounts.snapchat.com/login/oauth2/access_token", params=params
+        )
         r.raise_for_status()
         access_token = r.json()["access_token"]
         headers = {"Authorization": "Bearer " + access_token}
@@ -93,7 +97,6 @@ class SnapchatAdsHook(BaseHook):
         return campaign_ids
 
     def get_all_campaign_ids(self):
-
         print("getting organization ids")
         organization_id_list = self.get_organization_ids()
 
@@ -112,7 +115,6 @@ class SnapchatAdsHook(BaseHook):
         return campaign_list
 
     def get_all_account_ids(self, get_timezone=False):
-
         print("getting organization ids")
         organization_id_list = self.get_organization_ids()
 
@@ -141,7 +143,9 @@ class SnapchatAdsHook(BaseHook):
             else:
                 break
 
-    def write_dict_rows_to_file(self, rows, column_list, filename: str, compression="gzip"):
+    def write_dict_rows_to_file(
+        self, rows, column_list, filename: str, compression="gzip"
+    ):
         open_func = gzip.open if compression == "gzip" else open
         with open_func(filename, "wt") as f:  # type: ignore
             writer = csv.DictWriter(

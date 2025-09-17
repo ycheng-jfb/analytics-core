@@ -88,8 +88,12 @@ javascript_sx_schema = StructType(
                                     ArrayType(
                                         StructType(
                                             [
-                                                StructField("description", StringType(), True),
-                                                StructField("field", StringType(), True),
+                                                StructField(
+                                                    "description", StringType(), True
+                                                ),
+                                                StructField(
+                                                    "field", StringType(), True
+                                                ),
                                                 StructField("type", StringType(), True),
                                             ]
                                         )
@@ -272,14 +276,22 @@ javascript_sx_schema = StructType(
                                 [
                                     StructField("review_rating", DoubleType(), True),
                                     StructField("subcategory", StringType(), True),
-                                    StructField("inventory_availability", LongType(), True),
+                                    StructField(
+                                        "inventory_availability", LongType(), True
+                                    ),
                                     StructField("grid_position", LongType(), True),
                                     StructField("bundle_alias", StringType(), True),
                                     StructField("bundle_name", StringType(), True),
-                                    StructField("bundle_product_id", StringType(), True),
+                                    StructField(
+                                        "bundle_product_id", StringType(), True
+                                    ),
                                     StructField("bundle_quantity", StringType(), True),
-                                    StructField("bundle_retail_price", StringType(), True),
-                                    StructField("bundle_sale_price", StringType(), True),
+                                    StructField(
+                                        "bundle_retail_price", StringType(), True
+                                    ),
+                                    StructField(
+                                        "bundle_sale_price", StringType(), True
+                                    ),
                                     StructField("bundle_url", StringType(), True),
                                     StructField("bundle_vip_price", StringType(), True),
                                     StructField("category", StringType(), True),

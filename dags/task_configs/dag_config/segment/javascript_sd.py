@@ -38,7 +38,9 @@ javascript_sd_schema = StructType(
                                 StructField("content", StringType(), True),
                                 StructField("id", StringType(), True),
                                 StructField("medium", StringType(), True),
-                                StructField("medium%3Dsearch_branded", StringType(), True),
+                                StructField(
+                                    "medium%3Dsearch_branded", StringType(), True
+                                ),
                                 StructField("name", StringType(), True),
                                 StructField("souce", StringType(), True),
                                 StructField("source", StringType(), True),
@@ -82,8 +84,12 @@ javascript_sd_schema = StructType(
                                     ArrayType(
                                         StructType(
                                             [
-                                                StructField("description", StringType(), True),
-                                                StructField("field", StringType(), True),
+                                                StructField(
+                                                    "description", StringType(), True
+                                                ),
+                                                StructField(
+                                                    "field", StringType(), True
+                                                ),
                                                 StructField("type", StringType(), True),
                                             ]
                                         )
@@ -174,10 +180,16 @@ javascript_sd_schema = StructType(
                                     StructField("brand", StringType(), True),
                                     StructField("bundle_alias", StringType(), True),
                                     StructField("bundle_name", StringType(), True),
-                                    StructField("bundle_product_id", StringType(), True),
+                                    StructField(
+                                        "bundle_product_id", StringType(), True
+                                    ),
                                     StructField("bundle_quantity", StringType(), True),
-                                    StructField("bundle_retail_price", StringType(), True),
-                                    StructField("bundle_sale_price", StringType(), True),
+                                    StructField(
+                                        "bundle_retail_price", StringType(), True
+                                    ),
+                                    StructField(
+                                        "bundle_sale_price", StringType(), True
+                                    ),
                                     StructField("bundle_url", StringType(), True),
                                     StructField("bundle_vip_price", StringType(), True),
                                     StructField("category", StringType(), True),

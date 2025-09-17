@@ -16,7 +16,9 @@ from edm.acquisition.configs.lake_consolidated_high_frequency_tables import (
 from edm.acquisition.configs.lake_consolidated_history_high_frequency_tables import (
     history_table_list as high_freq_history_table_list,
 )
-from edm.acquisition.configs.lake_consolidated_history_other_tables import history_table_list
+from edm.acquisition.configs.lake_consolidated_history_other_tables import (
+    history_table_list,
+)
 from edm.acquisition.configs.lake_consolidated_intra_day_tables import (
     table_list as intra_day_table_list,
 )
@@ -30,15 +32,15 @@ from include.config import owners
 from include.config.email_lists import engineering_support
 
 default_args = {
-    'start_date': pendulum.datetime(2023, 1, 1, tz='America/Los_Angeles'),
-    'retries': 0,
-    'owner': owners.data_integrations,
-    'email': engineering_support,
+    "start_date": pendulum.datetime(2023, 1, 1, tz="America/Los_Angeles"),
+    "retries": 0,
+    "owner": owners.data_integrations,
+    "email": engineering_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
-    dag_id='edm_lake_consolidated_other',
+    dag_id="edm_lake_consolidated_other",
     default_args=default_args,
     schedule="0 13 * * *",
     catchup=False,
@@ -46,52 +48,52 @@ dag = DAG(
 )
 
 with dag:
-    warehouse = 'DA_WH_ETL_LIGHT'
-    acquisition_complete = EmptyOperator(task_id='consolidation_completion')
+    warehouse = "DA_WH_ETL_LIGHT"
+    acquisition_complete = EmptyOperator(task_id="consolidation_completion")
 
     hvr_sensor_gdpr = hvr_sensor(
-        task_id='hvr_sensor_gdpr',
-        schema='GDPR',
+        task_id="hvr_sensor_gdpr",
+        schema="GDPR",
         lookback_minutes=45,
     )
 
     hvr_sensor_ultra_cart = hvr_sensor(
-        task_id='hvr_sensor_ultra_cart',
-        schema='ULTRA_CART',
+        task_id="hvr_sensor_ultra_cart",
+        schema="ULTRA_CART",
         lookback_minutes=45,
     )
 
     hvr_sensor_ultra_cms = hvr_sensor(
-        task_id='hvr_sensor_ultra_cms',
-        schema='ULTRA_CMS',
+        task_id="hvr_sensor_ultra_cms",
+        schema="ULTRA_CMS",
         lookback_minutes=45,
     )
 
     hvr_sensor_ultra_cms_history = hvr_sensor(
-        task_id='hvr_sensor_ultra_cms_history',
-        schema='ULTRA_CMS_HISTORY',
+        task_id="hvr_sensor_ultra_cms_history",
+        schema="ULTRA_CMS_HISTORY",
         lookback_minutes=45,
     )
 
     hvr_sensor_ultra_merchant = hvr_sensor(
-        task_id='hvr_sensor_ultra_merchant',
-        schema='ULTRA_MERCHANT',
+        task_id="hvr_sensor_ultra_merchant",
+        schema="ULTRA_MERCHANT",
         lookback_minutes=45,
     )
 
     hvr_sensor_ultra_merchant_history = hvr_sensor(
-        task_id='hvr_sensor_ultra_merchant_history',
-        schema='ULTRA_MERCHANT_HISTORY',
+        task_id="hvr_sensor_ultra_merchant_history",
+        schema="ULTRA_MERCHANT_HISTORY",
         lookback_minutes=45,
     )
 
     hvr_sensor_ultra_rollup = hvr_sensor(
-        task_id='hvr_sensor_ultra_rollup',
-        schema='ULTRA_ROLLUP',
+        task_id="hvr_sensor_ultra_rollup",
+        schema="ULTRA_ROLLUP",
         lookback_minutes=45,
     )
 
-    hvr_acquisition = EmptyOperator(task_id='hvr_acquisition')
+    hvr_acquisition = EmptyOperator(task_id="hvr_acquisition")
 
     hvr_sensor_gdpr >> hvr_acquisition
     hvr_sensor_ultra_cart >> hvr_acquisition
@@ -105,8 +107,10 @@ with dag:
     for cfg in table_config_list:
         if (
             cfg.full_target_table_name.lower() not in map(str.lower, edw_source_list)
-            and cfg.full_target_table_name.lower() not in map(str.lower, high_freq_table_list)
-            and cfg.full_target_table_name.lower() not in map(str.lower, intra_day_table_list)
+            and cfg.full_target_table_name.lower()
+            not in map(str.lower, high_freq_table_list)
+            and cfg.full_target_table_name.lower()
+            not in map(str.lower, intra_day_table_list)
             and cfg.full_target_table_name.lower() not in map(str.lower, exclusion_list)
         ):
             to_lake_consolidated = cfg.to_lake_consolidated_operator

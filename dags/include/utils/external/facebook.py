@@ -286,7 +286,9 @@ def get_pixel_list() -> List[Pixel]:
                     and json.loads(elem["body"])["error"]["type"] == "OAuthException"
                 ):
                     print(
-                        component[0]["relative_url"][: component[0]["relative_url"].find("/")],
+                        component[0]["relative_url"][
+                            : component[0]["relative_url"].find("/")
+                        ],
                         "failed with error",
                         json.loads(elem["body"])["error"],
                     )
@@ -305,8 +307,12 @@ def get_pixel_list() -> List[Pixel]:
                                     pixel_name=p["name"],
                                     access_token=access_token,
                                     business_id=p.get("owner_business", {}).get("id"),
-                                    business_name=p.get("owner_business", {}).get("name"),
-                                    account_id=p.get("owner_ad_account", {}).get("account_id"),
+                                    business_name=p.get("owner_business", {}).get(
+                                        "name"
+                                    ),
+                                    account_id=p.get("owner_ad_account", {}).get(
+                                        "account_id"
+                                    ),
                                 )
                             )
     return pixel_list
@@ -316,7 +322,9 @@ def get_account_list():
     account_list = []
     for conn_id in ("facebook_na", "facebook_eu"):
         hook = FacebookAdsHook(facebook_ads_conn_id=conn_id)
-        api = FacebookAdsApi.init(access_token=hook.access_token, api_version=hook.api_version)
+        api = FacebookAdsApi.init(
+            access_token=hook.access_token, api_version=hook.api_version
+        )
         region = conn_id.replace("facebook_", "").lower()
         curr_account_list = [
             {
@@ -411,7 +419,9 @@ class BatchElement:
         """
         do something with self.curr_response_body['data']
         """
-        rows_exported = self.data_processor(data=self.curr_response_body["data"], name=self.name)
+        rows_exported = self.data_processor(
+            data=self.curr_response_body["data"], name=self.name
+        )
         if isinstance(rows_exported, int):
             self.rows_exported += rows_exported
 
@@ -430,7 +440,9 @@ class BatchElement:
             self.log(str(json.dumps(self.curr_response_body)))
 
         self.paging_after = (
-            self.curr_response_body.get("paging", {}).get("cursors", {}).get("after", None)
+            self.curr_response_body.get("paging", {})
+            .get("cursors", {})
+            .get("after", None)
         )
         if self.paging_after is None:
             self.is_complete = True
@@ -494,9 +506,9 @@ class Batch:
         while True:
             iter_count += 1
             print("iter count:", iter_count)
-            curr_batch_list = [x for x in self.batch_list if not x.is_failed and not x.is_complete][
-                0 : self.max_batch_length
-            ]
+            curr_batch_list = [
+                x for x in self.batch_list if not x.is_failed and not x.is_complete
+            ][0 : self.max_batch_length]
             if len(curr_batch_list) == 0:
                 break
 
@@ -506,7 +518,10 @@ class Batch:
                 try:
                     batch_response = requests.post(
                         url=self.BASE_URL,
-                        json={"access_token": self.access_token, "batch": batch_element_list},
+                        json={
+                            "access_token": self.access_token,
+                            "batch": batch_element_list,
+                        },
                     )
                     break
                 except requests.exceptions.ChunkedEncodingError:
@@ -518,11 +533,15 @@ class Batch:
             try:
                 batch_response_dict[0]
             except KeyError:
-                raise Exception("could not access batch_response_dict[0]", batch_response_dict)
+                raise Exception(
+                    "could not access batch_response_dict[0]", batch_response_dict
+                )
 
             for i, rep in enumerate(curr_batch_list):
                 print(i, rep)
                 curr_batch_list[i].process_response(batch_response_dict[i])
         self.execute_end = datetime.utcnow()
         self.stats_df = pd.DataFrame.from_records(map(self.stats_dict, self.batch_list))
-        self.stats_df["error_rate"] = self.stats_df.total_error_count / self.stats_df.response_count
+        self.stats_df["error_rate"] = (
+            self.stats_df.total_error_count / self.stats_df.response_count
+        )

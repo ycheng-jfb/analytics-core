@@ -20,7 +20,9 @@ class RokuAds:
     table: str
     relative_path: str
     column_list: list
-    date_param: str = str("{{ macros.datetime.now().strftime('%Y%m%dT%H%M%S%f')[0:-3] }}")
+    date_param: str = str(
+        "{{ macros.datetime.now().strftime('%Y%m%dT%H%M%S%f')[0:-3] }}"
+    )
 
     @property
     def files_path(self):
@@ -98,7 +100,7 @@ items = [
 default_args = {
     "start_date": pendulum.datetime(2021, 12, 7, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    'owner': owners.media_analytics,
+    "owner": owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "sla": timedelta(hours=2),
@@ -125,7 +127,7 @@ with dag:
             table=item.table,
             column_list=item.column_list,
             files_path=item.files_path,
-            copy_config=CopyConfigCsv(field_delimiter=',', header_rows=1, skip_pct=1),
+            copy_config=CopyConfigCsv(field_delimiter=",", header_rows=1, skip_pct=1),
             trigger_rule="all_done",
         )
         get_ads_data = RokuToS3Operator(

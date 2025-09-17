@@ -12,27 +12,27 @@ class Config:
     @property
     def sql_list(self):
         return [
-            Path(TASK_CONFIGS_DIR, 'sql', 'tableau.audit_terminated_users.sql'),
-            Path(TASK_CONFIGS_DIR, 'sql', 'tableau.audit_missing_users.sql'),
+            Path(TASK_CONFIGS_DIR, "sql", "tableau.audit_terminated_users.sql"),
+            Path(TASK_CONFIGS_DIR, "sql", "tableau.audit_missing_users.sql"),
         ]
 
     @property
     def body_list(self):
         return [
             (
-                'The following users have been terminated in Workday or Azure but still exist'
-                ' in Tableau. Please remove them ASAP.'
+                "The following users have been terminated in Workday or Azure but still exist"
+                " in Tableau. Please remove them ASAP."
             ),
             (
-                'The following users are setup in Tableau with non-corporate domains and a'
-                ' corresponding account in Workday or Azure could not be found.'
+                "The following users are setup in Tableau with non-corporate domains and a"
+                " corresponding account in Workday or Azure could not be found."
             ),
         ]
 
 
 config = Config(
-    subject='ALERT: Terminated / Non - Corp Accounts in Tableau',
+    subject="ALERT: Terminated / Non - Corp Accounts in Tableau",
     distribution_list=[
-        'mhernick@techstyle.com',
+        "mhernick@techstyle.com",
     ],
 )

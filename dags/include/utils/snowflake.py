@@ -21,7 +21,7 @@ def get_result_column_names(cur):
 
 def split_statements(cmd):
     for x in list(_split_statements(StringIO(cmd), remove_comments=True)):
-        next_val = x[0].rstrip(';')
+        next_val = x[0].rstrip(";")
         if len(next_val) > 0:
             yield next_val
 
@@ -48,14 +48,16 @@ def set_query_tag(hook_obj, dag_id, task_id):
 
 
 def get_snowflake_warehouse(context):
-    if 'production' in os.environ.get('ENVIRONMENT_STAGE', '').lower():
-        execution_time = context['ti'].execution_date.astimezone(pytz.timezone('US/Pacific'))
+    if "production" in os.environ.get("ENVIRONMENT_STAGE", "").lower():
+        execution_time = context["ti"].execution_date.astimezone(
+            pytz.timezone("US/Pacific")
+        )
         if execution_time.hour in (1, 17):
-            warehouse = 'DA_WH_EDW'
+            warehouse = "DA_WH_EDW"
         else:
-            warehouse = 'DA_WH_EDW'
+            warehouse = "DA_WH_EDW"
     else:
-        warehouse = 'DA_WH_EDW'
+        warehouse = "DA_WH_EDW"
     return warehouse
 
 
@@ -67,8 +69,10 @@ class ForeignKey:
         self.field = field
 
     def __repr__(self):
-        attrs = ['database', 'schema', 'field']
-        additional_params = [f"{a}={getattr(self, a)}" for a in attrs if getattr(self, a)]
+        attrs = ["database", "schema", "field"]
+        additional_params = [
+            f"{a}={getattr(self, a)}" for a in attrs if getattr(self, a)
+        ]
         return f"ForeignKey('{self.table}', {', '.join(additional_params)})"
 
     def __eq__(self, other) -> bool:
@@ -111,16 +115,16 @@ class Column:
 
     def __repr__(self):
         default_args = get_default_args(self.__init__)
-        default_args['source_name'] = self.name
-        optional_params = ''
+        default_args["source_name"] = self.name
+        optional_params = ""
         attrs = (
-            'uniqueness',
-            'key',
-            'type_1',
-            'type_2',
-            'delta_column',
-            'source_name',
-            'foreign_key',
+            "uniqueness",
+            "key",
+            "type_1",
+            "type_2",
+            "delta_column",
+            "source_name",
+            "foreign_key",
         )
         for attr in attrs:
             value = getattr(self, attr)
@@ -150,26 +154,26 @@ class Column:
 
     @property
     def type_base_name(self):
-        m = re.match(r'([a-zA-Z_]+).*?', self.type)
+        m = re.match(r"([a-zA-Z_]+).*?", self.type)
         return m.group(1)
 
     @property
     def column_size(self):
-        m = re.match(r'[a-zA-Z_]+\((.*?)\)', self.type)
+        m = re.match(r"[a-zA-Z_]+\((.*?)\)", self.type)
         if m:
             match = m.group(1)
-            if ',' in match:
-                return int(match.split(',')[0].strip())
+            if "," in match:
+                return int(match.split(",")[0].strip())
             else:
                 return int(match.strip())
 
     @property
     def decimal_digits(self):
-        m = re.match(r'[a-zA-Z_]+\((.*?)\)', self.type)
+        m = re.match(r"[a-zA-Z_]+\((.*?)\)", self.type)
         if m:
             match = m.group(1)
-            if ',' in match:
-                return int(match.split(',')[1].strip())
+            if "," in match:
+                return int(match.split(",")[1].strip())
 
 
 class BaseCopyConfig:
@@ -186,17 +190,19 @@ class BaseCopyConfig:
     def copy_params_list(self) -> List[str]:
         raise NotImplementedError
 
-    def dml_copy_into_table(self, table, files_path, pattern=None, column_names=None) -> str:
-        format_params_str = ',\n            '.join(self.format_params_list)
-        copy_params_str = ',\n        '.join(self.copy_params_list)
+    def dml_copy_into_table(
+        self, table, files_path, pattern=None, column_names=None
+    ) -> str:
+        format_params_str = ",\n            ".join(self.format_params_list)
+        copy_params_str = ",\n        ".join(self.copy_params_list)
         if self.custom_select:
             from_line = f"FROM ({self.custom_select})"
         else:
             from_line = f"FROM '{files_path}'"
         if pattern:
             from_line += f"\n        PATTERN = '{pattern}'"
-        insert_names_str = ', '.join(column_names)
-        col_names = f"({insert_names_str})" if self.SPECIFY_COLUMNS else ''
+        insert_names_str = ", ".join(column_names)
+        col_names = f"({insert_names_str})" if self.SPECIFY_COLUMNS else ""
         cmd = rf"""
         COPY INTO {table} {col_names}
         {from_line}
@@ -211,14 +217,14 @@ class BaseCopyConfig:
 
 class CopyConfigCsv(BaseCopyConfig):
     SPECIFY_COLUMNS = True
-    TRANS_DELIM = str.maketrans({'\t': r'\t', '\n': r'\n', '\r': r'\r'})
+    TRANS_DELIM = str.maketrans({"\t": r"\t", "\n": r"\n", "\r": r"\r"})
 
     def __init__(
         self,
-        field_delimiter: str = ',',
+        field_delimiter: str = ",",
         force_copy=False,
         header_rows=0,
-        record_delimiter: str = '\n',
+        record_delimiter: str = "\n",
         skip_pct: int = 1,
         timestamp_format=None,
         date_format=None,
@@ -324,7 +330,7 @@ class BaseLoadJob:
         column_list: List[Column],
         copy_config: BaseCopyConfig,
         warehouse: str = None,
-        stg_column_naming: str = 'target',
+        stg_column_naming: str = "target",
         pattern: str = None,
         fail_on_partially_loaded=False,
         fail_on_load_failed=True,
@@ -335,7 +341,7 @@ class BaseLoadJob:
         cluster_by: str = None,
     ):
         self.table = table
-        if '.' in table:
+        if "." in table:
             raise ValueError("table cannot have a '.'")
         self.schema = schema
         self.database = database
@@ -346,12 +352,14 @@ class BaseLoadJob:
         self.cnx = cnx
         self.column_list = column_list
         self.column_names = [x.name for x in column_list]
-        if stg_column_naming.lower() not in ['source', 'target']:
+        if stg_column_naming.lower() not in ["source", "target"]:
             raise ValueError("stg_column_naming must be one of ['source', 'target']")
         self.stg_column_naming = stg_column_naming
-        self.stg_cols_as_source = self.stg_column_naming.lower() == 'source'
+        self.stg_cols_as_source = self.stg_column_naming.lower() == "source"
         self.stg_column_names = (
-            [x.source_name for x in column_list] if self.stg_cols_as_source else self.column_names
+            [x.source_name for x in column_list]
+            if self.stg_cols_as_source
+            else self.column_names
         )
         self.files_path = files_path
         self.pattern = pattern
@@ -364,7 +372,7 @@ class BaseLoadJob:
         self.has_failed_load = False
         self.cluster_by = cluster_by
         self.archive_database = archive_database
-        self._full_cmd = ''
+        self._full_cmd = ""
 
     @property
     def fk_cols(self):
@@ -389,33 +397,42 @@ class BaseLoadJob:
     def pk_stg_col_names(self):
         if not self.stg_cols_as_source:
             return self.pk_col_names
-        pk_stg_col_names = [x.source_name for x in self.column_list if x.uniqueness is True]
+        pk_stg_col_names = [
+            x.source_name for x in self.column_list if x.uniqueness is True
+        ]
         if not pk_stg_col_names:
             pk_stg_col_names = [x.source_name for x in self.column_list]
         return pk_stg_col_names
 
     def print(self, val):
-        self._full_cmd += val + '\n'
+        self._full_cmd += val + "\n"
         print(val)
 
     @property
     def base_table(self):
-        return self.database + '.' + self.schema + '.' + self.table
+        return self.database + "." + self.schema + "." + self.table
 
     @staticmethod
     def unquote_and_lower(val: str) -> str:
-        return val.replace('"', '').lower()
+        return val.replace('"', "").lower()
 
     @property
     def stg_table(self):
         stg_database = self.staging_database or self.database
         stg_schema = self.staging_schema or self.schema
-        return stg_database + '.' + stg_schema + '.' + self.unquote_and_lower(self.table) + '_stg'
+        return (
+            stg_database
+            + "."
+            + stg_schema
+            + "."
+            + self.unquote_and_lower(self.table)
+            + "_stg"
+        )
 
     @property
     def archive_table(self):
         if self.archive_database:
-            return self.archive_database + '.' + self.schema + '.' + self.table
+            return self.archive_database + "." + self.schema + "." + self.table
 
     @property
     def full_cmd(self):
@@ -433,22 +450,22 @@ class BaseLoadJob:
 
     @property
     def insert_names_str(self) -> str:
-        insert_names_str = ', '.join(self.column_names)
+        insert_names_str = ", ".join(self.column_names)
         return insert_names_str
 
     @property
     def insert_stg_names_str(self) -> str:
-        insert_stg_names_str = ', '.join(self.stg_column_names)
+        insert_stg_names_str = ", ".join(self.stg_column_names)
         return insert_stg_names_str
 
     @property
     def pk_names_str(self) -> str:
-        pk_names_str = ', '.join(self.pk_col_names)
+        pk_names_str = ", ".join(self.pk_col_names)
         return pk_names_str
 
     @property
     def pk_stg_names_str(self) -> str:
-        pk_stg_names_str = ', '.join(self.pk_stg_col_names)
+        pk_stg_names_str = ", ".join(self.pk_stg_col_names)
         return pk_stg_names_str
 
     def run_cmd(self, cmd: Optional[str], dryrun=False):
@@ -475,22 +492,24 @@ class BaseLoadJob:
             with self.cnx.cursor(cursor_class=DictCursor) as cur:
                 cur.execute(cmd)
                 result_list = cur.fetchall()
-                logging.info('\n' + '\n'.join(map(str, result_list)))
+                logging.info("\n" + "\n".join(map(str, result_list)))
                 for row in result_list:
-                    if row['status'] == 'Copy executed with 0 files processed.':
-                        logging.info(row['status'])
+                    if row["status"] == "Copy executed with 0 files processed.":
+                        logging.info(row["status"])
                     else:
-                        filename = row['file']
-                        status = row['status']
-                        if status == 'PARTIALLY_LOADED':
+                        filename = row["file"]
+                        status = row["status"]
+                        if status == "PARTIALLY_LOADED":
                             self.has_partial_load = True
-                        if 'LOADED' not in status:
+                        if "LOADED" not in status:
                             self.has_failed_load = True
-                            logging.error(f"file {filename} failed with status {status}")
+                            logging.error(
+                                f"file {filename} failed with status {status}"
+                            )
 
     @staticmethod
     def _is_timestamp_col(data_type) -> bool:
-        return data_type.lower()[0:4] in ('date', 'time')
+        return data_type.lower()[0:4] in ("date", "time")
 
     @staticmethod
     def _get_col_ddls(column_list) -> str:
@@ -513,7 +532,7 @@ class BaseLoadJob:
 
     @staticmethod
     def _unindent(cmd, char_count=8) -> str:
-        ret_val = re.sub(rf"^[ ]{{{char_count}}}", '', cmd, flags=re.MULTILINE)  # type: str
+        ret_val = re.sub(rf"^[ ]{{{char_count}}}", "", cmd, flags=re.MULTILINE)  # type: str
         return ret_val
 
     @property
@@ -535,16 +554,18 @@ class BaseLoadJob:
     def base_table_meta_col_ddls(self) -> str:
         base_table_meta_col_ddls = self._get_col_ddls(self.base_table_meta_cols)
         if base_table_meta_col_ddls:
-            base_table_meta_col_ddls = ',\n            ' + base_table_meta_col_ddls
-        return base_table_meta_col_ddls or ''
+            base_table_meta_col_ddls = ",\n            " + base_table_meta_col_ddls
+        return base_table_meta_col_ddls or ""
 
     @property
     def ddl_base_table(self) -> str:
-        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ''
+        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ""
         surr_key_name = (
-            hasattr(self, 'surrogate_key_name') and getattr(self, 'surrogate_key_name') or ''
+            hasattr(self, "surrogate_key_name")
+            and getattr(self, "surrogate_key_name")
+            or ""
         )
-        surr_key_ddl = f"{surr_key_name} INT IDENTITY,\n    " if surr_key_name else ''
+        surr_key_ddl = f"{surr_key_name} INT IDENTITY,\n    " if surr_key_name else ""
         cmd = f"""
         CREATE TABLE IF NOT EXISTS {self.base_table} (
             {surr_key_ddl}{self.source_col_ddls}{self.base_table_meta_col_ddls}{self.primary_key_col_ddl}{self.foreign_key_ref_ddl}
@@ -556,12 +577,12 @@ class BaseLoadJob:
     def stg_table_meta_col_ddls(self):
         stg_table_meta_col_ddls = self._get_col_ddls(self.stg_table_meta_cols)
         if stg_table_meta_col_ddls:
-            stg_table_meta_col_ddls = ',\n\t\t\t' + stg_table_meta_col_ddls
-        return stg_table_meta_col_ddls or ''
+            stg_table_meta_col_ddls = ",\n\t\t\t" + stg_table_meta_col_ddls
+        return stg_table_meta_col_ddls or ""
 
     @property
     def ddl_stg_table(self) -> str:
-        create_command = 'CREATE TABLE IF NOT EXISTS'
+        create_command = "CREATE TABLE IF NOT EXISTS"
         cmd = f"""
         {create_command} {self.stg_table} (
             {self.stg_col_ddls}{self.stg_table_meta_col_ddls}
@@ -573,7 +594,7 @@ class BaseLoadJob:
     def ddl_archive_table(self) -> Optional[str]:
         if not self.archive_table:
             return None
-        create_command = 'CREATE TABLE IF NOT EXISTS'
+        create_command = "CREATE TABLE IF NOT EXISTS"
         cmd = f"""
         {create_command} {self.archive_table} (
             {self.source_col_ddls}{self.stg_table_meta_col_ddls}
@@ -591,10 +612,10 @@ class BaseLoadJob:
     def ddl_view(self):
         if not self.view_name:
             return None
-        meta_list = ['meta_create_datetime', 'meta_update_datetime']
-        select_list = ',\n    '.join([x.name for x in self.column_list] + meta_list)
+        meta_list = ["meta_create_datetime", "meta_update_datetime"]
+        select_list = ",\n    ".join([x.name for x in self.column_list] + meta_list)
         select = f"SELECT\n    {select_list}\n"
-        select += f'FROM {self.base_table}'
+        select += f"FROM {self.base_table}"
         cmd = f"CREATE VIEW IF NOT EXISTS {self.view_name} AS\n{select};\n"
         return cmd
 
@@ -630,18 +651,18 @@ class BaseLoadJob:
             self.fail_on_load_failed and self.has_failed_load
         )
         if failure:
-            raise Exception('Load failed')
+            raise Exception("Load failed")
 
     def execute(self, *, initial_load: bool = False, dryrun: bool = False):
         raise NotImplementedError
 
     @property
     def dml_begin(self):
-        return 'BEGIN;\n'
+        return "BEGIN;\n"
 
     @property
     def dml_commit(self):
-        return 'COMMIT;\n'
+        return "COMMIT;\n"
 
     def run_ddls(self, dryrun=True):
         self.run_cmd(self.ddl_stg_table, dryrun=dryrun)
@@ -660,9 +681,9 @@ class LoadJobInsertUpdate(BaseLoadJob):
     @property
     def base_table_meta_cols(self) -> List[Column]:
         base_table_meta_cols = [
-            Column('meta_row_hash', 'INT'),
-            Column('meta_create_datetime', 'TIMESTAMP_LTZ(3)'),
-            Column('meta_update_datetime', 'TIMESTAMP_LTZ(3)'),
+            Column("meta_row_hash", "INT"),
+            Column("meta_create_datetime", "TIMESTAMP_LTZ(3)"),
+            Column("meta_update_datetime", "TIMESTAMP_LTZ(3)"),
         ]
         return base_table_meta_cols
 
@@ -673,7 +694,9 @@ class LoadJobInsertUpdate(BaseLoadJob):
                 [f"t.{x.name} = s.{x.source_name}" for x in self.column_list]
             )
         else:
-            update_names_str = f',\n{" " * 16}'.join([f"t.{x} = s.{x}" for x in self.column_names])
+            update_names_str = f',\n{" " * 16}'.join(
+                [f"t.{x} = s.{x}" for x in self.column_names]
+            )
         return update_names_str
 
     @cached_property
@@ -683,7 +706,10 @@ class LoadJobInsertUpdate(BaseLoadJob):
 
     @property
     def stg_delta_col_names(self):
-        return [x.source_name if self.stg_cols_as_source else x.name for x in self.delta_columns]
+        return [
+            x.source_name if self.stg_cols_as_source else x.name
+            for x in self.delta_columns
+        ]
 
     @property
     def base_delta_col_names(self):
@@ -691,32 +717,37 @@ class LoadJobInsertUpdate(BaseLoadJob):
 
     def _merge_order_by(self, stg_table, alias=None) -> str:
         if not self.delta_columns:
-            return ''
-        full_alias = alias + '.' if alias else ''
+            return ""
+        full_alias = alias + "." if alias else ""
         first_dc = self.delta_columns[0]
-        null_repl = '1900-01-01' if self._is_timestamp_col(first_dc.type) else '0'
-        delta_names = self.stg_delta_col_names if stg_table else self.base_delta_col_names
-        sort_col_list = ', '.join(f"{full_alias}{x}" for x in delta_names)
+        null_repl = "1900-01-01" if self._is_timestamp_col(first_dc.type) else "0"
+        delta_names = (
+            self.stg_delta_col_names if stg_table else self.base_delta_col_names
+        )
+        sort_col_list = ", ".join(f"{full_alias}{x}" for x in delta_names)
         return f"coalesce({sort_col_list}, '{null_repl}')"
 
     @property
     def merge_rn_order_by(self):
         cmd = self._merge_order_by(stg_table=True)
-        return cmd + ' DESC' if cmd else '( SELECT NULL )'
+        return cmd + " DESC" if cmd else "( SELECT NULL )"
 
     @property
     def merge_update_condition(self):
-        source_coalesce = self._merge_order_by(stg_table=True, alias='s')
+        source_coalesce = self._merge_order_by(stg_table=True, alias="s")
         if not source_coalesce:
-            return ''
+            return ""
         else:
-            target_coalesce = self._merge_order_by(stg_table=False, alias='t')
+            target_coalesce = self._merge_order_by(stg_table=False, alias="t")
             return f"\n    AND {source_coalesce} > {target_coalesce}"
 
     @property
     def dml_merge(self) -> str:
-        uniqueness_join = '\n    AND '.join(
-            [f"equal_null(t.{x}, s.{y})" for x, y in zip(self.pk_col_names, self.pk_stg_col_names)]
+        uniqueness_join = "\n    AND ".join(
+            [
+                f"equal_null(t.{x}, s.{y})"
+                for x, y in zip(self.pk_col_names, self.pk_stg_col_names)
+            ]
         )
         cmd = f"""
             MERGE INTO {self.base_table} t
@@ -781,29 +812,30 @@ class LoadJobInsertUpdateDelete(LoadJobInsertUpdate):
     def ddl_view(self):
         if not self.view_name:
             return None
-        meta_list = ['meta_create_datetime', 'meta_update_datetime']
-        select_list = ',\n    '.join([x.name for x in self.column_list] + meta_list)
+        meta_list = ["meta_create_datetime", "meta_update_datetime"]
+        select_list = ",\n    ".join([x.name for x in self.column_list] + meta_list)
         select = f"SELECT\n    {select_list}\n"
-        select += f'FROM {self.base_table}'
-        cmd = (
-            f"CREATE VIEW IF NOT EXISTS {self.view_name} AS\n{select}\nWHERE NOT meta_is_deleted;\n"
-        )
+        select += f"FROM {self.base_table}"
+        cmd = f"CREATE VIEW IF NOT EXISTS {self.view_name} AS\n{select}\nWHERE NOT meta_is_deleted;\n"
         return cmd
 
     @property
     def base_table_meta_cols(self) -> List[Column]:
         base_table_meta_cols: List[Column] = [
-            Column('meta_row_hash', 'INT'),
-            Column('meta_create_datetime', 'TIMESTAMP_LTZ(3)'),
-            Column('meta_update_datetime', 'TIMESTAMP_LTZ(3)'),
-            Column('meta_is_deleted', 'BOOLEAN DEFAULT FALSE'),
+            Column("meta_row_hash", "INT"),
+            Column("meta_create_datetime", "TIMESTAMP_LTZ(3)"),
+            Column("meta_update_datetime", "TIMESTAMP_LTZ(3)"),
+            Column("meta_is_deleted", "BOOLEAN DEFAULT FALSE"),
         ]
         return base_table_meta_cols
 
     @property
     def dml_merge(self) -> str:
-        uniqueness_join = '\n    AND '.join(
-            [f"equal_null(t.{x}, s.{y})" for x, y in zip(self.pk_col_names, self.pk_stg_col_names)]
+        uniqueness_join = "\n    AND ".join(
+            [
+                f"equal_null(t.{x}, s.{y})"
+                for x, y in zip(self.pk_col_names, self.pk_stg_col_names)
+            ]
         )
         partial_update_cond = self.merge_update_condition
         update_cond = "t.meta_row_hash != s.meta_row_hash OR t.meta_is_deleted"
@@ -843,7 +875,7 @@ class LoadJobInsertUpdateDelete(LoadJobInsertUpdate):
 
     @property
     def dml_deletes(self) -> str:
-        uniqueness_join = '\n    AND '.join(
+        uniqueness_join = "\n    AND ".join(
             [f"equal_null(t.{x}, s.{x})" for x in self.pk_col_names]
         )
         cmd = f"""
@@ -897,7 +929,7 @@ class LoadJobScd(BaseLoadJob):
     def __init__(self, task_id, dag_id, min_type_1_updates: bool = True, **kwargs):
         super().__init__(**kwargs)
         self.min_type_1_updates = min_type_1_updates
-        self.delta_table = '_delta'
+        self.delta_table = "_delta"
         self.task_id = task_id
         self.dag_id = dag_id
 
@@ -911,7 +943,7 @@ class LoadJobScd(BaseLoadJob):
     def type_2_col_names(self):
         type_2_col_names = [x.name for x in self.column_list if x.type_2 is True]
         if not type_2_col_names:
-            raise ValueError('At least 1 type 2 column is required for SCD.')
+            raise ValueError("At least 1 type 2 column is required for SCD.")
         return type_2_col_names
 
     @property
@@ -919,37 +951,39 @@ class LoadJobScd(BaseLoadJob):
         delta_cols = [x for x in self.column_list if x.delta_column is not False]
         num_cols = len(delta_cols)
         if num_cols > 1:
-            raise ValueError('For SCD you may pass at most one delta column')
+            raise ValueError("For SCD you may pass at most one delta column")
         elif num_cols == 1:
             col = delta_cols[0]
             if not self._is_timestamp_col(col.type):
-                raise ValueError('For SCD, delta column must have data type TIMESTAMP_*')
+                raise ValueError(
+                    "For SCD, delta column must have data type TIMESTAMP_*"
+                )
             return col
         else:
-            return Column('current_timestamp', 'TIMESTAMP_LTZ', delta_column=True)
+            return Column("current_timestamp", "TIMESTAMP_LTZ", delta_column=True)
 
     @property
     def surrogate_key_name(self):
-        base_table_name = self.base_table.split('.').pop()
+        base_table_name = self.base_table.split(".").pop()
         surr_key_name = f"{base_table_name}_key"
         return surr_key_name
 
     @property
     def base_table_meta_cols(self) -> List[Column]:
         base_table_meta_cols = [
-            Column('meta_type_1_hash', 'INT'),
-            Column('meta_type_2_hash', 'INT'),
-            Column('meta_from_datetime', self.type_2_timestamp_col.type),
-            Column('meta_to_datetime', self.type_2_timestamp_col.type),
-            Column('meta_is_current', 'BOOLEAN'),
-            Column('meta_create_datetime', 'TIMESTAMP_LTZ'),
-            Column('meta_update_datetime', 'TIMESTAMP_LTZ'),
+            Column("meta_type_1_hash", "INT"),
+            Column("meta_type_2_hash", "INT"),
+            Column("meta_from_datetime", self.type_2_timestamp_col.type),
+            Column("meta_to_datetime", self.type_2_timestamp_col.type),
+            Column("meta_is_current", "BOOLEAN"),
+            Column("meta_create_datetime", "TIMESTAMP_LTZ"),
+            Column("meta_update_datetime", "TIMESTAMP_LTZ"),
         ]
         return base_table_meta_cols
 
     @property
     def pk_names_str(self) -> str:
-        return ', '.join(self.pk_col_names)
+        return ", ".join(self.pk_col_names)
 
     @property
     def primary_key_col_ddl(self):
@@ -966,14 +1000,14 @@ class LoadJobScd(BaseLoadJob):
     @property
     def ddl_delta_table(self):
         delta_meta_col_list = [
-            ('meta_from_datetime', 'TIMESTAMP_LTZ'),
-            ('meta_type_1_hash', 'INT'),
-            ('meta_type_2_hash', 'INT'),
-            ('rn', 'INT'),
-            ('meta_record_status', 'VARCHAR(15)'),
+            ("meta_from_datetime", "TIMESTAMP_LTZ"),
+            ("meta_type_1_hash", "INT"),
+            ("meta_type_2_hash", "INT"),
+            ("rn", "INT"),
+            ("meta_record_status", "VARCHAR(15)"),
         ]
         delta_meta_col_lines = [f"{x[0]} {x[1]}" for x in delta_meta_col_list]
-        delta_meta_ddls = ',\n            '.join(delta_meta_col_lines)
+        delta_meta_ddls = ",\n            ".join(delta_meta_col_lines)
         cmd = f"""
         CREATE TEMP TABLE {self.delta_table} (
             {self.source_col_ddls},
@@ -984,7 +1018,7 @@ class LoadJobScd(BaseLoadJob):
 
     @property
     def dml_load_delta(self):
-        uniqueness_join = '\n    AND '.join(
+        uniqueness_join = "\n    AND ".join(
             [f"equal_null(t.{x}, s.{x})" for x in self.pk_col_names]
         )
 
@@ -1018,11 +1052,11 @@ class LoadJobScd(BaseLoadJob):
     @property
     def dml_type_1_update(self):
         if self.type_1_col_names:
-            uniqueness_join = '\n    AND '.join(
+            uniqueness_join = "\n    AND ".join(
                 [f"equal_null(t.{x}, s.{x})" for x in self.pk_col_names]
             )
 
-            cnt = ',\n\t'
+            cnt = ",\n\t"
             type_1_update_list = [f"t.{x} = s.{x}" for x in self.type_1_col_names]
             cmd = f"""
             -- type 1 updates
@@ -1039,7 +1073,7 @@ class LoadJobScd(BaseLoadJob):
 
     @property
     def dml_type_2_update(self):
-        uniqueness_join = '\n    AND '.join(
+        uniqueness_join = "\n    AND ".join(
             [f"equal_null(t.{x}, s.{x})" for x in self.pk_col_names]
         )
 
@@ -1059,9 +1093,9 @@ class LoadJobScd(BaseLoadJob):
 
     @property
     def dml_inserts(self):
-        cnt = ',\n\t'
+        cnt = ",\n\t"
         full_col_list = self.column_names + [x.name for x in self.base_table_meta_cols]
-        full_col_select_list = ', '.join(full_col_list)
+        full_col_select_list = ", ".join(full_col_list)
         cmd = f"""
         -- insert new records
         INSERT INTO {self.base_table} ({full_col_select_list})
@@ -1174,9 +1208,9 @@ class LoadJobInsertUpdateBrand(BaseLoadJob):
     @property
     def base_table_meta_cols(self) -> List[Column]:
         base_table_meta_cols = [
-            Column('hvr_is_deleted', 'INT'),
-            Column('hvr_change_time', 'TIMESTAMP_TZ(3)'),
-            Column('meta_row_source', 'VARCHAR(40)'),
+            Column("hvr_is_deleted", "INT"),
+            Column("hvr_change_time", "TIMESTAMP_TZ(3)"),
+            Column("meta_row_source", "VARCHAR(40)"),
         ]
         return base_table_meta_cols
 
@@ -1187,7 +1221,9 @@ class LoadJobInsertUpdateBrand(BaseLoadJob):
                 [f"t.{x.name} = s.{x.source_name}" for x in self.column_list]
             )
         else:
-            update_names_str = f',\n{" " * 16}'.join([f"t.{x} = s.{x}" for x in self.column_names])
+            update_names_str = f',\n{" " * 16}'.join(
+                [f"t.{x} = s.{x}" for x in self.column_names]
+            )
         return update_names_str
 
     @property
@@ -1198,8 +1234,11 @@ class LoadJobInsertUpdateBrand(BaseLoadJob):
 
     @property
     def dml_merge(self) -> str:
-        uniqueness_join = '\n    AND '.join(
-            [f"equal_null(t.{x}, s.{y})" for x, y in zip(self.pk_col_names, self.pk_stg_col_names)]
+        uniqueness_join = "\n    AND ".join(
+            [
+                f"equal_null(t.{x}, s.{y})"
+                for x, y in zip(self.pk_col_names, self.pk_stg_col_names)
+            ]
         )
         cmd = f"""
             MERGE INTO {self.base_table} t

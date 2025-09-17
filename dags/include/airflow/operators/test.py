@@ -18,7 +18,9 @@ class XcomPullOperator(BaseOperator):
         super(XcomPullOperator, self).__init__(*args, **kwargs)
 
     def execute(self, context):
-        ret = self.xcom_pull(context, key="testxcom", include_prior_dates=self.include_all)
+        ret = self.xcom_pull(
+            context, key="testxcom", include_prior_dates=self.include_all
+        )
         print(ret)
 
 

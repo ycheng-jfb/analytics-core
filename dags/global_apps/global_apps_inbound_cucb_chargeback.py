@@ -11,15 +11,15 @@ from include.config import conn_ids, email_lists, owners, s3_buckets, stages
 from include.utils.snowflake import Column, CopyConfigCsv
 
 default_args = {
-    'start_date': pendulum.datetime(2023, 9, 1, tz='America/Los_Angeles'),
-    'retries': 2,
-    'owner': owners.data_integrations,
-    'email': email_lists.data_integration_support,
-    'on_failure_callback': slack_failure_gsc,
+    "start_date": pendulum.datetime(2023, 9, 1, tz="America/Los_Angeles"),
+    "retries": 2,
+    "owner": owners.data_integrations,
+    "email": email_lists.data_integration_support,
+    "on_failure_callback": slack_failure_gsc,
 }
 
 dag = DAG(
-    dag_id='global_apps_inbound_cucb_chargeback',
+    dag_id="global_apps_inbound_cucb_chargeback",
     default_args=default_args,
     schedule="0 10 * * 6",
     catchup=False,
@@ -29,9 +29,9 @@ dag = DAG(
 sheets = {
     "exception_report_by_create_date": {
         "sheet_config": SheetConfig(
-            sheet_name='Report1',
-            schema='excel',
-            table='cucb_exception_report_by_date',
+            sheet_name="Report1",
+            schema="excel",
+            table="cucb_exception_report_by_date",
             header_rows=3,
             column_list=[
                 Column("exception_subject", "VARCHAR", source_name="Exception Subject"),
@@ -42,10 +42,20 @@ sheets = {
                 Column("exception_name", "VARCHAR", source_name="EXCEPTION_NAME"),
                 Column("excep_detail", "VARCHAR", source_name="EXCEP_DETAIL"),
                 Column("status", "VARCHAR", source_name="STATUS"),
-                Column("create_by_user_name", "VARCHAR", source_name="CREATE_BY_USER_NAME"),
-                Column("create_time", "TIMESTAMP", source_name="CREATE_TIME", delta_column=0),
                 Column(
-                    "last_update_time", "TIMESTAMP", source_name="LAST_UPDATE_TIME", delta_column=1
+                    "create_by_user_name", "VARCHAR", source_name="CREATE_BY_USER_NAME"
+                ),
+                Column(
+                    "create_time",
+                    "TIMESTAMP",
+                    source_name="CREATE_TIME",
+                    delta_column=0,
+                ),
+                Column(
+                    "last_update_time",
+                    "TIMESTAMP",
+                    source_name="LAST_UPDATE_TIME",
+                    delta_column=1,
                 ),
                 Column("last_update_from", "VARCHAR", source_name="LAST_UPDATE_FROM"),
                 Column("division_name", "VARCHAR", source_name="DIVISION_NAME"),
@@ -60,27 +70,27 @@ sheets = {
 
 with dag:
     to_snowflake_waived_po_data = SnowflakeProcedureOperator(
-        procedure='excel.cucb_waived_po_data.sql', database='lake'
+        procedure="excel.cucb_waived_po_data.sql", database="lake"
     )
 
     cucb_chargeback_to_mssql = SnowflakeToMsSqlBCPOperator(
-        task_id='cucb_chargeback_to_mssql',
+        task_id="cucb_chargeback_to_mssql",
         snowflake_database="lake",
         snowflake_schema="excel",
         snowflake_table="waived_po_data",
-        mssql_target_table='waived_po_data',
-        mssql_target_database='ultrawarehouse',
-        mssql_target_schema='rpt',
+        mssql_target_table="waived_po_data",
+        mssql_target_database="ultrawarehouse",
+        mssql_target_schema="rpt",
         mssql_conn_id=conn_ids.MsSql.evolve01_app_airflow_rw,
         unique_columns=[
-            'po_number',
-            'container',
-            'reply_option',
-            'create_time',
-            'ref_type_number',
-            'event_notes_oid',
+            "po_number",
+            "container",
+            "reply_option",
+            "create_time",
+            "ref_type_number",
+            "event_notes_oid",
         ],
-        watermark_column='meta_update_datetime',
+        watermark_column="meta_update_datetime",
     )
 
     for file, sheet_config_details in sheets.items():
@@ -112,8 +122,8 @@ with dag:
         )
 
         files_path = (
-            f'{stages.tsos_da_int_inbound}/inbound/{sheet_config.schema}.{sheet_config.table}/'
-            f'{sheet_config.default_schema_version}/'
+            f"{stages.tsos_da_int_inbound}/inbound/{sheet_config.schema}.{sheet_config.table}/"
+            f"{sheet_config.default_schema_version}/"
         )
 
         to_snowflake = SnowflakeInsertOperator(
@@ -131,7 +141,15 @@ with dag:
                 header_rows=sheet_config.header_rows,
                 skip_pct=1,
             ),
-            custom_select=sheet_config_details["custom_select"].format(files_path=files_path),
+            custom_select=sheet_config_details["custom_select"].format(
+                files_path=files_path
+            ),
         )
 
-        to_smb >> to_s3 >> to_snowflake >> to_snowflake_waived_po_data >> cucb_chargeback_to_mssql
+        (
+            to_smb
+            >> to_s3
+            >> to_snowflake
+            >> to_snowflake_waived_po_data
+            >> cucb_chargeback_to_mssql
+        )

@@ -1,12 +1,12 @@
 import argparse
 from typing import Optional, Sequence
 
-ALLOWED_LIST = {'Dockerfile', 'docker/Dockerfile'}
+ALLOWED_LIST = {"Dockerfile", "docker/Dockerfile"}
 
 
 def main(argv=None):  # type: (Optional[Sequence[str]]) -> int
-    parser = argparse.ArgumentParser(description='Ensure filenames are lowercase.')
-    parser.add_argument('filenames', nargs='*', help='Filenames to check')
+    parser = argparse.ArgumentParser(description="Ensure filenames are lowercase.")
+    parser.add_argument("filenames", nargs="*", help="Filenames to check")
     args = parser.parse_args(argv)
 
     retv = 0
@@ -21,5 +21,5 @@ def main(argv=None):  # type: (Optional[Sequence[str]]) -> int
     return retv
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())

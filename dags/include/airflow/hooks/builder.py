@@ -12,9 +12,9 @@ class BuilderHook(BaseHook):
 
     @cached_property
     def session(self):
-        headers = {'Content-Type': 'application/json'}
+        headers = {"Content-Type": "application/json"}
         session = requests.session()
-        session.params = {'apiKey': self.api_key}
+        session.params = {"apiKey": self.api_key}
         session.headers = headers
         return session
 
@@ -27,7 +27,11 @@ class BuilderHook(BaseHook):
         files: dict = None,
     ):
         response = self.session.request(
-            method=method, url=self.url + '/' + path, params=params, data=data, files=files
+            method=method,
+            url=self.url + "/" + path,
+            params=params,
+            data=data,
+            files=files,
         )
         response.raise_for_status()
         return response

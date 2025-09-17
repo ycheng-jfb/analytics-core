@@ -19,7 +19,7 @@ class SqlFix:
         for idx, line in enumerate(content.splitlines(keepends=True)):
             new_line = self.fix_line(line, idx + 1)
             new_content_list.append(new_line)
-        new_content = ''.join(new_content_list)
+        new_content = "".join(new_content_list)
         if new_content != content:
             self.file.write_text(new_content)
             print(f"updated: {self.posix_path}")
