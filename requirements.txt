@@ -9,6 +9,6 @@ pyodbc
 --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.10.3/constraints-3.11.txt"
 
 # Formatters / linters
-ruff
+ruff==0.6.9
 sqlfluff[snowflake]
 pre-commit
