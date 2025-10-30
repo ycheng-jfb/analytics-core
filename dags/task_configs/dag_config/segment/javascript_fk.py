@@ -59,9 +59,7 @@ javascript_fk_schema = StructType(
                         True,
                     ),
                     StructField("locale", StringType(), True),
-                    StructField(
-                        "loyalty_membership_reward_tier_id", StringType(), True
-                    ),
+                    StructField("loyalty_membership_reward_tier_id", StringType(), True),
                     StructField("loyalty_membership_tier_points", LongType(), True),
                     StructField("membership_id", LongType(), True),
                     StructField("membership_level_group_id", LongType(), True),
@@ -92,12 +90,8 @@ javascript_fk_schema = StructType(
                                     ArrayType(
                                         StructType(
                                             [
-                                                StructField(
-                                                    "description", StringType(), True
-                                                ),
-                                                StructField(
-                                                    "field", StringType(), True
-                                                ),
+                                                StructField("description", StringType(), True),
+                                                StructField("field", StringType(), True),
                                                 StructField("type", StringType(), True),
                                             ]
                                         )
@@ -129,9 +123,7 @@ javascript_fk_schema = StructType(
                         "custom_vars",
                         StructType(
                             [
-                                StructField(
-                                    "data_segment_campaign", StringType(), True
-                                ),
+                                StructField("data_segment_campaign", StringType(), True),
                                 StructField("data_segment_promo", StringType(), True),
                             ]
                         ),
@@ -185,16 +177,10 @@ javascript_fk_schema = StructType(
                                     StructField("avg_recommended", DoubleType(), True),
                                     StructField("bundle_alias", StringType(), True),
                                     StructField("bundle_name", StringType(), True),
-                                    StructField(
-                                        "bundle_product_id", StringType(), True
-                                    ),
+                                    StructField("bundle_product_id", StringType(), True),
                                     StructField("bundle_quantity", StringType(), True),
-                                    StructField(
-                                        "bundle_retail_price", StringType(), True
-                                    ),
-                                    StructField(
-                                        "bundle_sale_price", StringType(), True
-                                    ),
+                                    StructField("bundle_retail_price", StringType(), True),
+                                    StructField("bundle_sale_price", StringType(), True),
                                     StructField("bundle_url", StringType(), True),
                                     StructField("bundle_vip_price", StringType(), True),
                                     StructField("category", StringType(), True),
@@ -202,9 +188,7 @@ javascript_fk_schema = StructType(
                                     StructField("has_reviews", BooleanType(), True),
                                     StructField("image_url", StringType(), True),
                                     StructField("fpl_id", LongType(), True),
-                                    StructField(
-                                        "inventory_availability", LongType(), True
-                                    ),
+                                    StructField("inventory_availability", LongType(), True),
                                     StructField("is_bundle", BooleanType(), True),
                                     StructField("name", StringType(), True),
                                     StructField("position", LongType(), True),
@@ -268,9 +252,7 @@ javascript_fk_schema = StructType(
                     StructField("kid_names", ArrayType(StringType()), True),
                     StructField("kid_personal_styles", ArrayType(StringType()), True),
                     StructField("kid_top_sizes", ArrayType(StringType()), True),
-                    StructField(
-                        "loyalty_membership_reward_tier_id", StringType(), True
-                    ),
+                    StructField("loyalty_membership_reward_tier_id", StringType(), True),
                     StructField("loyalty_membership_tier_points", LongType(), True),
                     StructField("membership_id", LongType(), True),
                     StructField("membership_level_group_id", LongType(), True),

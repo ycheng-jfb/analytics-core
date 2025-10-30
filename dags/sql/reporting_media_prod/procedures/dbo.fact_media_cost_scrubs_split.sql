@@ -24,7 +24,7 @@ select coalesce(womens_pct_total,1) as pct_total_w,
        impressions - impressions_w as impressions_m,
        clicks - clicks_w as clicks_m,
        fmc.*
-from reporting_media_prod.dbo.vw_fact_media_cost fmc
+from reporting_media_prod.dbo.fact_media_cost_view fmc
 join edw_prod.data_model_jfb.dim_store ds on ds.store_id = fmc.store_id
 left join _scrubs_pct_womens s on s.date = to_date(fmc.media_cost_date)
 where is_scrubs_flag = true;
@@ -98,7 +98,7 @@ select channel,
        specialty_store,
        is_mens_flag,
        ifnull(is_scrubs_flag,false) as is_scrubs_flag
-from reporting_media_prod.dbo.vw_fact_media_cost
+from reporting_media_prod.dbo.fact_media_cost_view
 where ifnull(is_scrubs_flag,false) = false
 union
 select * from _scrubs_spend_split;

@@ -18,16 +18,16 @@ from include.utils.acquisition.table_config import TableConfig as AcquisitionTab
 from include.utils.snowflake import Column
 
 default_args = {
-    "start_date": pendulum.datetime(2019, 11, 19, tz="America/Los_Angeles"),
-    "retries": 0,
-    "owner": owners.data_integrations,
+    'start_date': pendulum.datetime(2019, 11, 19, tz='America/Los_Angeles'),
+    'retries': 0,
+    'owner': owners.data_integrations,
     "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
-    dag_id="airflow_test_dag",
+    dag_id='airflow_test_dag',
     default_args=default_args,
-    schedule="0 0 * * *",
+    schedule='0 0 * * *',
     catchup=False,
     max_active_tasks=1000,
     max_active_runs=1,
@@ -54,9 +54,7 @@ column_list_fb = [
     Column("spend", "DECIMAL(38, 8)"),
     Column("date_start", "DATE", uniqueness=True),
     Column("date_stop", "DATE", uniqueness=True),
-    Column(
-        "hourly_stats_aggregated_by_advertiser_time_zone", "VARCHAR", uniqueness=True
-    ),
+    Column("hourly_stats_aggregated_by_advertiser_time_zone", "VARCHAR", uniqueness=True),
     Column("api_call_timestamp", "TIMESTAMP_NTZ(3)", delta_column=1),
 ]
 
@@ -97,58 +95,56 @@ column_list_fb = [
 # )
 # acquisition process check
 upsert_table_config = AcquisitionTableConfig(
-    database="ultrawarehouse",
-    schema="dbo",
-    table="outbound_plan_log",
+    database='ultrawarehouse',
+    schema='dbo',
+    table='outbound_plan_log',
     column_list=[
-        Column("outbound_plan_log_id", "INT", uniqueness=True),
-        Column("outbound_plan_id", "INT"),
-        Column("run_datetime", "TIMESTAMP_NTZ(3)"),
-        Column("datetime_added", "TIMESTAMP_NTZ(3)", delta_column=1),
-        Column("datetime_modified", "TIMESTAMP_NTZ(3)", delta_column=0),
+        Column('outbound_plan_log_id', 'INT', uniqueness=True),
+        Column('outbound_plan_id', 'INT'),
+        Column('run_datetime', 'TIMESTAMP_NTZ(3)'),
+        Column('datetime_added', 'TIMESTAMP_NTZ(3)', delta_column=1),
+        Column('datetime_modified', 'TIMESTAMP_NTZ(3)', delta_column=0),
     ],
     is_full_upsert=True,
 )
 
 acquisition_table_config = AcquisitionTableConfig(
-    database="ultrawarehouse",
-    schema="dbo",
-    table="outbound_preallocation",
-    watermark_column="datetime_modified",
+    database='ultrawarehouse',
+    schema='dbo',
+    table='outbound_preallocation',
+    watermark_column='datetime_modified',
     column_list=[
-        Column("outbound_preallocation_id", "INT", uniqueness=True),
-        Column("warehouse_id", "INT"),
-        Column("case_id", "INT"),
-        Column("lpn_id", "INT"),
-        Column("datetime_added", "TIMESTAMP_NTZ(3)", delta_column=1),
-        Column("datetime_modified", "TIMESTAMP_NTZ(3)", delta_column=0),
-        Column("preallocation_type", "VARCHAR(255)"),
+        Column('outbound_preallocation_id', 'INT', uniqueness=True),
+        Column('warehouse_id', 'INT'),
+        Column('case_id', 'INT'),
+        Column('lpn_id', 'INT'),
+        Column('datetime_added', 'TIMESTAMP_NTZ(3)', delta_column=1),
+        Column('datetime_modified', 'TIMESTAMP_NTZ(3)', delta_column=0),
+        Column('preallocation_type', 'VARCHAR(255)'),
     ],
 )
 
 sheets = [
     SheetConfig(
-        sheet_name="test",
-        schema="excel",
-        table="test_table",
+        sheet_name='test',
+        schema='excel',
+        table='test_table',
         header_rows=1,
         column_list=[
-            Column("comparison_type", "STRING", uniqueness=True),
-            Column("issued_datetime", "DATETIME"),
-            Column("month", "DATE", uniqueness=True),
-            Column("bu", "STRING", uniqueness=True),
-            Column("membership_credit_charged_count", "NUMBER(19,4)"),
-            Column("update_timestamp", "TIMESTAMP_LTZ(3)", delta_column=True),
+            Column('comparison_type', 'STRING', uniqueness=True),
+            Column('issued_datetime', 'DATETIME'),
+            Column('month', 'DATE', uniqueness=True),
+            Column('bu', 'STRING', uniqueness=True),
+            Column('membership_credit_charged_count', 'NUMBER(19,4)'),
+            Column('update_timestamp', 'TIMESTAMP_LTZ(3)', delta_column=True),
         ],
-        add_meta_cols={
-            "update_timestamp": lazy_object_proxy.Proxy(pendulum.DateTime.utcnow)
-        },
+        add_meta_cols={'update_timestamp': lazy_object_proxy.Proxy(pendulum.DateTime.utcnow)},
     ),
 ]
 
 
 def get_next_execution_date(execution_date, context):
-    return context["data_interval_end"]
+    return context['data_interval_end']
 
 
 with dag:
@@ -181,37 +177,37 @@ with dag:
     """  # Temporarily fixed stage name
 
     to_snowflake = SnowflakeCopyOperator(
-        task_id="test-no-file-copy-messaging",
+        task_id='test-no-file-copy-messaging',
         snowflake_conn_id=conn_ids.Snowflake.default.value,
         role=snowflake_roles.etl_service_account,
         sql_or_path=sql_test_cmd,
-        email_to_when_no_file="jlorence@techstyle.com",
+        email_to_when_no_file='jlorence@techstyle.com',
     )
 
     snowflake_op = SnowflakeSqlOperator(
-        task_id="test-snowflake-op",
-        sql_or_path="select current_database() as my_db",
-        database="reporting",
+        task_id='test-snowflake-op',
+        sql_or_path='select current_database() as my_db',
+        database='reporting',
     )
 
     to_s3 = MsSqlTableToS3CsvOperator(
-        bucket="tsos-da-int-inbound-dev",  # Hardcoded temporarily to resolve prod conn_id issue
-        key="test/test_dag/s3_op_test.tsv.gz",
+        bucket='tsos-da-int-inbound-dev',  # Hardcoded temporarily to resolve prod conn_id issue
+        key='test/test_dag/s3_op_test.tsv.gz',
         s3_conn_id=conn_ids.S3.tsos_da_int_dev,
         mssql_conn_id=conn_ids.MsSql.bento_prod_reader_app_airflow,
-        src_schema="dbo",
-        src_table="store",
-        src_database="ultramerchant",
-        watermark_process_name="test-process",
-        watermark_namespace="test-dag",
-        task_id="test-mssql-s3",
+        src_schema='dbo',
+        src_table='store',
+        src_database='ultramerchant',
+        watermark_process_name='test-process',
+        watermark_namespace='test-dag',
+        task_id='test-mssql-s3',
     )
 
     snowflake_to_S3 = SnowflakeToS3Operator(
         task_id="snowflake_to_S3",
         sql_or_path="SELECT * FROM med_db_staging.export.first_party_lists limit 10",
         s3_conn_id=conn_ids.S3.tsos_da_int_dev,
-        bucket="tsos-da-int-inbound-dev",  # Hardcoded temporarily to resolve prod conn_id issue
+        bucket='tsos-da-int-inbound-dev',  # Hardcoded temporarily to resolve prod conn_id issue
         key="test/test_dag/SnowflakeToS3Operator_test.csv.gz",
         field_delimiter=",",
         compression="gzip",
@@ -228,7 +224,7 @@ with dag:
         """,
     )
 
-    s3_prefix = "test/conversations"
+    s3_prefix = 'test/conversations'
     column_list = [
         Column("brand", "VARCHAR(55)", uniqueness=True, source_name="Brand"),
     ]
@@ -262,24 +258,24 @@ with dag:
     trigger_child_dag = TFGTriggerDagRunOperator(
         task_id="trigger_test_child_dag",
         trigger_dag_id="airflow_test_child_dag",
-        execution_date="{{ data_interval_end }}",
+        execution_date='{{ data_interval_end }}',
         skip_downstream_if_paused=True,
     )
     await_child_test_child_dag = ExternalTaskSensor(
         task_id="await_child_test_child_dag",
         external_dag_id="airflow_test_child_dag",
-        mode="reschedule",
+        mode='reschedule',
         execution_date_fn=get_next_execution_date,
         poke_interval=60 * 5,
     )
     trigger_child_dag >> await_child_test_child_dag
 
     def print_args(next_exec_date, pst_now):
-        print("next execution date:", next_exec_date)
-        print("macros tfgdt:", pst_now)
+        print('next execution date:', next_exec_date)
+        print('macros tfgdt:', pst_now)
 
     test_template_macros = PythonOperator(
-        task_id="test_template_macros",
+        task_id='test_template_macros',
         python_callable=print_args,
-        op_args=["{{data_interval_end}}", "{{ macros.tfgdt.pstnow().date() }}"],
+        op_args=['{{data_interval_end}}', "{{ macros.tfgdt.pstnow().date() }}"],
     )

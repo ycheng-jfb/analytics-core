@@ -35,7 +35,7 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2019, 6, 10, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.media_analytics,
+    'owner': owners.media_analytics,
     "email": email_lists.airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "sla": timedelta(hours=1),
@@ -45,7 +45,7 @@ default_args = {
 
 
 dag = DAG(
-    dag_id="media_inbound_blisspoint_hourly_spend",
+    dag_id='media_inbound_blisspoint_hourly_spend',
     default_args=default_args,
     schedule="25 5 * * *",
     catchup=False,
@@ -56,8 +56,8 @@ dag = DAG(
 
 with dag:
     database = "lake"
-    schema = "blisspoint"
-    table = "hourly_spend"
+    schema = 'blisspoint'
+    table = 'hourly_spend'
     full_table_name = f"{database}.{schema}.{table}"
     execution_date = "{{ ds_nodash }}"
     pre_merge_command = f"""DELETE FROM {full_table_name}
@@ -72,8 +72,8 @@ with dag:
         schema=schema,
         table=table,
         column_list=column_list,
-        files_path=f"{stages.tsos_da_int_vendor}/inbound/svc_blisspoint_prod_s3/blisspoint_hourly_spend_v4/",
-        copy_config=CopyConfigCsv(field_delimiter=",", header_rows=1, skip_pct=1),
+        files_path=f'{stages.tsos_da_int_vendor}/inbound/svc_blisspoint_prod_s3/blisspoint_hourly_spend_v4/',
+        copy_config=CopyConfigCsv(field_delimiter=',', header_rows=1, skip_pct=1),
         trigger_rule="all_done",
         pre_merge_command=pre_merge_command,
     )

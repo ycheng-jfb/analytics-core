@@ -3,10 +3,7 @@ from airflow.models import DAG
 
 from include.airflow.callbacks.slack import slack_failure_media
 from include.airflow.operators.creatoriq import CreatorIQToS3Operator
-from include.airflow.operators.snowflake_load import (
-    Column,
-    SnowflakeIncrementalLoadOperator,
-)
+from include.airflow.operators.snowflake_load import Column, SnowflakeIncrementalLoadOperator
 from include.config import owners, s3_buckets, stages, conn_ids
 from include.config.email_lists import airflow_media_support
 from include.utils.snowflake import CopyConfigCsv
@@ -32,7 +29,7 @@ column_list = [
 DEFAULT_ARGS = {
     "start_date": pendulum.datetime(2020, 11, 13, 0, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.media_analytics,
+    'owner': owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }
@@ -57,15 +54,13 @@ class CreatorIQPullCampaignListToS3Operator(CreatorIQToS3Operator):
         params = {"size": 1000, "page": 1}
         while True:
             response = self.hook.make_request(
-                url="https://api.creatoriq.com/api/campaigns", params=params
+                url='https://api.creatoriq.com/api/campaigns', params=params
             )
             data = response.json()
-            for row in data["CampaignCollection"]:
-                yield row["Campaign"]
+            for row in data['CampaignCollection']:
+                yield row['Campaign']
             if data["total"] >= params["page"] * params["size"]:
-                print(
-                    f"Pulled {params['page'] * params['size']} records of {data['total']}"
-                )
+                print(f"Pulled {params['page'] * params['size']} records of {data['total']}")
                 params["page"] += 1
             else:
                 break
@@ -79,7 +74,7 @@ with dag:
         table=TABLE,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{S3_PREFIX}",
-        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=1),
+        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=1),
         trigger_rule="all_done",
     )
     op = CreatorIQPullCampaignListToS3Operator(

@@ -10,16 +10,16 @@ default_args = {
 
 # from airflow.
 dag = DAG(
-    dag_id="astronomer_test_dag",
+    dag_id='astronomer_test_dag',
     default_args=default_args,
-    schedule="@once",
+    schedule='@once',
     start_date=datetime(2020, 1, 1),
     catchup=False,
 )
 
 
 def test():
-    raise Exception("Oops.")
+    raise Exception('Oops.')
 
 
-test = PythonOperator(task_id="wow", dag=dag, python_callable=test)
+test = PythonOperator(task_id='wow', dag=dag, python_callable=test)

@@ -257,7 +257,7 @@ select st.store_brand as business_unit,
        st.store_currency as currency,
        sum(fmc.cost * coalesce(fmc.local_store_conv_rate,1))::decimal(18,4) as spend_local,
        sum(fmc.cost * coalesce(fmc.spend_date_usd_conv_rate,1))::decimal(18,4) as spend_usd
-from reporting_media_prod.dbo.vw_fact_media_cost fmc
+from reporting_media_prod.dbo.fact_media_cost_view fmc
 join edw_prod.data_model_jfb.dim_store st on st.store_id = fmc.store_id
 where channel is not null
     and lower(fmc.targeting) not in ('vip retargeting','purchase retargeting','free alpha')
@@ -279,8 +279,8 @@ select
     date,
     store,
     is_fk_free_trial,
-    is_fl_mens_vip,
-    is_fl_scrubs_customer,
+    coalesce(is_fl_mens_vip, FALSE) as is_fl_mens_vip,
+    coalesce(is_fl_scrubs_customer, FALSE) as is_fl_scrubs_customer,
     retail_lead,
     retail_vip,
     retail_customer,
@@ -413,7 +413,7 @@ select s.store_brand as business_unit,
 
 from reporting_media_prod.attribution.acquisition_unattributed_utm_cac au
 join edw_prod.data_model_jfb.dim_store s on s.store_id = au.store_id
-left join reporting_media_base_prod.dbo.vw_med_hdyh_mapping_tsos h on h.hdyh_value = lower(replace(au.howdidyouhear,' ',''))
+left join reporting_media_base_prod.dbo.vw_med_hdyh_mapping h on h.hdyh_value = lower(replace(au.howdidyouhear,' ',''))
 where lower(concat(s.store_brand, ' ', s.store_country)) != 'justfab nl'
 group by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15;
 
@@ -442,8 +442,8 @@ select business_unit,
        country,
        store,
        is_fk_free_trial,
-       is_fl_mens_vip,
-       is_fl_scrubs_customer,
+       coalesce(is_fl_mens_vip, FALSE) as is_fl_mens_vip,
+       coalesce(is_fl_scrubs_customer, FALSE) as is_fl_scrubs_customer,
        retail_lead,
        retail_vip,
        retail_customer,
@@ -987,7 +987,7 @@ select
     activating_vip_product_gross_revenue_usd,
     activating_vip_product_margin_pre_return_local,
     activating_vip_product_margin_pre_return_usd,
-    case when lower(channel_name) = 'meta' then 1 else sequence end  as channel_sequence_new,
+    sequence  as channel_sequence_new,
     meta_create_datetime,
     meta_update_datetime
 

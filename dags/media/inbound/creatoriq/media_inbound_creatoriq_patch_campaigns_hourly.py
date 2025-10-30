@@ -9,7 +9,7 @@ from include.config.email_lists import airflow_media_support
 default_args = {
     "start_date": pendulum.datetime(2020, 12, 10, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.media_analytics,
+    'owner': owners.media_analytics,
     "email": airflow_media_support,
 }
 

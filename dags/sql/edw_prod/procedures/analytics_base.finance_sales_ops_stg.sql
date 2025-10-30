@@ -157,40 +157,40 @@ INSERT INTO _finance_sales_ops__customer_base (customer_id, date)
 SELECT DISTINCT fr.customer_id, fr.date
 FROM (
     SELECT customer_id, order_local_datetime::DATE AS date
-    FROM edw_prod.stg.fact_order
+    FROM edw_prod.data_model_jfb.fact_order
 
     UNION ALL
 
     SELECT customer_id, order_completion_local_datetime::DATE AS date
-    FROM edw_prod.stg.fact_order
+    FROM edw_prod.data_model_jfb.fact_order
     WHERE order_completion_local_datetime IS NOT NULL
 
     UNION ALL
 
     SELECT customer_id, payment_transaction_local_datetime::DATE AS date
-    FROM edw_prod.stg.fact_order
+    FROM edw_prod.data_model_jfb.fact_order
     WHERE payment_transaction_local_datetime IS NOT NULL
 
     UNION ALL
 
     SELECT customer_id, refund_completion_local_datetime::DATE AS date
-    FROM edw_prod.stg.fact_refund
+    FROM edw_prod.data_model_jfb.fact_refund
 
     UNION ALL
 
     SELECT customer_id, chargeback_datetime::DATE AS date
-    FROM edw_prod.stg.fact_chargeback
+    FROM edw_prod.data_model_jfb.fact_chargeback
 
     UNION ALL
 
     SELECT customer_id, return_completion_local_datetime::DATE AS date
-    FROM edw_prod.stg.fact_return_line
+    FROM edw_prod.data_model_jfb.fact_return_line
 
     UNION ALL
 
     SELECT dc.customer_id, fce.credit_activity_local_datetime::DATE AS date
-    FROM edw_prod.stg.fact_credit_event AS fce
-        JOIN edw_prod.stg.dim_credit AS dc
+    FROM edw_prod.data_model_jfb.fact_credit_event AS fce
+        JOIN edw_prod.data_model_jfb.dim_credit AS dc
             ON dc.credit_key = fce.credit_key
 
     UNION ALL
@@ -198,7 +198,7 @@ FROM (
     SELECT IFF(occ.is_gift_order = TRUE, occ.new_customer_id, occ.original_customer_id) AS customer_id,
            o.order_local_datetime::DATE AS date
     FROM edw_prod.reference.order_customer_change AS occ
-        JOIN edw_prod.stg.fact_order AS o
+        JOIN edw_prod.data_model_jfb.fact_order AS o
             ON o.order_id = occ.order_id
 
     UNION ALL
@@ -206,7 +206,7 @@ FROM (
     SELECT IFF(occ.is_gift_order = TRUE, occ.new_customer_id, occ.original_customer_id) AS customer_id,
            o.order_completion_local_datetime::DATE AS date
     FROM edw_prod.reference.order_customer_change AS occ
-        JOIN edw_prod.stg.fact_order AS o
+        JOIN edw_prod.data_model_jfb.fact_order AS o
             ON o.order_id = occ.order_id
     WHERE o.order_completion_local_datetime IS NOT NULL
 
@@ -215,7 +215,7 @@ FROM (
     SELECT IFF(occ.is_gift_order = TRUE, occ.new_customer_id, occ.original_customer_id) AS customer_id,
            fr.refund_completion_local_datetime::DATE AS date
     FROM edw_prod.reference.order_customer_change AS occ
-        JOIN edw_prod.stg.fact_refund AS fr
+        JOIN edw_prod.data_model_jfb.fact_refund AS fr
             ON fr.order_id = occ.order_id
 
     UNION ALL
@@ -223,7 +223,7 @@ FROM (
     SELECT IFF(occ.is_gift_order = TRUE, occ.new_customer_id, occ.original_customer_id) AS customer_id,
            fc.chargeback_datetime::DATE AS date
     FROM edw_prod.reference.order_customer_change AS occ
-        JOIN edw_prod.stg.fact_chargeback AS fc
+        JOIN edw_prod.data_model_jfb.fact_chargeback AS fc
             ON fc.order_id = occ.order_id
 
     UNION ALL
@@ -231,7 +231,7 @@ FROM (
     SELECT IFF(occ.is_gift_order = TRUE, occ.new_customer_id, occ.original_customer_id) AS customer_id,
            frl.return_completion_local_datetime::DATE AS date
     FROM edw_prod.reference.order_customer_change AS occ
-        JOIN edw_prod.stg.fact_return_line AS frl
+        JOIN edw_prod.data_model_jfb.fact_return_line AS frl
             ON frl.order_id = occ.order_id
 
     UNION ALL
@@ -447,7 +447,7 @@ ORDER BY fr.customer_id, fr.date;
 
 CREATE OR REPLACE TEMP TABLE _customer_date AS
 SELECT
-    edw_prod.stg.UDF_UNCONCAT_BRAND(base.customer_id) AS customer_id,
+    base.customer_id AS customer_id,
     base.date,
     IFF(dc.gender = 'M' AND dc.registration_local_datetime >= '2020-01-01','M','F')::VARCHAR(10) AS gender,
     IFNULL(dc.is_cross_promo,FALSE) AS is_cross_promo,
@@ -455,7 +455,7 @@ SELECT
     IFNULL(dc.is_scrubs_customer,FALSE) AS is_scrubs_customer
 FROM _finance_sales_ops__customer_base AS base
     LEFT JOIN edw_prod.data_model_jfb.dim_customer AS dc
-        ON dc.customer_id = edw_prod.stg.UDF_UNCONCAT_BRAND(base.customer_id)
+        ON dc.customer_id = base.customer_id
 where
     base.date >= $start_date
 ORDER BY
@@ -482,7 +482,7 @@ WHERE a.is_core_store = TRUE;
 -- DA-18807, DA-18808
 CREATE OR REPLACE TEMP TABLE _customer_list_gender_fss AS
 SELECT DISTINCT
-    edw_prod.stg.UDF_UNCONCAT_BRAND(customer_id) AS customer_id,
+    customer_id,
     IFF(gender = 'M' AND registration_local_datetime >= '2020-01-01','M','F') AS gender,
     IFNULL(finance_specialty_store,'None') AS finance_specialty_store,
     IFNULL(is_cross_promo,FALSE) AS is_cross_promo
@@ -720,7 +720,7 @@ WHERE
     AND LOWER(os.order_status) IN ('success', 'pending');
 -- SELECT date, date_object, customer_id, order_id, count(1) FROM _order_base GROUP BY 1, 2, 3, 4 having count(1) > 1;
 
-select * from _order_base;
+--select * from _order_base;
 
 CREATE OR REPLACE TEMPORARY TABLE _product_orders as
 WITH _product_orders AS (
@@ -3696,7 +3696,7 @@ SELECT
     is_cross_promo,
     gender,
     is_reactivated_vip,
-    is_retail_vip,
+    coalesce(is_retail_vip, false) as is_retail_vip,
     finance_specialty_store,
     is_scrubs_customer,
     reporting_landed_cost_local_amount,

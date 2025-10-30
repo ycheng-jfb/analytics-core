@@ -1,7 +1,7 @@
 CREATE OR REPLACE TEMPORARY TABLE _giftco_transfer_key AS
 SELECT dcf.original_credit_key
 FROM lake_jfb_view.ultra_merchant.membership_token_transaction mtt
-         JOIN edw_prod.data_model_jfb.dim_credit dcf
+         JOIN edw_prod.new_stg.dim_credit dcf
               ON mtt.membership_token_id = dcf.credit_id
 WHERE mtt.membership_token_transaction_type_id = 50
   AND credit_type = 'Token';
@@ -22,10 +22,10 @@ SELECT dcf.credit_key,
                AND dcf.original_credit_issued_local_datetime::DATE < '2018-12-01'
                THEN 'Membership Credit to Giftco'
            ELSE 'None' END AS giftco_transfer_status
-FROM edw_prod.data_model_jfb.dim_credit dcf
-         JOIN edw_prod.data_model.dim_store st ON st.store_id = dcf.store_id
+FROM edw_prod.new_stg.dim_credit dcf
+         JOIN edw_prod.data_model_jfb.dim_store st ON st.store_id = dcf.store_id
          LEFT JOIN edw_prod.data_model_jfb.dim_customer dc
-                   ON dcf.customer_id = dc.customer_id
+                   ON dcf.original_customer_id = dc.customer_id
          LEFT JOIN _giftco_transfer_key gtk
                    ON dcf.original_credit_key = gtk.original_credit_key;
 
@@ -54,14 +54,14 @@ SELECT CASE
        SUM(fce.credit_activity_gross_vat_local_amount *
            dcf.credit_issued_usd_conversion_rate)                                    AS usd_gross_vat_activity_amount,
        SUM(fce.credit_activity_local_amount * dcf.credit_issued_usd_conversion_rate) AS usd_net_vat_activity_amount
-FROM edw_prod.data_model_jfb.dim_credit dcf
+FROM edw_prod.new_stg.dim_credit dcf
          JOIN edw_prod.data_model_jfb.dim_customer dc
-              ON dc.customer_id = dcf.customer_id
-         JOIN edw_prod.data_model_jfb.dim_credit dcf2 ON dcf.original_credit_key = dcf2.credit_key
+              ON dc.customer_id = dcf.original_customer_id
+         JOIN edw_prod.new_stg.dim_credit dcf2 ON dcf.original_credit_key = dcf2.credit_key
          LEFT JOIN _giftco_transfer_status gts ON dcf.credit_key = gts.credit_key
-         JOIN edw_prod.data_model_jfb.dim_customer dc2 ON dc2.customer_id = dcf2.customer_id
-         JOIN edw_prod.data_model_jfb.fact_credit_event fce
-              ON dcf.credit_key = fce.credit_key -- join to get all activity (need join to be on new to capture all activity, we just pull attributes from the original)
+         JOIN edw_prod.data_model_jfb.dim_customer dc2 ON dc2.customer_id = dcf2.original_customer_id
+         JOIN EDW_PROD.NEW_STG.FACT_CREDIT_EVENT_all fce
+              ON dcf.credit_key :: varchar = fce.credit_key :: varchar -- join to get all activity (need join to be on new to capture all activity, we just pull attributes from the original)
          JOIN edw_prod.data_model_jfb.dim_store st
               ON st.store_id = dcf.store_id
          JOIN edw_prod.data_model_jfb.dim_store st2

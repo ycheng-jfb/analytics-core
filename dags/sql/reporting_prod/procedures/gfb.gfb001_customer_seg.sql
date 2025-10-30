@@ -1545,6 +1545,24 @@ FROM lake_jfb_view.ultra_merchant.membership_detail md
               ON ac.customer_id = m.customer_id
 WHERE md.name ILIKE 'FK_Lead_migration%';
 
+CREATE OR REPLACE TEMPORARY TABLE _JF_2025_acquisition_offers AS
+SELECT DISTINCT pd.customer_id
+    , ac.vip_cohort
+    , 'JF 2025 Acquisition Offers' AS custom_segment_category
+    , CASE
+            WHEN pd.promo_code_by_order ILIKE ANY ('%LEADDAY1ALLBOOTS10NEW%','%SHOES10MEN%','%SHOES10GIRLS%','%SHOES10BOYS%') then '$10 Shoes'
+            WHEN (pd.promo_code_by_order ILIKE ANY ('%75OFF%')) then '75% Off'
+       END AS custom_segment
+FROM gfb.gfb011_promo_data_set pd
+         JOIN _all_customers ac
+              ON ac.customer_id = pd.customer_id
+WHERE pd.business_unit = 'JUSTFAB'
+    AND pd.region = 'NA'
+    AND pd.order_type = 'vip activating'
+    AND pd.promo_code_by_order ILIKE ANY ('%75OFF%','%LEADDAY1ALLBOOTS10NEW%','%SHOES10MEN%','%SHOES10GIRLS%','%SHOES10BOYS%')
+    AND NOT(pd.promo_code_by_order ILIKE ANY ('%D8_75OFF%', '%D37_75OFF%','%FIRSTPAIR10DAY8%','GENSITEWIDE75OFF'))
+    AND pd.order_date >= '2025-04-01';
+
 CREATE OR REPLACE TRANSIENT TABLE reporting_prod.gfb.gfb001_customer_seg AS
 SELECT ac.customer_id
      , ac.vip_cohort
@@ -1806,7 +1824,23 @@ FROM _activating_sub_brand
 UNION
 
 SELECT *
-FROM _fk_sd_lead_vip_migration;
+FROM _fk_sd_lead_vip_migration
+
+UNION
+
+SELECT ac.customer_id
+     , ac.vip_cohort
+     , 'All VIPs by Brand' AS custom_segment_category
+     , (CASE
+            WHEN store_brand_name = 'JustFab' THEN 'JUSTFAB'
+            WHEN store_brand_name = 'ShoeDazzle' THEN 'SHOEDAZZLE'
+            WHEN store_brand_name = 'FabKids' THEN 'FABKIDS' END) AS custom_segment
+FROM _all_customers ac
+
+UNION
+
+SELECT *
+FROM _JF_2025_acquisition_offers;;
 
 CREATE OR REPLACE TRANSIENT TABLE reporting_prod.gfb.gfb001_customer_seg_count AS
 SELECT UPPER(ac.store_brand_name)     AS store_brand_name

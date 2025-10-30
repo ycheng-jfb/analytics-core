@@ -9,7 +9,7 @@ SELECT CASE
        -1                                                       AS vip_store_id,
        cast(0 AS BOOLEAN)                                       AS is_retail_vip,
        IFF(dc.gender = 'M' AND dc.registration_local_datetime >= '2020-01-01','M','F') AS customer_gender,
-       dc.is_cross_promo                                        AS is_cross_promo,
+       coalesce(dc.is_cross_promo, FALSE)                                        AS is_cross_promo,
        dc.finance_specialty_store                               AS finance_specialty_store,
        l.is_retail_registration                                 AS is_retail_registration,
        IFF(st.store_brand = 'Fabletics' AND dc.is_scrubs_customer = TRUE, TRUE, FALSE) AS is_scrubs_customer,
@@ -30,7 +30,7 @@ GROUP BY event_store_id,
          vip_store_id,
          is_retail_vip,
          customer_gender,
-         is_cross_promo,
+         coalesce(dc.is_cross_promo, FALSE),
          finance_specialty_store,
          is_retail_registration,
          IFF(st.store_brand = 'Fabletics' AND dc.is_scrubs_customer = TRUE, TRUE, FALSE),
@@ -44,11 +44,12 @@ GROUP BY event_store_id,
 CREATE OR REPLACE TEMPORARY TABLE _acquisition_media_stg AS
 SELECT dc.customer_id,
        IFF(dc.gender = 'M' AND dc.registration_local_datetime >= '2020-01-01','M','F') AS gender,
-       dc.is_cross_promo,
+       coalesce(dc.is_cross_promo, FALSE) as is_cross_promo,
        dc.finance_specialty_store,
        fr.registration_local_datetime,
        fr.is_retail_registration,
-       IFF(st.store_brand = 'Fabletics' AND dc.is_scrubs_customer = TRUE, TRUE, FALSE) AS is_scrubs_customer,
+--       IFF(st.store_brand = 'Fabletics' AND dc.is_scrubs_customer = TRUE, TRUE, FALSE) AS is_scrubs_customer,
+       FALSE as is_scrubs_customer,
        IFNULL(fr.registration_channel,'unclassified')                                  AS registration_channel,
        IFF(fr.registration_subchannel = '' or fr.registration_subchannel is null,'unclassified',fr.registration_subchannel) AS registration_subchannel,
        IFNULL(fr.how_did_you_hear,'Unknown')                                           AS how_did_you_hear,
@@ -58,10 +59,10 @@ SELECT dc.customer_id,
        fa.activation_local_datetime,
        fa.cancellation_local_datetime,
        fa.cancel_type,
-       fa.sub_store_id,
-       fa.is_retail_vip,
-       fa.is_reactivated_vip,
-       fa.is_retail_varsity_vip,
+       coalesce(fa.sub_store_id, fa.store_id) as sub_store_id,
+       coalesce(fa.is_retail_vip, FALSE) as is_retail_vip,
+       coalesce(fa.is_reactivated_vip, FALSE) as is_reactivated_vip,
+       coalesce(fa.is_retail_varsity_vip, FALSE) as is_retail_varsity_vip,
        fa.store_id AS activation_store_id
 FROM edw_prod.data_model_jfb.fact_activation fa
          JOIN edw_prod.data_model_jfb.fact_registration fr
@@ -69,7 +70,8 @@ FROM edw_prod.data_model_jfb.fact_activation fa
                   AND IFNULL(fr.is_secondary_registration, FALSE) = FALSE
                   AND IFNULL(fr.is_fake_retail_registration, FALSE) = FALSE
          JOIN edw_prod.data_model_jfb.dim_customer dc ON dc.customer_id = fa.customer_id
-         JOIN edw_prod.data_model_jfb.dim_store st ON st.store_id = fa.sub_store_id;
+--         JOIN edw_prod.data_model_jfb.dim_store st ON st.store_id = fa.sub_store_id
+;
 
 
 CREATE OR REPLACE TEMPORARY TABLE _vips_from_leads AS
@@ -489,7 +491,7 @@ SELECT IFF(st2.store_id = 41, 26, st2.store_id)                              AS 
        CAST(media_cost_date AS DATE)                                         AS date,
        SUM(fmc.cost * fmc.spend_date_usd_conv_rate)                          AS media_spend_usd,
        SUM(fmc.cost * fmc.local_store_conv_rate)                             AS media_spend_local
-FROM reporting_media_prod.dbo.vw_fact_media_cost fmc
+FROM reporting_media_prod.dbo.fact_media_cost_view fmc
          JOIN edw_prod.data_model_jfb.dim_store st2 ON st2.store_id = fmc.store_id -- will ensure we get no specialty stores
 WHERE LOWER(fmc.targeting) NOT IN ('vip retargeting', 'purchase retargeting', 'free alpha')
 AND  CAST(fmc.media_cost_date AS DATE) < DATEADD(DAY, 1, current_date())

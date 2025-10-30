@@ -13,7 +13,7 @@ SELECT clvmc.month_date,
        clvmc.gender,
        vip_cohort_month_date,
        ROW_NUMBER() OVER (PARTITION BY clvmc.month_date, clvmc.customer_id, clvmc.store_id ORDER BY vip_cohort_month_date DESC) AS rnk
-FROM edw_prod.analytics_base.customer_lifetime_value_monthly_cust clvmc
+FROM edw_prod.analytics_base.customer_lifetime_value_monthly_cust_jfb clvmc
 WHERE is_failed_billing
   AND clvmc.month_date >= $process_from_date;
 
@@ -95,7 +95,7 @@ SELECT clvm.month_date,
        MAX(is_login)              AS is_login,
        MAX(is_failed_billing)     AS is_failed_billing,
        SUM(product_order_count)   AS product_order_count
-FROM edw_prod.analytics_base.customer_lifetime_value_monthly clvm
+FROM edw_prod.analytics_base.customer_lifetime_value_monthly_jfb clvm
          JOIN _distinct_failed_billing_customers dfbc ON clvm.customer_id = dfbc.customer_id
     AND clvm.store_id = dfbc.store_id
 GROUP BY clvm.month_date,

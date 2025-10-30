@@ -5,10 +5,7 @@ from airflow.models import DAG
 
 from include.airflow.callbacks.slack import slack_failure_media, slack_sla_miss_media
 from include.airflow.operators.smartly import SmartlyToS3Operator
-from include.airflow.operators.snowflake_load import (
-    Column,
-    SnowflakeIncrementalLoadOperator,
-)
+from include.airflow.operators.snowflake_load import Column, SnowflakeIncrementalLoadOperator
 from include.config import owners, stages, s3_buckets, conn_ids
 from include.config.email_lists import airflow_media_support
 from include.utils.snowflake import CopyConfigCsv
@@ -242,7 +239,7 @@ config = {
 default_args = {
     "start_date": pendulum.datetime(2019, 4, 3, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.media_analytics,
+    'owner': owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "sla": timedelta(hours=2),
@@ -269,7 +266,7 @@ with dag:
         schema="smartly",
         column_list=column_list,
         files_path=f"{stage_name}/{s3_prefix}",
-        copy_config=CopyConfigCsv(field_delimiter=",", header_rows=1, skip_pct=5),
+        copy_config=CopyConfigCsv(field_delimiter=',', header_rows=1, skip_pct=5),
     )
     batch_size = 20
     for x in range(0, len(account_ids), batch_size):

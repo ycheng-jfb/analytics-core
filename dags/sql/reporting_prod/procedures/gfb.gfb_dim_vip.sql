@@ -740,7 +740,7 @@ SELECT dv.business_unit
      , clvm.month_date
      , MAX(clvm.vip_cohort_month_date) AS vip_cohort
 FROM gfb.gfb_dim_vip dv
-         JOIN edw_prod.analytics_base.customer_lifetime_value_monthly clvm
+         JOIN edw_prod.analytics_base.customer_lifetime_value_monthly_jfb clvm
               ON clvm.meta_original_customer_id = dv.customer_id
                   AND clvm.store_id = dv.store_id
 GROUP BY dv.business_unit

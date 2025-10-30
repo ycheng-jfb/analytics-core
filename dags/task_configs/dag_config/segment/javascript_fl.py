@@ -24,12 +24,8 @@ javascript_fl_schema = StructType(
                         "campaign",
                         StructType(
                             [
-                                StructField(
-                                    "3bamp_3bamp_3butm_content", StringType(), True
-                                ),
-                                StructField(
-                                    "3bamp_3bamp_3butm_term", StringType(), True
-                                ),
+                                StructField("3bamp_3bamp_3butm_content", StringType(), True),
+                                StructField("3bamp_3bamp_3butm_term", StringType(), True),
                                 StructField("3bamp_3butm_campaign", StringType(), True),
                                 StructField("3bamp_3butm_content", StringType(), True),
                                 StructField("3bamp_3butm_medium", StringType(), True),
@@ -42,9 +38,7 @@ javascript_fl_schema = StructType(
                                 StructField("3butm_term", StringType(), True),
                                 StructField("amp_3butm_content", StringType(), True),
                                 StructField("amp_3butm_term", StringType(), True),
-                                StructField(
-                                    "amp_amp_amp_utm_content", StringType(), True
-                                ),
+                                StructField("amp_amp_amp_utm_content", StringType(), True),
                                 StructField("amp_amp_amp_utm_term", StringType(), True),
                                 StructField("amp_amp_utm_content", StringType(), True),
                                 StructField("amp_amp_utm_term", StringType(), True),
@@ -64,9 +58,7 @@ javascript_fl_schema = StructType(
                                 StructField("large", StringType(), True),
                                 StructField("medifableticsm", StringType(), True),
                                 StructField("medium", StringType(), True),
-                                StructField(
-                                    "mefabletics_20logindium", StringType(), True
-                                ),
+                                StructField("mefabletics_20logindium", StringType(), True),
                                 StructField("m_medium", StringType(), True),
                                 StructField("name", StringType(), True),
                                 StructField("nooverride", StringType(), True),
@@ -86,9 +78,7 @@ javascript_fl_schema = StructType(
                                 StructField("utm_medium", StringType(), True),
                                 StructField("utm_source", StringType(), True),
                                 StructField("utm_term", StringType(), True),
-                                StructField(
-                                    "medium%3Dpaid_social_media", StringType(), True
-                                ),
+                                StructField("medium%3Dpaid_social_media", StringType(), True),
                             ]
                         ),
                     ),
@@ -125,12 +115,8 @@ javascript_fl_schema = StructType(
                                     ArrayType(
                                         StructType(
                                             [
-                                                StructField(
-                                                    "description", StringType(), True
-                                                ),
-                                                StructField(
-                                                    "field", StringType(), True
-                                                ),
+                                                StructField("description", StringType(), True),
+                                                StructField("field", StringType(), True),
                                                 StructField("type", StringType(), True),
                                             ]
                                         )
@@ -177,9 +163,7 @@ javascript_fl_schema = StructType(
                                 StructField("size_top", StringType(), True),
                                 StructField("size_bra", StringType(), True),
                                 StructField(
-                                    "referrer",
-                                    MapType(StringType(), StringType(), True),
-                                    True,
+                                    "referrer", MapType(StringType(), StringType(), True), True
                                 ),
                             ]
                         ),
@@ -254,32 +238,22 @@ javascript_fl_schema = StructType(
                                     StructField("product_tag", StringType(), True),
                                     StructField("bundle_alias", StringType(), True),
                                     StructField("bundle_name", StringType(), True),
-                                    StructField(
-                                        "bundle_product_id", StringType(), True
-                                    ),
+                                    StructField("bundle_product_id", StringType(), True),
                                     StructField("bundle_quantity", StringType(), True),
-                                    StructField(
-                                        "bundle_retail_price", StringType(), True
-                                    ),
-                                    StructField(
-                                        "bundle_sale_price", StringType(), True
-                                    ),
+                                    StructField("bundle_retail_price", StringType(), True),
+                                    StructField("bundle_sale_price", StringType(), True),
                                     StructField("bundle_url", StringType(), True),
                                     StructField("bundle_vip_price", StringType(), True),
                                     StructField("category", StringType(), True),
                                     StructField("grid_label", StringType(), True),
                                     StructField("has_reviews", BooleanType(), True),
                                     StructField("image_url", StringType(), True),
-                                    StructField(
-                                        "inventory_availability", LongType(), True
-                                    ),
+                                    StructField("inventory_availability", LongType(), True),
                                     StructField("is_bundle", BooleanType(), True),
                                     StructField("name", StringType(), True),
                                     StructField("position", LongType(), True),
                                     StructField("price", DoubleType(), True),
-                                    StructField(
-                                        "product_display_reason", StringType(), True
-                                    ),
+                                    StructField("product_display_reason", StringType(), True),
                                     StructField("product_id", StringType(), True),
                                     StructField("psrc", StringType(), True),
                                     StructField("quantity", LongType(), True),
@@ -339,17 +313,11 @@ javascript_fl_schema = StructType(
             StructType(
                 [
                     StructField("-----", StringType(), True),
-                    StructField(
-                        "Anniversaire_(facultatif_-_JJ/MM)", StringType(), True
-                    ),
+                    StructField("Anniversaire_(facultatif_-_JJ/MM)", StringType(), True),
                     StructField("Birthday_(optional_-_dd/mm)", StringType(), True),
                     StructField("Birthday_(optional_-_mm/dd/yy)", StringType(), True),
                     StructField("Bottom_Size", StringType(), True),
-                    StructField(
-                        "Comment_avez-vous_entendu_parler_de_nous_?_",
-                        StringType(),
-                        True,
-                    ),
+                    StructField("Comment_avez-vous_entendu_parler_de_nous_?_", StringType(), True),
                     StructField(
                         "De_quelle_offre_réservée_aux_nouveaux_membres_VIP_souhaitez-vous_profiter_?",
                         StringType(),
@@ -359,9 +327,7 @@ javascript_fl_schema = StructType(
                     StructField("Hosengröße", StringType(), True),
                     StructField("How_did_you_hear_about_us?", StringType(), True),
                     StructField("Oberteil-Größe", StringType(), True),
-                    StructField(
-                        "Que_recherchez-vous_aujourd'hui_?", StringType(), True
-                    ),
+                    StructField("Que_recherchez-vous_aujourd'hui_?", StringType(), True),
                     StructField(
                         "Quelle_couleur_de_short_porteriez-vous_le_plus_souvent_?",
                         StringType(),
@@ -373,9 +339,7 @@ javascript_fl_schema = StructType(
                         True,
                     ),
                     StructField("Quelle_est_ta_taille_de_bas?", StringType(), True),
-                    StructField(
-                        "Quelle_est_votre_activité_préférée_?", StringType(), True
-                    ),
+                    StructField("Quelle_est_votre_activité_préférée_?", StringType(), True),
                     StructField("Quelle_est_votre_taille_de_haut?", StringType(), True),
                     StructField(
                         "Quelle_propriété_technique_privilégiez-vous_pour_vos_vêtements_?",
@@ -383,12 +347,8 @@ javascript_fl_schema = StructType(
                         True,
                     ),
                     StructField("Style_Auswahl:_was_shoppst_du?", StringType(), True),
-                    StructField(
-                        "Style_selector:_What_are_you_shopping_for?", StringType(), True
-                    ),
-                    StructField(
-                        "Sélecteur_de_style_:_Que_cherchez-vous_?", StringType(), True
-                    ),
+                    StructField("Style_selector:_What_are_you_shopping_for?", StringType(), True),
+                    StructField("Sélecteur_de_style_:_Que_cherchez-vous_?", StringType(), True),
                     StructField("Taille_de_bas", StringType(), True),
                     StructField("Taille_de_haut", StringType(), True),
                     StructField("Top_Size", StringType(), True),
@@ -401,59 +361,31 @@ javascript_fl_schema = StructType(
                     StructField("Welche_Größe_trägst_Du?", StringType(), True),
                     StructField("Welche_Hosengröße_hast_Du?", StringType(), True),
                     StructField(
-                        "Welche_Shorts-Farbe_würdest_Du_am_häufigsten_tragen?",
-                        StringType(),
-                        True,
+                        "Welche_Shorts-Farbe_würdest_Du_am_häufigsten_tragen?", StringType(), True
                     ),
                     StructField(
-                        "Welche_T-Shirt-Farbe_würdest_Du_am_häufigsten_tragen?",
-                        StringType(),
-                        True,
+                        "Welche_T-Shirt-Farbe_würdest_Du_am_häufigsten_tragen?", StringType(), True
                     ),
                     StructField(
-                        "Welches_Angebot_für_neue_VIPs_würdest_Du_gerne_nutzen?",
-                        StringType(),
-                        True,
+                        "Welches_Angebot_für_neue_VIPs_würdest_Du_gerne_nutzen?", StringType(), True
                     ),
-                    StructField(
-                        "Welches_Workout_machst_Du_am_liebsten?", StringType(), True
-                    ),
+                    StructField("Welches_Workout_machst_Du_am_liebsten?", StringType(), True),
                     StructField("What's_your_favourite_workout?", StringType(), True),
                     StructField("What's_your_go-to_workout?", StringType(), True),
                     StructField("What_are_you_shopping_for_today?", StringType(), True),
                     StructField("What_is_your_bottoms_size?", StringType(), True),
                     StructField("What_is_your_shirt_size?", StringType(), True),
                     StructField("What_is_your_waist_size?", StringType(), True),
-                    StructField(
-                        "What_tech_do_you_need_the_MOST_in_your_gear?",
-                        StringType(),
-                        True,
-                    ),
-                    StructField(
-                        "Which_New_VIP_Offer_do_you_prefer?", StringType(), True
-                    ),
+                    StructField("What_tech_do_you_need_the_MOST_in_your_gear?", StringType(), True),
+                    StructField("Which_New_VIP_Offer_do_you_prefer?", StringType(), True),
                     StructField("Which_New_VIP_Offer_do_you_want?", StringType(), True),
                     StructField("Which_Offer_do_you_want?", StringType(), True),
-                    StructField(
-                        "Which_color_shorts_would_you_wear_the_most?",
-                        StringType(),
-                        True,
-                    ),
-                    StructField(
-                        "Which_color_tee_would_you_wear_the_most?", StringType(), True
-                    ),
-                    StructField(
-                        "Which_colour_shorts_would_you_wear_the_most?",
-                        StringType(),
-                        True,
-                    ),
-                    StructField(
-                        "Which_colour_tee_would_you_wear_the_most?", StringType(), True
-                    ),
+                    StructField("Which_color_shorts_would_you_wear_the_most?", StringType(), True),
+                    StructField("Which_color_tee_would_you_wear_the_most?", StringType(), True),
+                    StructField("Which_colour_shorts_would_you_wear_the_most?", StringType(), True),
+                    StructField("Which_colour_tee_would_you_wear_the_most?", StringType(), True),
                     StructField("Wie_hast_Du_von_uns_erfahren?", StringType(), True),
-                    StructField(
-                        "Your_bottom_size_preference_(waist)", StringType(), True
-                    ),
+                    StructField("Your_bottom_size_preference_(waist)", StringType(), True),
                     StructField("Your_top_size_preference_(chest)", StringType(), True),
                     StructField("Zip_Code*", StringType(), True),
                     StructField("activated_date", StringType(), True),

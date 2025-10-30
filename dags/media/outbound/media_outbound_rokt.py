@@ -13,7 +13,7 @@ data_interval_start = "{{ ts_nodash }}"
 default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2024, 2, 20, tz="America/Los_Angeles"),
-    "owner": owners.media_analytics,
+    'owner': owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }
@@ -41,5 +41,5 @@ with dag:
         sftp_conn_id=SFTP.sftp_rokt,
         filename=f"techstyle_fl_vips_{data_interval_start}.csv",
         sftp_dir=f"/upload/custom-audience/include/AdvertiserDatabase",
-        field_delimiter=",",
+        field_delimiter=',',
     )

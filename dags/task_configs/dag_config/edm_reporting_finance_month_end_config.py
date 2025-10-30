@@ -17,9 +17,9 @@ class CustomTableConfig(TableConfig):
 table_list = ["credit_recon", "token_recon"]
 
 credit_recon_column_list = CustomTableConfig(
-    database="reporting_base",
-    table="credit_recon",
-    schema="shared",
+    database='reporting_base',
+    table='credit_recon',
+    schema='shared',
     column_list=[
         Column("record_type", "varchar"),
         Column("operating_unit", "varchar"),
@@ -57,9 +57,9 @@ credit_recon_column_list = CustomTableConfig(
 )
 
 token_recon_column_list = CustomTableConfig(
-    database="reporting_base",
-    table="token_recon",
-    schema="shared",
+    database='reporting_base',
+    table='token_recon',
+    schema='shared',
     column_list=[
         Column("record_type", "varchar"),
         Column("operating_unit", "varchar"),

@@ -1,4 +1,4 @@
-create TRANSIENT TABLE IF NOT EXISTS lake_consolidated.ultra_merchant_history.PRODUCT (
+CREATE or replace TRANSIENT TABLE lake_consolidated.ultra_merchant_history.PRODUCT (
     data_source_id INT,
     meta_company_id INT,
     product_id INT,
@@ -16,8 +16,8 @@ create TRANSIENT TABLE IF NOT EXISTS lake_consolidated.ultra_merchant_history.PR
     label VARCHAR(100),
     alias VARCHAR(100),
     group_code VARCHAR(50),
-    short_description VARCHAR(255),
-    medium_description VARCHAR(2000),
+    short_description VARCHAR,
+    medium_description VARCHAR,
     long_description VARCHAR,
     meta_keywords VARCHAR(255),
     meta_description VARCHAR(255),
@@ -67,32 +67,16 @@ create TRANSIENT TABLE IF NOT EXISTS lake_consolidated.ultra_merchant_history.PR
 
 
 SET lake_jfb_watermark = (
-    select min(last_update)
-    from (
-        select
-            coalesce(
-            DATEADD(minutes,
-                case
-                when DATEDIFF(minutes, max(META_UPDATE_DATETIME), current_timestamp) < 60
-                then -180
-                when DATEDIFF(minutes, max(META_UPDATE_DATETIME), current_timestamp) >= 360
-                then (DATEDIFF(minutes, max(META_UPDATE_DATETIME), current_timestamp) + 1080) * -1
-                else DATEDIFF(minutes, max(META_UPDATE_DATETIME), current_timestamp) * -3
-                end,
-            max(META_UPDATE_DATETIME)
-            ), '1900-01-01'
-        ) as last_update
-        from lake_consolidated.ultra_merchant_history.PRODUCT
-        WHERE data_source_id = 10
-        UNION
-        select cast(max(META_SOURCE_CHANGE_DATETIME) as TIMESTAMP_LTZ(3)) AS last_update
+    SELECT MIN(last_update)
+    FROM (
+        SELECT CAST(min(META_SOURCE_CHANGE_DATETIME) AS TIMESTAMP_LTZ(3)) AS last_update
         FROM lake_jfb.ultra_merchant_history.PRODUCT
     ) AS A
 );
 
 
-create or replace TEMP TABLE _lake_jfb_product_history AS
-select distinct
+CREATE OR REPLACE TEMP TABLE _lake_jfb_product_history AS
+SELECT DISTINCT
 
     product_id,
     master_product_id,
@@ -151,7 +135,7 @@ select distinct
     fulfillment_partner_id,
     meta_row_source,
     hvr_change_op,
-    cast(META_SOURCE_CHANGE_DATETIME as TIMESTAMP_LTZ(3))  as effective_start_datetime,
+    CAST(META_SOURCE_CHANGE_DATETIME AS TIMESTAMP_LTZ(3))  as effective_start_datetime,
     10 as data_source_id
 FROM lake_jfb.ultra_merchant_history.PRODUCT
 WHERE META_SOURCE_CHANGE_DATETIME >= DATEADD(MINUTE, -5, $lake_jfb_watermark)
@@ -159,41 +143,41 @@ QUALIFY ROW_NUMBER() OVER(PARTITION BY product_id, META_SOURCE_CHANGE_DATETIME
     ORDER BY HVR_CHANGE_SEQUENCE DESC) = 1;
 
 
-create or replace TEMP TABLE _lake_jfb_company_product AS
-select product_id, company_id as meta_company_id
-from (
-      select l.product_id, ds.company_id
-        from lake_jfb.ultra_merchant.order_line l
+ CREATE OR REPLACE TEMP TABLE _lake_jfb_company_product AS
+SELECT product_id, company_id as meta_company_id
+FROM (
+      SELECT l.product_id, ds.company_id
+        FROM lake_jfb.ultra_merchant.order_line l
              JOIN lake_jfb.ultra_merchant."ORDER" o
                   ON l.order_id = o.order_id
              JOIN lake_jfb.reference.dim_store ds
                   ON o.store_id = ds.store_id
                   UNION
-        select  l.product_id,
+        SELECT  l.product_id,
                 ps.company_id
-         from lake_jfb.ultra_merchant_history.product l
-         LEFT JOIN (select p.product_id,
+         FROM lake_jfb.ultra_merchant_history.product l
+         LEFT JOIN (SELECT p.product_id,
                                     ds.company_id
-                    from lake_jfb.ultra_merchant_history.product p
+                    FROM lake_jfb.ultra_merchant_history.product p
 
-                             LEFT JOIN (select distinct product_id,
+                             LEFT JOIN (SELECT DISTINCT product_id,
                                                         store_group_id,
                                                         default_store_id
-                                        from lake_jfb.ultra_merchant_history.product
+                                        FROM lake_jfb.ultra_merchant_history.product
                                         WHERE master_product_id IS NULL) AS ms
                                        ON p.master_product_id = ms.product_id
                              LEFT JOIN lake_jfb.reference.dim_store AS ds
                                        ON ds.store_group_id = COALESCE(p.store_group_id, ms.store_group_id)
                     WHERE ds.company_id != 40
                     UNION
-                    select p.product_id,
+                    SELECT p.product_id,
                                     ds.company_id
-                    from lake_jfb.ultra_merchant_history.product p
+                    FROM lake_jfb.ultra_merchant_history.product p
 
-                             LEFT JOIN (select distinct product_id,
+                             LEFT JOIN (SELECT DISTINCT product_id,
                                                         store_group_id,
                                                         default_store_id
-                                        from lake_jfb.ultra_merchant_history.product
+                                        FROM lake_jfb.ultra_merchant_history.product
                                         WHERE master_product_id IS NULL) AS ms
                                        ON p.master_product_id = ms.product_id
                              LEFT JOIN lake_jfb.reference.dim_store AS ds
@@ -205,7 +189,7 @@ from (
     ) AS l ;
 
 
-INSERT INTO lake_consolidated.ultra_merchant_history.PRODUCT (
+ INSERT INTO lake_consolidated.ultra_merchant_history.PRODUCT (
     data_source_id,
     meta_company_id,
     product_id,
@@ -407,10 +391,10 @@ FROM _product_updates AS s
     AND     s.meta_original_product_id = t.meta_original_product_id
     AND S.rnk = T.rnk - 1
 WHERE (S.effective_end_datetime <> dateadd(MILLISECOND, -1, T.effective_start_datetime)
-    OR S.effective_end_datetime IS NULL);
+    OR S.effective_end_datetime IS NULL) ;
 
 
-UPDATE lake_consolidated.ultra_merchant_history.PRODUCT AS t
+ UPDATE lake_consolidated.ultra_merchant_history.PRODUCT AS t
 SET t.effective_end_datetime = s.new_effective_end_datetime,
     META_UPDATE_DATETIME = current_timestamp()
 FROM _product_delta AS s

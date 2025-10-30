@@ -1,83 +1,83 @@
 CREATE OR REPLACE TEMPORARY TABLE _fk_on_jf AS
 SELECT UPPER(mml.business_unit)                                                                                                                               AS business_unit
-              , 'JFB'                                                                                                                                                  AS sub_brand
-              , UPPER(mml.region)                                                                                                                                      AS region
-              , UPPER(REPLACE(mml.product_sku, '	', ''))                                                                                                            AS product_sku
-              , FIRST_VALUE(mml.launch_date)
-                            OVER (PARTITION BY UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '	', '')) ORDER BY mml.launch_date DESC)                           AS latest_launch_date
-              , UPPER(SPLIT(REPLACE(mml.product_sku, '	', ''), '-')[0])                                                                                             AS product_style_number
-              , FIRST_VALUE(CASE
-                                WHEN UPPER(mml.region) = 'EU' THEN TRIM(
-                                    UPPER(COALESCE(mml.department, mml.planning_department)), ' ')
-                                ELSE TRIM(UPPER(mml.planning_department), ' ') END)
-                            OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '	', '')) ORDER BY mml.launch_date DESC) AS department
-              , FIRST_VALUE(CASE
-                                WHEN UPPER(mml.region) = 'EU'
-                                    THEN TRIM(UPPER(COALESCE(mml.category, mml.planning_category)), ' ')
-                                WHEN UPPER(mml.region) = 'NA' AND
-                                     TRIM(UPPER(mml.planning_department), ' ') IN ('JEWELRY', 'ACCESSORIES')
-                                    THEN TRIM(UPPER(mml.jewelry_accessory_sub_category), ' ')
-                                ELSE TRIM(UPPER(mml.planning_category), ' ') END)
-                            OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '	', '')) ORDER BY mml.launch_date DESC) AS subcategory
-              , FIRST_VALUE(UPPER(mml.brand))
-                            OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '	', '')) ORDER BY mml.launch_date DESC) AS shared
-              , FIRST_VALUE(TRIM(UPPER(mml.planning_category), ' '))
-                            OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '	', '')) ORDER BY mml.launch_date DESC) AS planning_category
-              , CASE
-                    WHEN mml.department ILIKE '%FABKID%' OR mml.planning_department ILIKE '%FABKIDS%' THEN NULL
-                    ELSE 'WOMENS' END                                                                                                                                  AS gender
-              , NULL                                                                                                                                                   AS distro
+     , 'JFB'                                                                                                                                                  AS sub_brand
+     , UPPER(mml.region)                                                                                                                                      AS region
+     , UPPER(REPLACE(mml.product_sku, ' ', ''))                                                                                                            AS product_sku
+     , FIRST_VALUE(mml.launch_date)
+                   OVER (PARTITION BY UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '   ', '')) ORDER BY mml.launch_date DESC)                           AS latest_launch_date
+     , UPPER(SPLIT(REPLACE(mml.product_sku, '   ', ''), '-')[0])                                                                                             AS product_style_number
+     , FIRST_VALUE(CASE
+                       WHEN UPPER(mml.region) = 'EU' THEN TRIM(
+                           UPPER(COALESCE(mml.department, mml.planning_department)), ' ')
+                       ELSE TRIM(UPPER(mml.planning_department), ' ') END)
+                   OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, ' ', '')) ORDER BY mml.launch_date DESC) AS department
+     , FIRST_VALUE(CASE
+                       WHEN UPPER(mml.region) = 'EU'
+                           THEN TRIM(UPPER(COALESCE(mml.category, mml.planning_category)), ' ')
+                       WHEN UPPER(mml.region) = 'NA' AND
+                            TRIM(UPPER(mml.planning_department), ' ') IN ('JEWELRY', 'ACCESSORIES')
+                           THEN TRIM(UPPER(mml.jewelry_accessory_sub_category), ' ')
+                       ELSE TRIM(UPPER(mml.planning_category), ' ') END)
+                   OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, ' ', '')) ORDER BY mml.launch_date DESC) AS subcategory
+     , FIRST_VALUE(UPPER(mml.brand))
+                   OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, ' ', '')) ORDER BY mml.launch_date DESC) AS shared
+     , FIRST_VALUE(TRIM(UPPER(mml.planning_category), ' '))
+                   OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, ' ', '')) ORDER BY mml.launch_date DESC) AS planning_category
+     , CASE
+           WHEN mml.department ILIKE '%FABKID%' OR mml.planning_department ILIKE '%FABKIDS%' THEN NULL
+           ELSE 'WOMENS' END                                                                                                                                  AS gender
+     , NULL                                                                                                                                                   AS distro
 FROM lake_view.sharepoint.jfb_master_style_log mml
 UNION
-    SELECT UPPER(mml.business_unit)                                                                                                                               AS business_unit
-              , 'JFB'                                                                                                                                                  AS sub_brand
-              , UPPER(mml.region)                                                                                                                                      AS region
-              , UPPER(REPLACE(mml.product_sku, '	', ''))                                                                                                            AS product_sku
-              , FIRST_VALUE(mml.launch_date)
-                            OVER (PARTITION BY UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '	', '')) ORDER BY mml.launch_date DESC)                           AS latest_launch_date
-              , UPPER(SPLIT(REPLACE(mml.product_sku, '	', ''), '-')[0])                                                                                             AS product_style_number
-              , FIRST_VALUE(CASE
-                                WHEN UPPER(mml.region) = 'EU' THEN TRIM(
-                                    UPPER(COALESCE(mml.department, mml.planning_department)), ' ')
-                                ELSE TRIM(UPPER(mml.planning_department), ' ') END)
-                            OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '	', '')) ORDER BY mml.launch_date DESC) AS department
-              , FIRST_VALUE(CASE
-                                WHEN UPPER(mml.region) = 'EU'
-                                    THEN TRIM(UPPER(COALESCE(mml.category, mml.planning_category)), ' ')
-                                WHEN UPPER(mml.region) = 'NA' AND
-                                     TRIM(UPPER(mml.planning_department), ' ') IN ('JEWELRY', 'ACCESSORIES')
-                                    THEN TRIM(UPPER(mml.jewelry_accessory_sub_category), ' ')
-                                ELSE TRIM(UPPER(mml.planning_category), ' ') END)
-                            OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '	', '')) ORDER BY mml.launch_date DESC) AS subcategory
-              , FIRST_VALUE(UPPER(mml.brand))
-                            OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '	', '')) ORDER BY mml.launch_date DESC) AS shared
-              , FIRST_VALUE(TRIM(UPPER(mml.planning_category), ' '))
-                            OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '	', '')) ORDER BY mml.launch_date DESC) AS planning_category
-              , CASE
-                    WHEN mml.department ILIKE '%FABKID%' OR mml.planning_department ILIKE '%FABKIDS%' THEN NULL
-                    ELSE 'WOMENS' END                                                                                                                                  AS gender
-              , NULL                                                                                                                                                   AS distro
+SELECT UPPER(mml.business_unit)                                                                                                                               AS business_unit
+     , 'JFB'                                                                                                                                                  AS sub_brand
+     , UPPER(mml.region)                                                                                                                                      AS region
+     , UPPER(REPLACE(mml.product_sku, ' ', ''))                                                                                                            AS product_sku
+     , FIRST_VALUE(mml.launch_date)
+                   OVER (PARTITION BY UPPER(mml.region), UPPER(REPLACE(mml.product_sku, '   ', '')) ORDER BY mml.launch_date DESC)                           AS latest_launch_date
+     , UPPER(SPLIT(REPLACE(mml.product_sku, '   ', ''), '-')[0])                                                                                             AS product_style_number
+     , FIRST_VALUE(CASE
+                       WHEN UPPER(mml.region) = 'EU' THEN TRIM(
+                           UPPER(COALESCE(mml.department, mml.planning_department)), ' ')
+                       ELSE TRIM(UPPER(mml.planning_department), ' ') END)
+                   OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, ' ', '')) ORDER BY mml.launch_date DESC) AS department
+     , FIRST_VALUE(CASE
+                       WHEN UPPER(mml.region) = 'EU'
+                           THEN TRIM(UPPER(COALESCE(mml.category, mml.planning_category)), ' ')
+                       WHEN UPPER(mml.region) = 'NA' AND
+                            TRIM(UPPER(mml.planning_department), ' ') IN ('JEWELRY', 'ACCESSORIES')
+                           THEN TRIM(UPPER(mml.jewelry_accessory_sub_category), ' ')
+                       ELSE TRIM(UPPER(mml.planning_category), ' ') END)
+                   OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, ' ', '')) ORDER BY mml.launch_date DESC) AS subcategory
+     , FIRST_VALUE(UPPER(mml.brand))
+                   OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, ' ', '')) ORDER BY mml.launch_date DESC) AS shared
+     , FIRST_VALUE(TRIM(UPPER(mml.planning_category), ' '))
+                   OVER (PARTITION BY UPPER(mml.business_unit), UPPER(mml.region), UPPER(REPLACE(mml.product_sku, ' ', '')) ORDER BY mml.launch_date DESC) AS planning_category
+     , CASE
+           WHEN mml.department ILIKE '%FABKID%' OR mml.planning_department ILIKE '%FABKIDS%' THEN NULL
+           ELSE 'WOMENS' END                                                                                                                                  AS gender
+     , NULL                                                                                                                                                   AS distro
 FROM reporting_prod.gfb.merch_master_log mml
-left join lake_view.sharepoint.jfb_master_style_log mdt
-    ON UPPER(REPLACE(mml.product_sku, '	', '')) = UPPER(REPLACE(mdt.product_sku, '	', ''))
-    AND UPPER(mml.region) = UPPER(mdt.region)
-where UPPER(REPLACE(mdt.product_sku, '	', '')) is null
+         LEFT JOIN lake_view.sharepoint.jfb_master_style_log mdt
+                   ON UPPER(REPLACE(mml.product_sku, '  ', '')) = UPPER(REPLACE(mdt.product_sku, '  ', ''))
+                       AND UPPER(mml.region) = UPPER(mdt.region)
+WHERE UPPER(REPLACE(mdt.product_sku, '  ', '')) IS NULL
 UNION
 SELECT UPPER(s.store_brand)                                                                                                                                           AS business_unit
-              , 'JFB'                                                                                                                                                          AS sub_brand
-              , s.store_region                                                                                                                                                 AS region
-              , dm.product_sku
-              , FIRST_VALUE(dm.current_showroom_date)
-                            OVER (PARTITION BY UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '	', '')) ORDER BY dm.current_showroom_date DESC)                       AS latest_launch_date
-              , UPPER(SPLIT(REPLACE(dm.product_sku, '	', ''), '-')[0])                                                                                                      AS product_style_number
-              , FIRST_VALUE(CONCAT(dm.category, ' - ', dm.product_category))
-                            OVER (PARTITION BY UPPER(business_unit), UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '	', '')) ORDER BY dm.current_showroom_date DESC) AS department
-              , UPPER(fk.class)                                                                                                                                                AS subcategory
-              , NULL                                                                                                                                                           AS shared
-              , FIRST_VALUE(dm.category)
-                            OVER (PARTITION BY UPPER(business_unit), UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '	', '')) ORDER BY dm.current_showroom_date DESC) AS planning_category
-              , NULL                                                                                                                                                           AS gender
-              , NULL                                                                                                                                                           AS distro
+     , 'JFB'                                                                                                                                                          AS sub_brand
+     , s.store_region                                                                                                                                                 AS region
+     , dm.product_sku
+     , FIRST_VALUE(dm.current_showroom_date)
+                   OVER (PARTITION BY UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '    ', '')) ORDER BY dm.current_showroom_date DESC)                       AS latest_launch_date
+     , UPPER(SPLIT(REPLACE(dm.product_sku, '    ', ''), '-')[0])                                                                                                      AS product_style_number
+     , FIRST_VALUE(CONCAT(dm.category, ' - ', dm.product_category))
+                   OVER (PARTITION BY UPPER(business_unit), UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '  ', '')) ORDER BY dm.current_showroom_date DESC) AS department
+     , UPPER(fk.class)                                                                                                                                                AS subcategory
+     , NULL                                                                                                                                                           AS shared
+     , FIRST_VALUE(dm.category)
+                   OVER (PARTITION BY UPPER(business_unit), UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '  ', '')) ORDER BY dm.current_showroom_date DESC) AS planning_category
+     , NULL                                                                                                                                                           AS gender
+     , NULL                                                                                                                                                           AS distro
 FROM edw_prod.data_model_jfb.dim_product dm
          JOIN edw_prod.data_model_jfb.dim_store s
               ON dm.store_id = s.store_id
@@ -94,23 +94,24 @@ WHERE s.store_id = 26
   AND NOT dm.product_name ILIKE ANY ('%do not use%', '%delete%')
   AND NOT dm.product_alias ILIKE ANY ('%do not use%', '%delete%')
   AND CONCAT(dm.product_sku, s.store_region, UPPER(s.store_brand)) NOT IN
-      (SELECT DISTINCT CONCAT(UPPER(REPLACE(product_sku, '	', '')), UPPER(region), UPPER(business_unit))
+      (SELECT DISTINCT CONCAT(UPPER(REPLACE(product_sku, '  ', '')), UPPER(region), UPPER(business_unit))
        FROM reporting_prod.gfb.merch_master_log
-       WHERE UPPER(department) LIKE '%FABKIDS' OR planning_department ILIKE '%FABKIDS%')
+       WHERE UPPER(department) LIKE '%FABKIDS'
+          OR planning_department ILIKE '%FABKIDS%')
 UNION
 SELECT UPPER(s.store_brand)                                                                                                                                   AS business_unit
      , b.sub_brand
      , s.store_region                                                                                                                                         AS region
      , product_sku
      , FIRST_VALUE(dm.current_showroom_date)
-                   OVER (PARTITION BY UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '	', '')) ORDER BY dm.current_showroom_date DESC)               AS latest_launch_date
-     , UPPER(SPLIT(REPLACE(dm.product_sku, '	', ''), '-')[0])                                                                                              AS product_style_number
+                   OVER (PARTITION BY UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '    ', '')) ORDER BY dm.current_showroom_date DESC)               AS latest_launch_date
+     , UPPER(SPLIT(REPLACE(dm.product_sku, '    ', ''), '-')[0])                                                                                              AS product_style_number
      , FIRST_VALUE(CONCAT(dm.department, ' - ', dm.category))
-                   OVER (PARTITION BY UPPER(brand), UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '	', '')) ORDER BY dm.current_showroom_date DESC) AS department
+                   OVER (PARTITION BY UPPER(brand), UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '  ', '')) ORDER BY dm.current_showroom_date DESC) AS department
      , UPPER(dm.subcategory)                                                                                                                                  AS subcategory
      , NULL                                                                                                                                                   AS shared
      , FIRST_VALUE(dm.category)
-                   OVER (PARTITION BY UPPER(brand), UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '	', '')) ORDER BY dm.current_showroom_date DESC) AS planning_category
+                   OVER (PARTITION BY UPPER(brand), UPPER(s.store_region), UPPER(REPLACE(dm.product_sku, '  ', '')) ORDER BY dm.current_showroom_date DESC) AS planning_category
      , CASE
            WHEN dm.membership_brand_id = 10 THEN 'WOMENS'
            WHEN dm.membership_brand_id = 11 THEN 'MENS'
@@ -367,15 +368,15 @@ CREATE OR REPLACE TEMPORARY TABLE _product_info AS
 SELECT DISTINCT dp.product_sku
               , mml.business_unit
               , mml.region
-              , FIRST_VALUE(dp.vip_unit_price)
+              , FIRST_VALUE(dp.vip_unit_price  IGNORE NULLS)
                             OVER (PARTITION BY dp.product_sku, ds.store_brand, ds.store_region ORDER BY dp.current_showroom_date DESC) AS current_vip_retail
-              , FIRST_VALUE(dp.retail_unit_price)
+              , FIRST_VALUE(dp.retail_unit_price  IGNORE NULLS)
                             OVER (PARTITION BY dp.product_sku, ds.store_brand, ds.store_region ORDER BY dp.current_showroom_date DESC) AS current_retail
-              , FIRST_VALUE(dp.image_url)
+              , FIRST_VALUE(dp.image_url  IGNORE NULLS)
                             OVER (PARTITION BY dp.product_sku ORDER BY dp.current_showroom_date DESC)                                  AS image_url
-              , FIRST_VALUE(dp.is_plus_size)
+              , FIRST_VALUE(dp.is_plus_size  IGNORE NULLS)
                             OVER (PARTITION BY dp.product_sku ORDER BY dp.current_showroom_date DESC)                                  AS is_plussize
-              , FIRST_VALUE(dp.product_name)
+              , FIRST_VALUE(dp.product_name  IGNORE NULLS)
                             OVER (PARTITION BY dp.product_sku ORDER BY dp.current_showroom_date DESC)                                  AS product_name
 FROM edw_prod.data_model_jfb.dim_product dp
          JOIN edw_prod.data_model_jfb.dim_store ds
@@ -384,12 +385,10 @@ FROM edw_prod.data_model_jfb.dim_product dp
               ON LOWER(mml.business_unit) = LOWER(ds.store_brand)
                   AND LOWER(mml.region) = LOWER(ds.store_region)
                   AND mml.product_sku = dp.product_sku
---         JOIN edw_prod.data_model_jfb.dim_product dpm
---              ON dpm.product_id = dp.master_product_id
 WHERE dp.retail_unit_price != 0
   AND ds.store_region = 'NA'
   AND NOT dp.product_name ILIKE ANY ('%DO NOT USE%', '%remove%', '%delete%', '%foundry%')
-  AND NOT dp.image_url ILIKE ANY ('%/OLD_%', '%DELETE%', '%/TEST%')
+  AND NOT dp.image_url ILIKE ANY ('%/OLD_%', '%DELETE%', '%/TEST%', '%static%')
 
 UNION
 
@@ -414,8 +413,6 @@ FROM edw_prod.data_model_jfb.dim_product dp
               ON LOWER(mml.business_unit) = LOWER(ds.store_brand)
                   AND LOWER(mml.region) = LOWER(ds.store_region)
                   AND mml.product_sku = dp.product_sku
---         JOIN edw_prod.data_model_jfb.dim_product dpm
---              ON dpm.product_id = dp.master_product_id
          LEFT JOIN (
     SELECT DISTINCT dp.product_sku
                   , mml.business_unit
@@ -437,14 +434,14 @@ FROM edw_prod.data_model_jfb.dim_product dp
       AND mml.business_unit = 'JUSTFAB'
       AND mml.department LIKE '%FABKID%'
       AND NOT dp.product_name ILIKE ANY ('%DO NOT USE%', '%remove%', '%delete%', '%foundry%')
-      AND NOT dp.image_url ILIKE ANY ('%/OLD_%', '%DELETE%', '%/TEST%')) AS sn
+      AND NOT dp.image_url ILIKE ANY ('%/OLD_%', '%DELETE%', '%/TEST%', '%static3%')) AS sn
                    ON LOWER(sn.business_unit) = LOWER(mml.business_unit)
                        AND sn.product_sku = dp.product_sku
 WHERE dp.retail_unit_price != 0
   AND ds.store_region = 'EU'
   AND ds.store_country = 'FR'
   AND NOT dp.product_name ILIKE ANY ('%DO NOT USE%', '%remove%', '%delete%', '%foundry%')
-  AND NOT dp.image_url ILIKE ANY ('%/OLD_%', '%DELETE%', '%/TEST%')
+  AND NOT dp.image_url ILIKE ANY ('%/OLD_%', '%DELETE%', '%/TEST%', '%static3%')
 ;
 
 --fixing issue with some FK products on JF
@@ -577,13 +574,11 @@ VALUES ('JUSTFAB', 'EU', 'AT')
      , ('SHOEDAZZLE', 'NA', 'CA');
 
 CREATE OR REPLACE TEMPORARY TABLE _current_status AS
-SELECT DISTINCT FIRST_VALUE(mp.product_status)
-                            OVER (PARTITION BY dp.store_id,dp.product_sku ORDER BY mp.product_status ASC) AS product_status,
+SELECT DISTINCT FIRST_VALUE(case when is_active = 1 then 'Active' else 'Inactive' end)
+                            OVER (PARTITION BY dp.store_id,dp.product_sku ORDER BY is_active DESC) AS product_status,
                 dp.product_sku,
                 dp.store_id
-FROM edw_prod.data_model_jfb.dim_product AS dp
-         LEFT JOIN edw_prod.data_model_jfb.dim_product AS mp
-                   ON mp.product_id = dp.master_product_id;
+FROM edw_prod.new_stg.dim_product AS dp;
 
 CREATE OR REPLACE TEMPORARY TABLE _master_product_id AS
 SELECT a.*
@@ -594,7 +589,7 @@ FROM (
                        , st.store_region
                        , st.store_country
                        , mml.product_sku
-                       , cs.product_status                                                                                                                        AS current_status
+                       , cs.product_status AS current_status
                        , FIRST_VALUE(CASE
                                          WHEN dp.master_product_id = -1 THEN dp.product_id
                                          ELSE dp.master_product_id END)
@@ -887,9 +882,11 @@ SELECT DISTINCT mml.business_unit
               , pi.vendor
               , mrs.direct_non_direct
               , pi.landing_cost
-              , IFF(prod.current_vip_retail = 0, CAST(ROUND(prod.current_retail, 2) AS VARCHAR(20)),
-                    CAST(ROUND(prod.current_vip_retail, 2) AS VARCHAR(20)))                               AS current_vip_retail
-              , prod.current_retail                                                                       AS msrp
+              , FIRST_VALUE(IFF(prod.current_vip_retail = 0, CAST(ROUND(prod.current_retail, 2) AS VARCHAR(20)),
+                                CAST(ROUND(prod.current_vip_retail, 2) AS VARCHAR(20))) IGNORE NULLS)
+                            OVER (PARTITION BY mml.product_sku ORDER BY mml.region DESC)                  AS current_vip_retail
+              , FIRST_VALUE(prod.current_retail IGNORE NULLS)
+                            OVER (PARTITION BY mml.product_sku ORDER BY mml.region DESC)                  AS msrp
               , mrs.heel_height
               , mrs.heel_type
               , mrs.coresb_reorder_fashion
@@ -1229,7 +1226,7 @@ GROUP BY UPPER(st.store_brand)
 
 CREATE OR REPLACE TEMPORARY TABLE _fk_on_brands AS
 SELECT DISTINCT mdp.product_sku
-              , FIRST_VALUE(mdp.current_vip_retail)
+              , FIRST_VALUE(mdp.current_vip_retail IGNORE NULLS)
                             OVER (PARTITION BY mdp.product_sku ORDER BY mdp.latest_launch_date DESC) AS current_vip_retail
 FROM _merch_dim_product mdp
 WHERE mdp.business_unit = 'FABKIDS'
@@ -1254,15 +1251,15 @@ HAVING COUNT(DISTINCT business_unit) > 1;
 
 
 CREATE OR REPLACE TEMPORARY TABLE _mm_department_subcategory AS
-SELECT DISTINCT s.tfg_colorway_sku                                                                           AS product_sku,
+SELECT DISTINCT s.tfg_colorway_sku                                                                        AS product_sku,
                 FIRST_VALUE(CASE
                                 WHEN ec2.node_name = 'BOOTIES' THEN 'ANKLE BOOTS'
                                 WHEN ec2.node_name = 'SANDALS-FLAT' THEN 'FLAT SANDALS'
                                 WHEN ec2.node_name = 'SANDALS-DRESSY' THEN 'HEELED SANDALS'
                                 WHEN ec2.node_name = 'STREET' THEN 'SNEAKERS'
                                 ELSE ec2.node_name END)
-                            OVER (PARTITION BY product_sku ORDER BY product_sku)                             AS subcategory,
-                FIRST_VALUE(UPPER(c3.node_name)) OVER (PARTITION BY product_sku ORDER BY product_sku ASC)    AS subclass
+                            OVER (PARTITION BY product_sku ORDER BY product_sku)                          AS subcategory,
+                FIRST_VALUE(UPPER(c3.node_name)) OVER (PARTITION BY product_sku ORDER BY product_sku ASC) AS subclass
 FROM lake_view.centric.ed_sku s
          LEFT JOIN lake_view.centric.ed_style d ON s.the_parent_id = d.id
          LEFT JOIN lake_view.centric.ed_classifier2 ec2 ON ec2.id = d.tfg_classifier2
@@ -1270,8 +1267,7 @@ FROM lake_view.centric.ed_sku s
          JOIN (SELECT DISTINCT product_sku
                FROM reporting_prod.gfb.merch_dim_product
                WHERE sub_brand NOT IN ('JFB')) mdp
-              ON s.tfg_colorway_sku = mdp.product_sku
-WHERE d.tfg_division = 'tfgDivision:MM';
+              ON s.tfg_colorway_sku = mdp.product_sku;
 
 CREATE OR REPLACE TEMP TABLE _mm_version_sku AS
 SELECT DISTINCT tfg_colorway_sku,
@@ -1292,20 +1288,21 @@ SELECT mdp.business_unit,
        a.subcategory,
        p.subclass
 FROM _merch_dim_product mdp
-JOIN (SELECT business_unit,
-        product_sku,
-        department,
-        department_detail,
-        gender,
-        subcategory,
-        row_number() OVER (PARTITION BY product_sku ORDER BY business_unit asc,region desc) as row_num
-FROM _merch_dim_product) a
-    ON mdp.product_sku=a.product_sku
-LEFT JOIN(SELECT DISTINCT product_sku,
-                        FIRST_VALUE(subclass) OVER (PARTITION BY product_sku ORDER BY region desc) as subclass
-          FROM _product_attr)p
-    ON mdp.product_sku=p.product_sku
-WHERE a.row_num=1;
+         JOIN (SELECT business_unit,
+                      product_sku,
+                      department,
+                      department_detail,
+                      gender,
+                      subcategory,
+                      ROW_NUMBER() OVER (PARTITION BY product_sku ORDER BY business_unit ASC,region DESC) AS row_num
+               FROM _merch_dim_product) a
+              ON mdp.product_sku = a.product_sku
+         LEFT JOIN(SELECT DISTINCT product_sku,
+                                   FIRST_VALUE(subclass)
+                                               OVER (PARTITION BY product_sku ORDER BY region DESC) AS subclass
+                   FROM _product_attr) p
+                  ON mdp.product_sku = p.product_sku
+WHERE a.row_num = 1;
 
 CREATE OR REPLACE TRANSIENT TABLE gfb.merch_dim_product AS
 SELECT DISTINCT a.business_unit
@@ -1430,7 +1427,7 @@ SELECT DISTINCT a.business_unit
               , b.priced_down
               , CASE
                     WHEN a.sub_brand NOT IN ('JFB') THEN mds.subclass
-                    ELSE da.subclass END                                                                                                   AS subclass
+                    ELSE da.subclass END                                                                                                  AS subclass
               , b.na_landed_cost
               , b.eu_landed_cost
               , b.error_free_image_url
@@ -1551,8 +1548,8 @@ FROM _merch_dim_product a
               ON a.product_sku = b.product_sku
                   AND a.region = b.region
          JOIN _department_alignment da
-              ON a.business_unit=da.business_unit
-                  AND a.product_sku=da.product_sku
+              ON a.business_unit = da.business_unit
+                  AND a.product_sku = da.product_sku
          LEFT JOIN _clearance_price cp
                    ON cp.business_unit = a.business_unit
                        AND cp.region = a.region
@@ -1606,3 +1603,4 @@ FROM _merch_dim_product a
                    ON mds.product_sku = a.product_sku
          LEFT JOIN _mm_version_sku mvs
                    ON mvs.tfg_colorway_sku = a.product_sku;
+

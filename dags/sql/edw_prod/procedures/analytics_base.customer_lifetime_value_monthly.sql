@@ -584,7 +584,18 @@ FROM _customer_lifetime__customer_month AS cm
     JOIN lake_jfb.ultra_merchant.period AS p
         ON p.period_id = ms.period_id
 WHERE cm.month_date = p.date_period_start
-    AND cm.vip_cohort_rank = 1;
+    AND cm.vip_cohort_rank = 1
+
+union
+
+SELECT DISTINCT cm.month_date, cm.customer_id, cm.activation_key, TRUE AS is_skip
+FROM _customer_lifetime__customer_month AS cm
+    JOIN edw_prod.data_model_jfb.fact_customer_action AS fca
+        ON fca.customer_id = cm.customer_id
+        and fca.customer_action_type_key = 5 -- skip
+        and cm.month_date = fca.customer_action_period_date
+WHERE cm.vip_cohort_rank = 1
+;
 -- SELECT * FROM _customer_lifetime__customer_skip;
 
 CREATE OR REPLACE TEMP TABLE _customer_lifetime__customer_snooze AS

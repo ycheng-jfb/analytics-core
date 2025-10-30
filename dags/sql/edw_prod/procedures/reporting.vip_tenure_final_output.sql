@@ -18,9 +18,9 @@ SELECT fa.sub_store_id                                                          
      , COUNT(DISTINCT fa.customer_id)                                                 AS metric_count
      , SUM(IFF(DATE_TRUNC('MONTH', CAST(activation_local_datetime AS DATE)) =
                DATE_TRUNC('MONTH', CAST(cancellation_local_datetime AS DATE)), 1, 0)) AS cancellations
-FROM data_model.fact_activation fa
-         JOIN data_model.dim_customer dc ON dc.customer_id = fa.customer_id
-         JOIN data_model.dim_store st ON st.store_id = fa.sub_store_id
+FROM data_model_jfb.fact_activation fa
+         JOIN data_model_jfb.dim_customer dc ON dc.customer_id = fa.customer_id
+         JOIN data_model_jfb.dim_store st ON st.store_id = fa.sub_store_id
 WHERE 1 = 1
   AND CAST(activation_local_datetime AS DATE) >= '2010-01-01'
 GROUP BY fa.sub_store_id
@@ -56,11 +56,11 @@ SELECT fa.sub_store_id                              AS event_store_id
      , SUM(IFF(is_failed_billing = TRUE, 1, 0))     AS failed_billing
      , SUM(IFF(is_passive_cancel = TRUE, 1, 0))     AS passive_cancel
      , SUM(IFF(is_merch_purchaser = TRUE AND is_bop_vip = TRUE, 1, 0))    AS merch_purchasers_ltv
-FROM analytics_base.customer_lifetime_value_monthly ltv
-         JOIN data_model.fact_activation fa ON ltv.activation_key = fa.activation_key
-         JOIN data_model.dim_store ds ON ltv.store_id = ds.store_id
-         LEFT JOIN data_model.dim_store ds2 ON fa.sub_store_id = ds2.store_id
-         JOIN data_model.dim_customer dc ON ltv.customer_id = dc.customer_id
+FROM analytics_base.customer_lifetime_value_monthly_jfb ltv
+         JOIN data_model_jfb.fact_activation fa ON ltv.activation_key = fa.activation_key
+         JOIN data_model_jfb.dim_store ds ON ltv.store_id = ds.store_id
+         LEFT JOIN data_model_jfb.dim_store ds2 ON fa.sub_store_id = ds2.store_id
+         JOIN data_model_jfb.dim_customer dc ON ltv.customer_id = dc.customer_id
 WHERE ltv.vip_cohort_month_date >= '2010-01-01'
   AND is_bop_vip = 1
 GROUP BY fa.sub_store_id
@@ -98,17 +98,17 @@ SELECT fo.store_id                                                  AS event_sto
      , COUNT(DISTINCT iff(fa.cancellation_local_datetime <= fo.order_local_datetime,
                            fo.order_id, null)) as shipped_orders_inactive_vip
      , SUM(fo.product_gross_revenue_local_amount*fo.reporting_usd_conversion_rate) AS product_gross_revenue
-FROM data_model.fact_order fo
-         JOIN data_model.fact_activation fa ON fo.activation_key = fa.activation_key
+FROM data_model_jfb.fact_order fo
+         JOIN data_model_jfb.fact_activation fa ON fo.activation_key = fa.activation_key
     AND fo.activation_key <> -1
     AND fo.order_local_datetime >= fa.activation_local_datetime
 --     AND fo.order_local_datetime < fa.cancellation_local_datetime
-         JOIN data_model.dim_store ds ON fa.sub_store_id = ds.store_id
-         LEFT JOIN data_model.dim_customer dc ON dc.customer_id = fa.customer_id
-         JOIN data_model.dim_order_status dos ON fo.order_status_key = dos.order_status_key
-         JOIN data_model.dim_order_sales_channel dosc
+         JOIN data_model_jfb.dim_store ds ON fa.sub_store_id = ds.store_id
+         LEFT JOIN data_model_jfb.dim_customer dc ON dc.customer_id = fa.customer_id
+         JOIN data_model_jfb.dim_order_status dos ON fo.order_status_key = dos.order_status_key
+         JOIN data_model_jfb.dim_order_sales_channel dosc
               ON fo.order_sales_channel_key = dosc.order_sales_channel_key AND dosc.is_ps_order <> 1
-         LEFT JOIN data_model.dim_order_membership_classification domc
+         LEFT JOIN data_model_jfb.dim_order_membership_classification domc
                    ON fo.order_membership_classification_key = domc.order_membership_classification_key
 WHERE dos.order_status = 'Success'
   AND dosc.order_classification_l1 = 'Product Order'
@@ -150,12 +150,12 @@ SELECT fa.sub_store_id                                             AS event_stor
                           fce.credit_key, NULL))                   AS cancelled_credits_inactive_vip
 FROM reporting_base_prod.shared.fact_credit_event fce
          JOIN reporting_base_prod.shared.dim_credit dcred ON fce.credit_key = dcred.credit_key
-         JOIN data_model.dim_store ds ON dcred.store_id = ds.store_id
-         JOIN data_model.dim_customer dc ON dcred.customer_id = dc.customer_id
-         LEFT JOIN data_model.fact_activation fa ON fce.activation_key = fa.activation_key
+         JOIN data_model_jfb.dim_store ds ON dcred.store_id = ds.store_id
+         JOIN data_model_jfb.dim_customer dc ON dcred.customer_id = dc.customer_id
+         LEFT JOIN data_model_jfb.fact_activation fa ON fce.activation_key = fa.activation_key
     AND fa.activation_local_datetime <= fce.credit_activity_local_datetime
 --    AND fa.cancellation_local_datetime > fce.credit_activity_local_datetime
-         LEFT JOIN data_model.dim_store ds2 ON fa.sub_store_id = ds2.store_id
+         LEFT JOIN data_model_jfb.dim_store ds2 ON fa.sub_store_id = ds2.store_id
 WHERE 1 = 1
   AND LOWER(fce.credit_activity_type) = 'cancelled'
   AND LOWER(dcred.credit_report_mapping) = 'billed credit'
@@ -189,17 +189,17 @@ SELECT fo.store_id                                                           AS 
      , DATE_TRUNC('MONTH', CAST(fo.order_completion_local_datetime AS DATE)) AS month_date
      , SUM(foc.billed_cash_credit_redeemed_equivalent_count)                 AS credits_redeemed
      , SUM(foc.billed_cash_credit_redeemed_local_amount*fo.reporting_usd_conversion_rate) AS credits_redeemed_amount
-FROM data_model.fact_order fo
-         JOIN data_model.fact_activation fa ON fo.activation_key = fa.activation_key
+FROM data_model_jfb.fact_order fo
+         JOIN data_model_jfb.fact_activation fa ON fo.activation_key = fa.activation_key
     AND fo.activation_key <> -1
     AND fo.order_local_datetime >= fa.activation_local_datetime
     AND fo.order_local_datetime < fa.cancellation_local_datetime
-         JOIN data_model.dim_store ds ON fa.sub_store_id = ds.store_id
-         JOIN data_model.dim_store ds2 ON fo.store_id = ds2.store_id
-         LEFT JOIN data_model.dim_customer dc ON dc.customer_id = fa.customer_id
-         JOIN data_model.dim_order_status dos ON fo.order_status_key = dos.order_status_key
-         JOIN data_model.dim_order_sales_channel dosc ON fo.order_sales_channel_key = dosc.order_sales_channel_key
-         LEFT JOIN data_model.dim_order_membership_classification domc
+         JOIN data_model_jfb.dim_store ds ON fa.sub_store_id = ds.store_id
+         JOIN data_model_jfb.dim_store ds2 ON fo.store_id = ds2.store_id
+         LEFT JOIN data_model_jfb.dim_customer dc ON dc.customer_id = fa.customer_id
+         JOIN data_model_jfb.dim_order_status dos ON fo.order_status_key = dos.order_status_key
+         JOIN data_model_jfb.dim_order_sales_channel dosc ON fo.order_sales_channel_key = dosc.order_sales_channel_key
+         LEFT JOIN data_model_jfb.dim_order_membership_classification domc
                    ON fo.order_membership_classification_key = domc.order_membership_classification_key
          LEFT JOIN reporting_base_prod.shared.fact_order_credit foc ON fo.order_id = foc.order_id
 WHERE 1 = 1
@@ -233,17 +233,17 @@ SELECT fa.sub_store_id                                                       AS 
      , fa.vip_cohort_month_date                                              AS vip_cohort
      , DATE_TRUNC('MONTH', CAST(fo.order_completion_local_datetime AS DATE)) AS month_date
      , SUM(IFF(dos.order_status = 'Success', 1, 0))                          AS credit_billers
-FROM data_model.fact_order fo
-         JOIN data_model.fact_activation fa ON fo.activation_key = fa.activation_key
+FROM data_model_jfb.fact_order fo
+         JOIN data_model_jfb.fact_activation fa ON fo.activation_key = fa.activation_key
     AND fo.activation_key <> -1
     AND fo.order_local_datetime >= fa.activation_local_datetime
     AND fo.order_local_datetime < fa.cancellation_local_datetime
-         JOIN data_model.dim_store ds ON fa.sub_store_id = ds.store_id
-         JOIN data_model.dim_store ds2 ON fo.store_id = ds2.store_id
-         LEFT JOIN data_model.dim_customer dc ON dc.customer_id = fa.customer_id
-         JOIN data_model.dim_order_status dos ON fo.order_status_key = dos.order_status_key
-         JOIN data_model.dim_order_sales_channel dosc ON fo.order_sales_channel_key = dosc.order_sales_channel_key
-         LEFT JOIN data_model.dim_order_membership_classification domc
+         JOIN data_model_jfb.dim_store ds ON fa.sub_store_id = ds.store_id
+         JOIN data_model_jfb.dim_store ds2 ON fo.store_id = ds2.store_id
+         LEFT JOIN data_model_jfb.dim_customer dc ON dc.customer_id = fa.customer_id
+         JOIN data_model_jfb.dim_order_status dos ON fo.order_status_key = dos.order_status_key
+         JOIN data_model_jfb.dim_order_sales_channel dosc ON fo.order_sales_channel_key = dosc.order_sales_channel_key
+         LEFT JOIN data_model_jfb.dim_order_membership_classification domc
                    ON fo.order_membership_classification_key = domc.order_membership_classification_key
 WHERE 1 = 1
   AND fa.vip_cohort_month_date >= '2010-01-01'
@@ -282,17 +282,17 @@ SELECT fo.store_id                                                           AS 
                            fo.customer_id, null)) as merch_purchasers_fo_shipped_active_vip
      , COUNT(DISTINCT iff(fa.cancellation_local_datetime <= fo.order_local_datetime,
                            fo.customer_id, null)) as merch_purchasers_fo_shipped_inactive_vip
-FROM data_model.fact_order fo
-         JOIN data_model.fact_activation fa ON fo.activation_key = fa.activation_key
+FROM data_model_jfb.fact_order fo
+         JOIN data_model_jfb.fact_activation fa ON fo.activation_key = fa.activation_key
     AND fo.activation_key <> -1
     AND fo.order_local_datetime >= fa.activation_local_datetime
 --    AND fo.order_local_datetime < fa.cancellation_local_datetime
-         JOIN data_model.dim_store ds ON fa.sub_store_id = ds.store_id
-         LEFT JOIN data_model.dim_customer dc ON dc.customer_id = fa.customer_id
-         JOIN data_model.dim_order_status dos ON fo.order_status_key = dos.order_status_key
-         JOIN data_model.dim_order_sales_channel dosc
+         JOIN data_model_jfb.dim_store ds ON fa.sub_store_id = ds.store_id
+         LEFT JOIN data_model_jfb.dim_customer dc ON dc.customer_id = fa.customer_id
+         JOIN data_model_jfb.dim_order_status dos ON fo.order_status_key = dos.order_status_key
+         JOIN data_model_jfb.dim_order_sales_channel dosc
               ON fo.order_sales_channel_key = dosc.order_sales_channel_key AND dosc.is_ps_order <> 1
-         LEFT JOIN data_model.dim_order_membership_classification domc
+         LEFT JOIN data_model_jfb.dim_order_membership_classification domc
                    ON fo.order_membership_classification_key = domc.order_membership_classification_key
 WHERE 1 = 1
   AND dos.order_status = 'Success'
@@ -322,17 +322,17 @@ SELECT fo.store_id                                                AS event_store
      , fa.vip_cohort_month_date                                   AS vip_cohort
      , DATE_TRUNC('MONTH', CAST(fo.order_local_datetime AS DATE)) AS month_date
      , COUNT(DISTINCT fo.customer_id)                             AS merch_purchasers_fo_placed
-FROM data_model.fact_order fo
-         JOIN data_model.fact_activation fa ON fo.activation_key = fa.activation_key
+FROM data_model_jfb.fact_order fo
+         JOIN data_model_jfb.fact_activation fa ON fo.activation_key = fa.activation_key
     AND fo.activation_key <> -1
     AND fo.order_local_datetime >= fa.activation_local_datetime
     AND fo.order_local_datetime < fa.cancellation_local_datetime
-         JOIN data_model.dim_store ds ON fa.sub_store_id = ds.store_id
-         LEFT JOIN data_model.dim_customer dc ON dc.customer_id = fa.customer_id
-         JOIN data_model.dim_order_status dos ON fo.order_status_key = dos.order_status_key
-         JOIN data_model.dim_order_sales_channel dosc
+         JOIN data_model_jfb.dim_store ds ON fa.sub_store_id = ds.store_id
+         LEFT JOIN data_model_jfb.dim_customer dc ON dc.customer_id = fa.customer_id
+         JOIN data_model_jfb.dim_order_status dos ON fo.order_status_key = dos.order_status_key
+         JOIN data_model_jfb.dim_order_sales_channel dosc
               ON fo.order_sales_channel_key = dosc.order_sales_channel_key AND dosc.is_ps_order <> 1
-         LEFT JOIN data_model.dim_order_membership_classification domc
+         LEFT JOIN data_model_jfb.dim_order_membership_classification domc
                    ON fo.order_membership_classification_key = domc.order_membership_classification_key
 WHERE 1 = 1
   AND dos.order_status = 'Success'
@@ -369,10 +369,11 @@ SELECT b.store_id                                        AS event_store_id
      , DATE_TRUNC('MONTH', b.date)                       AS month_date
      , SUM(billed_cash_credit_redeemed_equivalent_count) AS activating_billed_credit_redeemed_equivalent_counts
 FROM analytics_base.finance_sales_ops b
-         LEFT JOIN data_model.dim_order_membership_classification mc
+         LEFT JOIN data_model_jfb.dim_order_membership_classification mc
                    ON mc.order_membership_classification_key = b.order_membership_classification_key
 WHERE b.vip_cohort_month_date >= '2010-01-01'
   AND date_object = 'shipped'
+  AND currency_object = 'usd'
   AND mc.membership_order_type_l1 = 'Activating VIP'
 GROUP BY b.store_id
        , COALESCE(b.vip_store_id, -1)
@@ -402,17 +403,17 @@ SELECT fo.store_id                                                              
      , DATE_TRUNC('MONTH', cast(fo.order_completion_local_datetime AS DATE))                       AS month_date
      , SUM(CASE WHEN foc.order_id IS NOT NULL then foc.billed_cash_credit_redeemed_equivalent_count
            ELSE 0 END)                                                                          AS cancelled_vip_billed_credit_redeemed_equivalent_counts
-FROM data_model.fact_order fo
-         JOIN data_model.fact_activation fa ON fo.activation_key = fa.activation_key
+FROM data_model_jfb.fact_order fo
+         JOIN data_model_jfb.fact_activation fa ON fo.activation_key = fa.activation_key
     AND fo.activation_key <> -1
     AND fo.order_local_datetime >= fa.activation_local_datetime
     AND fo.order_local_datetime > fa.cancellation_local_datetime /*after cancellation*/
-         JOIN data_model.dim_store ds ON fa.sub_store_id = ds.store_id
-         LEFT JOIN data_model.dim_customer dc ON dc.customer_id = fa.customer_id
-         JOIN data_model.dim_order_status dos ON fo.order_status_key = dos.order_status_key
-         JOIN data_model.dim_order_sales_channel dosc
+         JOIN data_model_jfb.dim_store ds ON fa.sub_store_id = ds.store_id
+         LEFT JOIN data_model_jfb.dim_customer dc ON dc.customer_id = fa.customer_id
+         JOIN data_model_jfb.dim_order_status dos ON fo.order_status_key = dos.order_status_key
+         JOIN data_model_jfb.dim_order_sales_channel dosc
               ON fo.order_sales_channel_key = dosc.order_sales_channel_key AND dosc.is_ps_order <> 1
-         LEFT JOIN data_model.dim_order_membership_classification domc
+         LEFT JOIN data_model_jfb.dim_order_membership_classification domc
                    ON fo.order_membership_classification_key = domc.order_membership_classification_key
          LEFT JOIN stg.fact_order_credit AS foc ON foc.order_id = fo.order_id
 WHERE 1 = 1

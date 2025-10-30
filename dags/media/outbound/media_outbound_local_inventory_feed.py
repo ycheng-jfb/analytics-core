@@ -11,7 +11,7 @@ from include.config.email_lists import airflow_media_support
 default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2019, 9, 16, tz="America/Los_Angeles"),
-    "owner": owners.media_analytics,
+    'owner': owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }
@@ -50,7 +50,7 @@ with dag:
         sql_or_path=sql,
         sftp_conn_id=SFTP.sftp_fl_local_feed,
         filename="fl_local_inventory_data.csv",
-        sftp_dir="/",
-        field_delimiter=",",
+        sftp_dir='/',
+        field_delimiter=',',
         header=True,
     )

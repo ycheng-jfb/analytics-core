@@ -172,7 +172,7 @@ LEFT JOIN lake_jfb_view.ultra_merchant.payment_transaction_psp ptp ON ptp.order_
     AND dp.payment_method = 'Psp'
 LEFT JOIN lake_jfb_view.ultra_merchant.payment_transaction_cash ptc ON ptc.order_id = fo.order_id
     AND dp.payment_method = 'Cash'
-JOIN lake_jfb_view.ultra_merchant.statuscode sc ON sc.statuscode = COALESCE(ptcc.statuscode, ptp.statuscode, ptc.statuscode)
+left JOIN lake_jfb_view.ultra_merchant.statuscode sc ON sc.statuscode = COALESCE(ptcc.statuscode, ptp.statuscode, ptc.statuscode)
 LEFT JOIN reporting_base_prod.shared.session s ON s.meta_original_session_id = fo.session_id
 LEFT JOIN _is_credit_billing_on_retry icbor ON fo.order_id = icbor.order_id
 WHERE order_local_datetime::DATE >= $process_from_date

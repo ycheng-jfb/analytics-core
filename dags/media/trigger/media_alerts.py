@@ -47,7 +47,7 @@ class AccountAlert:
     def alert_operator(self):
         return SnowflakeAlertOperator(
             task_id=self.task_id,
-            database="lake",
+            database='lake',
             sql_or_path=self.sql,
             subject=self.subject,
             body=self.body,
@@ -92,14 +92,14 @@ config_list: List[Union[Alert, AccountAlert]] = [
         reference_column="account_id",
         source_id_list=CLIENT_CUSTOMER_ID_LIST,
         distribution_list=airflow_media_support,
-        alert_type=["slack", "email"],
+        alert_type=['slack', 'email'],
     ),
     AccountAlert(
         source="Doubleclick Advertiser",
         reference_column="advertiser_id",
         source_id_list=[adv.id for adv in ADVERTISER_LIST],
         distribution_list=airflow_media_support,
-        alert_type=["slack", "email"],
+        alert_type=['slack', 'email'],
     ),
     AccountAlert(
         source="Facebook",
@@ -110,14 +110,14 @@ config_list: List[Union[Alert, AccountAlert]] = [
             for x in account_list
         ],
         distribution_list=airflow_media_support,
-        alert_type=["slack", "email"],
+        alert_type=['slack', 'email'],
     ),
     AccountAlert(
         source="Pinterest",
         reference_column="account_id",
         source_id_list=[adv.advertiser_id for adv in pinterest_act_list],
         distribution_list=airflow_media_support,
-        alert_type=["slack", "email"],
+        alert_type=['slack', 'email'],
     ),
     Alert(
         sql="""SELECT
@@ -133,15 +133,15 @@ config_list: List[Union[Alert, AccountAlert]] = [
             WHERE pc.datetime_added >= DATEADD(DAY, -7, CURRENT_DATE());
             """,
         subject="New Product Categories",
-        database="lake_consolidated_view",
+        database='lake_consolidated_view',
         body="The following product categories have been added within the last week.",
         distribution_list=[
-            "dragan@techstyle.com",
-            "knowack@techstyle.com",
-            "KXue@TechStyle.com",
-            "Mhill@techstyle.com",
+            'dragan@techstyle.com',
+            'knowack@techstyle.com',
+            'KXue@TechStyle.com',
+            'Mhill@techstyle.com',
         ],
-        alert_type=["slack", "email"],
+        alert_type=['slack', 'email'],
     ),
     Alert(
         sql="""
@@ -171,7 +171,7 @@ config_list: List[Union[Alert, AccountAlert]] = [
             WHERE creative_code IS NOT NULL
             QUALIFY row_number() OVER(PARTITION BY creative_code ORDER BY NULL)>1;
         """,
-        database="lake_view",
+        database='lake_view',
         subject="Duplicate Creative Codes Found",
         body="Following are creative_codes with duplicates",
         distribution_list=[],
@@ -182,7 +182,7 @@ config_list: List[Union[Alert, AccountAlert]] = [
 default_args = {
     "start_date": pendulum.datetime(2018, 7, 16, 0, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.media_analytics,
+    'owner': owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }

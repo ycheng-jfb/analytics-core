@@ -8,14 +8,10 @@ from include.config.email_lists import airflow_media_support
 
 
 data_interval_start = "{{ data_interval_start.strftime('%Y-%m-%d') }}"
-data_interval_end = (
-    '{{ (data_interval_end - macros.timedelta(days=1)).strftime("%Y-%m-%d") }}'
-)
+data_interval_end = '{{ (data_interval_end - macros.timedelta(days=1)).strftime("%Y-%m-%d") }}'
 
 start_date_nodash = "{{ data_interval_start.strftime('%Y%m%d') }}"
-end_date_nodash = (
-    '{{ (data_interval_end - macros.timedelta(days=1)).strftime("%Y%m%d") }}'
-)
+end_date_nodash = '{{ (data_interval_end - macros.timedelta(days=1)).strftime("%Y%m%d") }}'
 
 sql_cmd = f"""
     SELECT o.ORDER_PLACED_LOCAL_DATETIME AS order_date
@@ -52,7 +48,7 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2024, 10, 1, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.media_analytics,
+    'owner': owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
 }
@@ -70,7 +66,7 @@ with dag:
     spend_data = SnowflakeToS3Operator(
         task_id=f"export_to_slm",
         sql_or_path=sql_cmd,
-        s3_conn_id="aws_s3_slm_export",
+        s3_conn_id='aws_s3_slm_export',
         bucket=s3_buckets.tsos_da_slm_outbound,
         key=f"orders/slm_flus_orders_{start_date_nodash}_{end_date_nodash}.csv.gz",
         field_delimiter=",",

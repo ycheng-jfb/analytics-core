@@ -25,7 +25,7 @@ SELECT CASE
     edw_prod.stg.udf_unconcat_brand(ltv.customer_id) as customer_id,
     m.membership_id,
     'M' || (1 + DATEDIFF(MONTH,  ltv.vip_cohort_month_date, ltv.month_date))       AS tenure
-FROM edw_prod.analytics_base.customer_lifetime_value_monthly ltv
+FROM edw_prod.analytics_base.customer_lifetime_value_monthly_jfb ltv
 JOIN lake_jfb_view.ultra_merchant.period p
     ON p.date_period_start = ltv.month_date
 JOIN edw_prod.data_model_jfb.dim_store st

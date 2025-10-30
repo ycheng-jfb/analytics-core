@@ -83,7 +83,7 @@ SELECT DISTINCT UPPER(st.store_brand)                                           
               , UPPER(st.store_region)                                                           AS region
               , (CASE
                      WHEN dc.specialty_country_code = 'GB' THEN 'UK'
-                     WHEN dc.specialty_country_code != 'Unknown' THEN dc.specialty_country_code
+                     WHEN dc.specialty_country_code NOT IN ('Unknown','',NULL) THEN dc.specialty_country_code
                      ELSE st.store_country END)                                                  AS country
               , fol.order_id
               , fol.order_line_id
@@ -92,7 +92,8 @@ SELECT DISTINCT UPPER(st.store_brand)                                           
               , dp.product_id
               , dp.product_type
               , dpt.product_type_name
-              , dp.product_sku
+              , CASE WHEN dp.product_sku IS NULL OR dp.product_sku = '' THEN TRIM(REGEXP_SUBSTR(dp.sku, '^[^-]+-[^-]+'))
+                        ELSE dp.product_sku END AS product_sku
               , dp.sku
               , dp.product_name
               , dp.color                                                                         AS dp_color
@@ -237,7 +238,7 @@ FROM edw_prod.data_model_jfb.fact_order_line fol
               ON dos.order_status_key = fol.order_status_key
          JOIN edw_prod.data_model_jfb.dim_order_line_status dols
               ON dols.order_line_status_key = fol.order_line_status_key
-         JOIN edw_prod.data_model_jfb.dim_order_membership_classification domc
+         left JOIN edw_prod.data_model_jfb.dim_order_membership_classification domc
               ON domc.order_membership_classification_key = fol.order_membership_classification_key
          JOIN edw_prod.data_model_jfb.dim_product dp
               ON dp.product_id = fol.product_id
@@ -461,7 +462,7 @@ FROM edw_prod.data_model_jfb.fact_order_line fol
               ON dos.order_status_key = fol.order_status_key
          JOIN edw_prod.data_model_jfb.dim_order_line_status dols
               ON dols.order_line_status_key = fol.order_line_status_key
-         JOIN edw_prod.data_model_jfb.dim_order_membership_classification domc
+         left JOIN edw_prod.data_model_jfb.dim_order_membership_classification domc
               ON domc.order_membership_classification_key = fol.order_membership_classification_key
          JOIN edw_prod.data_model_jfb.dim_product dp
               ON dp.product_id = fol.product_id
@@ -715,12 +716,12 @@ SELECT old.business_unit
       ,old.two_for_one_discount
 
      , cb.chargeback_date
-     , cb.total_chargeback_amount * old.order_line_revenue_percent    AS total_chargeback_amount
+     , coalesce(cb.total_chargeback_amount, 0) * old.order_line_revenue_percent    AS total_chargeback_amount
 
      , rf.refund_date
-     , rf.total_refund_amount * old.order_line_revenue_percent        AS total_refund_amount
-     , rf.total_refund_cash_amount * old.order_line_revenue_percent   AS total_refund_cash_amount
-     , rf.total_refund_credit_amount * old.order_line_revenue_percent AS total_refund_credit_amount
+     , coalesce(rf.total_refund_amount, 0) * old.order_line_revenue_percent        AS total_refund_amount
+     , coalesce(rf.total_refund_cash_amount, 0) * old.order_line_revenue_percent   AS total_refund_cash_amount
+     , coalesce(rf.total_refund_credit_amount, 0) * old.order_line_revenue_percent AS total_refund_credit_amount
 
      , rd.return_date
      , rd.return_reason
@@ -830,12 +831,12 @@ SELECT old.business_unit
       ,old.two_for_one_discount
 
      , cb.chargeback_date
-     , cb.total_chargeback_amount * old.order_line_revenue_percent    AS total_chargeback_amount
+     , coalesce(cb.total_chargeback_amount, 0) * old.order_line_revenue_percent    AS total_chargeback_amount
 
      , rf.refund_date
-     , rf.total_refund_amount * old.order_line_revenue_percent        AS total_refund_amount
-     , rf.total_refund_cash_amount * old.order_line_revenue_percent   AS total_refund_cash_amount
-     , rf.total_refund_credit_amount * old.order_line_revenue_percent AS total_refund_credit_amount
+     , coalesce(rf.total_refund_amount, 0) * old.order_line_revenue_percent        AS total_refund_amount
+     , coalesce(rf.total_refund_cash_amount, 0) * old.order_line_revenue_percent   AS total_refund_cash_amount
+     , coalesce(rf.total_refund_credit_amount, 0) * old.order_line_revenue_percent AS total_refund_credit_amount
 
      , rd.return_date
      , rd.return_reason

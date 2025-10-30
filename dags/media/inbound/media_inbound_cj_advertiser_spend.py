@@ -41,7 +41,7 @@ advertiser_ids = [5844330, 5889552, 5963319, 6323253]
 default_args = {
     "start_date": pendulum.datetime(2021, 8, 23, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.media_analytics,
+    'owner': owners.media_analytics,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "sla": timedelta(hours=2),
@@ -52,18 +52,14 @@ default_args = {
 
 def from_ds(data_interval_start):
     exec_date = pendulum.instance(data_interval_start)
-    exec_date = (
-        exec_date.add(days=-15).replace(tzinfo=None).format("YYYY-MM-DDTHH:MM:SS")
-    )
-    return str(exec_date) + "Z"
+    exec_date = exec_date.add(days=-15).replace(tzinfo=None).format('YYYY-MM-DDTHH:MM:SS')
+    return str(exec_date) + 'Z'
 
 
 def to_ds(data_interval_start):
     exec_date = pendulum.instance(data_interval_start)
-    exec_date = (
-        exec_date.add(days=+1).replace(tzinfo=None).format("YYYY-MM-DDTHH:MM:SS")
-    )
-    return str(exec_date) + "Z"
+    exec_date = exec_date.add(days=+1).replace(tzinfo=None).format('YYYY-MM-DDTHH:MM:SS')
+    return str(exec_date) + 'Z'
 
 
 dag = DAG(
@@ -78,11 +74,7 @@ dag = DAG(
 
 
 def build_query(advertiser_id):
-    lst = [
-        x.source_name
-        for x in column_list
-        if x.source_name not in ["updated_at", "custSegment"]
-    ]
+    lst = [x.source_name for x in column_list if x.source_name not in ["updated_at", "custSegment"]]
 
     return (
         f"{{ advertiserCommissions( forAdvertisers: [\"{advertiser_id}\"], "
@@ -100,7 +92,7 @@ with dag:
         table=table,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}",
-        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=3),
+        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=3),
         trigger_rule="all_done",
     )
     for advertiser_id in advertiser_ids:
