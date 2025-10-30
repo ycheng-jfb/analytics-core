@@ -25,7 +25,7 @@ class AzureGraphToS3(BaseRowsToS3CsvOperator):
         self.group_request_url = group_request_url
 
     def get_azure_conn(self):
-        hook = AzureHook("azure_default")
+        hook = AzureHook('azure_default')
         client = hook.azure_get_conn()
         return client
 
@@ -35,21 +35,19 @@ class AzureGraphToS3(BaseRowsToS3CsvOperator):
         while request_url:
             result = client.get(url=request_url)
             json_resp = json.loads(result.text)
-            if "Users" in request_url:
-                for resp in json_resp["value"]:
+            if 'Users' in request_url:
+                for resp in json_resp['value']:
                     yield {**resp, "updated_at": updated_at}
-            elif "groups" in request_url:
+            elif 'groups' in request_url:
                 group_params = {
-                    "group_name": group_param_tuple.get("displayName"),
-                    "group_id": group_param_tuple.get("id"),
+                    'group_name': group_param_tuple.get('displayName'),
+                    'group_id': group_param_tuple.get('id'),
                 }
-                for resp in json_resp["value"]:
-                    resp.pop("@odata.type")
+                for resp in json_resp['value']:
+                    resp.pop('@odata.type')
                     yield {**group_params, **resp, "updated_at": updated_at}
             request_url = (
-                json_resp["@odata.nextLink"]
-                if "@odata.nextLink" in json_resp.keys()
-                else False
+                json_resp['@odata.nextLink'] if '@odata.nextLink' in json_resp.keys() else False
             )
             logging.info("Loaded 100 records & fetching next set of records...")
 
@@ -58,19 +56,19 @@ class AzureGraphToS3(BaseRowsToS3CsvOperator):
         group_request_url = self.group_request_url.format(groupName=prefix_name)
         result = client.get(url=group_request_url)
         json_resp = json.loads(result.text)
-        return json_resp["value"]
+        return json_resp['value']
 
     def get_rows(self):
-        if "Users" in self.request_url:
+        if 'Users' in self.request_url:
             for record in self.get_data_from_azure(self.request_url):
                 yield record
-        elif "groups" in self.request_url:
+        elif 'groups' in self.request_url:
             for prefix in self.prefix_list:
                 logging.info(
                     f"Looking for prefix - {prefix}",
                 )
                 group_details = self.get_group_details_from_azure(prefix)
                 for group in group_details:
-                    group_request_url = self.request_url.format(groupID=group["id"])
+                    group_request_url = self.request_url.format(groupID=group['id'])
                     for record in self.get_data_from_azure(group_request_url, group):
                         yield record

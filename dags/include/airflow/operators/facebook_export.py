@@ -242,12 +242,8 @@ class SegmentFacebookConversionsExportOperator(SnowflakeWatermarkSqlOperator):
             records = list(df_chunk.values.tolist())
             events = []
             for record in records:
-                if record[3] in [
-                    "Purchase",
-                    "CancelSubscription",
-                    "AddToCart",
-                    "ViewContent",
-                ]:
+
+                if record[3] in ['Purchase', 'CancelSubscription', 'AddToCart', 'ViewContent']:
                     user_data = UserData(
                         email=record[2],
                         zip_code=record[9],
@@ -264,11 +260,11 @@ class SegmentFacebookConversionsExportOperator(SnowflakeWatermarkSqlOperator):
                         fbc=record[8],
                     )
                     cd = json.loads(record[4])
-                    content_ids = [con["content_id"] for con in json.loads(record[16])]
+                    content_ids = [con['content_id'] for con in json.loads(record[16])]
                     custom_data = CustomData(
-                        currency=cd["currency"],
-                        value=float(cd["value"]),
-                        order_id=record[1] if record[3] == "Purchase" else None,
+                        currency=cd['currency'],
+                        value=float(cd['value']),
+                        order_id=record[1] if record[3] == 'Purchase' else None,
                         content_ids=content_ids,
                         content_type="product_group",
                         # custom_properties={"partner_agent": "internal_capi"} if record[3] == 'AddToCart' else None
@@ -341,9 +337,7 @@ class SegmentFacebookConversionsExportOperator(SnowflakeWatermarkSqlOperator):
     def initialize_api(self, region):
         facebook_conn_id = "facebook_" + region.lower()
         if facebook_conn_id not in self._hooks:
-            self._hooks[facebook_conn_id] = FacebookAdsHook(
-                facebook_ads_conn_id=facebook_conn_id
-            )
+            self._hooks[facebook_conn_id] = FacebookAdsHook(facebook_ads_conn_id=facebook_conn_id)
         FacebookAdsApi.init(
             access_token=self._hooks[facebook_conn_id].access_token,
             api_version=self._hooks[facebook_conn_id].api_version,
@@ -355,27 +349,27 @@ class SegmentFacebookConversionsExportOperator(SnowflakeWatermarkSqlOperator):
             df = pd.DataFrame(
                 users,
                 columns=[
-                    "EVENT_TIME",
-                    "EVENT_ID",
-                    "EMAIL",
-                    "PIXEL_ID",
-                    "REGION",
-                    "EVENT_NAME",
-                    "CUSTOM_DATA",
+                    'EVENT_TIME',
+                    'EVENT_ID',
+                    'EMAIL',
+                    'PIXEL_ID',
+                    'REGION',
+                    'EVENT_NAME',
+                    'CUSTOM_DATA',
                     # 'PHONE',
-                    "IP",
-                    "USER_AGENT",
-                    "SUBSCRIPTION_ID",
-                    "FBC",
-                    "ZP",
-                    "DB",
-                    "COUNTRY",
-                    "EXTERNAL_ID",
-                    "FIRST_NAME",
-                    "LAST_NAME",
-                    "PHONE",
-                    "CONTENTS",
-                    "PARTNER_AGENT",
+                    'IP',
+                    'USER_AGENT',
+                    'SUBSCRIPTION_ID',
+                    'FBC',
+                    'ZP',
+                    'DB',
+                    'COUNTRY',
+                    'EXTERNAL_ID',
+                    'FIRST_NAME',
+                    'LAST_NAME',
+                    'PHONE',
+                    'CONTENTS',
+                    'PARTNER_AGENT',
                 ],
             )
             df.set_index(["REGION"], inplace=True)
@@ -421,6 +415,7 @@ class FacebookOfflineConversionsExportOperator(SnowflakeWatermarkSqlOperator):
         self.country = country
 
     def get_user_list_chunks(self, low_watermark: str) -> Iterable[List]:
+
         cur = self.snowflake_hook.get_cursor()
 
         query = f"""
@@ -494,10 +489,10 @@ class FacebookOfflineConversionsExportOperator(SnowflakeWatermarkSqlOperator):
                     },
                     "action_source": "physical_store",
                 }
-                if event["user_data"]["st"] is None:
-                    del event["user_data"]["st"]
-                if event["user_data"]["zip"] is None:
-                    del event["user_data"]["zip"]
+                if event['user_data']['st'] is None:
+                    del event['user_data']['st']
+                if event['user_data']['zip'] is None:
+                    del event['user_data']['zip']
                 events.append(event)
 
             payload = {
@@ -521,23 +516,23 @@ class FacebookOfflineConversionsExportOperator(SnowflakeWatermarkSqlOperator):
             df = pd.DataFrame(
                 users,
                 columns=[
-                    "EVENT_TIME",
-                    "EVENT_ID",
-                    "EM",
-                    "PH",
-                    "GEN",
-                    "LN",
-                    "FN",
-                    "CT",
-                    "ST",
-                    "ZIP",
-                    "COUNTRY",
-                    "EXTERNAL_ID",
-                    "CURRENCY",
-                    "VALUE",
-                    "ORDER_ID",
-                    "PIXEL_ID",
-                    "REGION",
+                    'EVENT_TIME',
+                    'EVENT_ID',
+                    'EM',
+                    'PH',
+                    'GEN',
+                    'LN',
+                    'FN',
+                    'CT',
+                    'ST',
+                    'ZIP',
+                    'COUNTRY',
+                    'EXTERNAL_ID',
+                    'CURRENCY',
+                    'VALUE',
+                    'ORDER_ID',
+                    'PIXEL_ID',
+                    'REGION',
                 ],
             )
             df.set_index(["REGION"], inplace=True)
@@ -545,6 +540,4 @@ class FacebookOfflineConversionsExportOperator(SnowflakeWatermarkSqlOperator):
                 print(f"region: {region}")
                 region_df = df.loc[[region]]
                 conn_id = "facebook_" + region.lower()
-                self.post_conversions(
-                    pixel_df=region_df, pixel_id=self.pixel_id, conn_id=conn_id
-                )
+                self.post_conversions(pixel_df=region_df, pixel_id=self.pixel_id, conn_id=conn_id)

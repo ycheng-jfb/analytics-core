@@ -28,15 +28,12 @@ class SsrsScheduleOperator(RunSqlAgent):
         self,
         ssrs_schedule_name,
         mssql_conn_id=conn_ids.MsSql.default,
-        wrapper_proc="pr_start_job_wrapper",
+        wrapper_proc='pr_start_job_wrapper',
         **kwargs,
     ):
         self.ssrs_schedule_name = ssrs_schedule_name
         super().__init__(
-            mssql_job_name=None,
-            mssql_conn_id=mssql_conn_id,
-            wrapper_proc=wrapper_proc,
-            **kwargs,
+            mssql_job_name=None, mssql_conn_id=mssql_conn_id, wrapper_proc=wrapper_proc, **kwargs
         )
 
     @property

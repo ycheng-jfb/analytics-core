@@ -23,9 +23,7 @@ class GCSHook(GoogleBaseHook):
     def get_conn(self):
         if not self._conn:
             self._conn = storage.Client(
-                credentials=self.get_credentials(),
-                client_info=CLIENT_INFO,
-                project=self.project_id,
+                credentials=self.get_credentials(), client_info=CLIENT_INFO, project=self.project_id
             )
 
         return self._conn
@@ -85,13 +83,6 @@ class GCSHook(GoogleBaseHook):
                     timeout=timeout,
                 )
             )
-            self.log.info(
-                "File %s uploaded to %s in %s bucket",
-                filename,
-                object_name,
-                bucket_name,
-            )
+            self.log.info("File %s uploaded to %s in %s bucket", filename, object_name, bucket_name)
         else:
-            raise ValueError(
-                "'filename' parameter missing. It is required to upload to gcs."
-            )
+            raise ValueError("'filename' parameter missing. It is required to upload to gcs.")

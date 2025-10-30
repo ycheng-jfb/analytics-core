@@ -122,7 +122,7 @@ def cached(cachefile_path, ttl_hours=8):
     return decorator  # return this "customized" decorator that uses "cachefile_path"
 
 
-pickle_dir = Path(gettempdir(), ".pickle")
+pickle_dir = Path(gettempdir(), '.pickle')
 
 
 def pickle_cache(name, folder=pickle_dir):
@@ -140,17 +140,17 @@ def pickle_cache(name, folder=pickle_dir):
     Returns: callable
 
     """
-    pickle_path = Path(folder, name).with_suffix(".pickle")
+    pickle_path = Path(folder, name).with_suffix('.pickle')
 
     def wrap(func):
         @wraps(func)
         def wrapped_f(*args, **kwargs):
             if os.path.exists(pickle_path):
-                with open(pickle_path, "rb") as f:
+                with open(pickle_path, 'rb') as f:
                     obj = pickle.load(f)
             else:
                 obj = func(*args, **kwargs)
-                with open(pickle_path, "wb") as f:
+                with open(pickle_path, 'wb') as f:
                     pickle.dump(obj, f)
             return obj
 

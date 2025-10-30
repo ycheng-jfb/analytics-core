@@ -29,15 +29,15 @@ default_args = {
     "email_on_failure": True,
     "email_on_retry": False,
     "email": [
-        "rpoornima@techstyle.com",
-        "rtanneeru@techstyle.com",
+        'rpoornima@techstyle.com',
+        'rtanneeru@techstyle.com',
     ],
 }
 
 dag = DAG(
-    dag_id="edm_outbound_sftp_constructor_feed_qa",
+    dag_id='edm_outbound_sftp_constructor_feed_qa',
     default_args=default_args,
-    schedule="5 18-20 * * 1-5/2",  # Running at 5th minute to avoid conflict with prod DAG
+    schedule='5 18-20 * * 1-5/2',  # Running at 5th minute to avoid conflict with prod DAG
     catchup=False,
     max_active_tasks=2,
     max_active_runs=1,
@@ -49,11 +49,11 @@ dag = DAG(
     ),
 )
 
-environment = "qa"  # ['dev', 'qa', 'prod']
+environment = 'qa'  # ['dev', 'qa', 'prod']
 
 
 def check_time(**kwargs):
-    execution_time = kwargs["data_interval_end"].in_timezone("America/Los_Angeles")
+    execution_time = kwargs['data_interval_end'].in_timezone('America/Los_Angeles')
     if execution_time.hour == 18 and execution_time.minute == 5:
         return [full.task_id]
     else:
@@ -151,8 +151,8 @@ class MsSqlConstructorFeedOperator(BaseOperator, SkipMixin):
         is_full_load: bool,
         tgt_database: str,
         store_group_region: str,
-        store_region: str = "",
-        tgt_schema: str = "dbo",
+        store_region: str = '',
+        tgt_schema: str = 'dbo',
         is_post_delete: bool = False,
         **kwargs,
     ) -> None:
@@ -164,23 +164,19 @@ class MsSqlConstructorFeedOperator(BaseOperator, SkipMixin):
         self.store_group_region = store_group_region
         self.store_region = store_region
         self.is_post_delete = is_post_delete
-        self.store_brand = "fbl" if "fl" == store_region.lower()[0:2] else "sxf"
+        self.store_brand = 'fbl' if 'fl' == store_region.lower()[0:2] else 'sxf'
         super().__init__(**kwargs)
 
     @cached_property
     def mssql_hook(self):
         return MsSqlOdbcHook(
-            mssql_conn_id=self.mssql_conn_id,
-            database=self.tgt_database,
-            schema=self.tgt_schema,
+            mssql_conn_id=self.mssql_conn_id, database=self.tgt_database, schema=self.tgt_schema
         )
 
     @property
     def watermark_cmd(self):
-        store_group_region = (
-            f"''{self.store_group_region}''" if self.store_group_region else "NULL"
-        )
-        store_region = f"''{self.store_region}''" if self.store_region else "NULL"
+        store_group_region = f"''{self.store_group_region}''" if self.store_group_region else 'NULL'
+        store_region = f"''{self.store_region}''" if self.store_region else 'NULL'
         watermark_cmd = f"""SELECT TOP 1 CONVERT(VARCHAR, datetime_refresh_to, 21)
                 FROM ultrasearch.log.process_log_detail
                 WHERE [process_name] = '[ultrasearch].[dbo].[pr_personalization_product_feed_{self.store_brand}_sel]'
@@ -197,7 +193,7 @@ class MsSqlConstructorFeedOperator(BaseOperator, SkipMixin):
         result = cur.fetchone()
 
         if self.is_full_load or result is None:
-            return "1900-01-01"
+            return '1900-01-01'
         else:
             return result[0]
 
@@ -219,14 +215,13 @@ class MsSqlConstructorFeedOperator(BaseOperator, SkipMixin):
 
     @property
     def sql_cmd(self) -> str:
+
         if not self.is_post_delete:
             cmd = f""" EXEC [ultrasearch].[dbo].[pr_personalization_product_feed_{self.store_brand}_sel]
                 @RefreshDate = '{self.refresh_date}'
                 , @StoreGroupRegion = '{self.store_group_region}'
                 """
-            cmd += (
-                f", @StoreRegion = '{self.store_region}'" if self.store_region else ""
-            )
+            cmd += f", @StoreRegion = '{self.store_region}'" if self.store_region else ''
 
         else:
             cmd = f"""DELETE FROM ultrasearch.dbo.personalization_product_feed_{self.store_brand}_queue
@@ -237,7 +232,7 @@ class MsSqlConstructorFeedOperator(BaseOperator, SkipMixin):
 
     def dry_run(self) -> None:
         if not self.is_post_delete:
-            print(self.watermark_cmd, "\n\n")
+            print(self.watermark_cmd, '\n\n')
         print(self.sql_cmd)
 
     @retry_wrapper(3, Exception, sleep_time=20)
@@ -252,15 +247,9 @@ class MsSqlConstructorFeedOperator(BaseOperator, SkipMixin):
             # Skipping tasks if no records found
             if not self.is_post_delete:
                 if self.is_product_queue_empty(con) and context:
-                    print("The queue table is empty. Skipping run...")
-                    downstream_tasks = context["task"].get_direct_relatives(
-                        upstream=False
-                    )
-                    self.skip(
-                        context["dag_run"],
-                        context["ti"].execution_date,
-                        downstream_tasks,
-                    )
+                    print('The queue table is empty. Skipping run...')
+                    downstream_tasks = context['task'].get_direct_relatives(upstream=False)
+                    self.skip(context['dag_run'], context['ti'].execution_date, downstream_tasks)
 
 
 @dataclass
@@ -268,7 +257,7 @@ class StoreConnectionSlug:
     env: str
     connection_slug: str
     store_group_region: str
-    store_region: str = ""
+    store_region: str = ''
 
     @property
     def slug_abbr(self):
@@ -277,73 +266,71 @@ class StoreConnectionSlug:
 
 connection_slugs = [
     # Fabletics
-    StoreConnectionSlug("qa", "con_Uv0WOoM8zXsbSi3S", "FLEU", "FLDE"),
-    StoreConnectionSlug("qa", "con_zayoRDTKkdbSG71N", "FLEU", "FLDK"),
-    StoreConnectionSlug("qa", "con_8vtymWM9GWoTy6k1", "FLEU", "FLES"),
-    StoreConnectionSlug("qa", "con_p8nsk6PYlY0tLxjQ", "FLEU", "FLFR"),
-    StoreConnectionSlug("qa", "con_OvFADv5X5dwVTlY7", "FLEU", "FLNL"),
-    StoreConnectionSlug("qa", "con_X2WbSrPrviMu5ZLO", "FLEU", "FLSE"),
-    StoreConnectionSlug("qa", "con_c5vrwp2q3qOC7jTr", "FLEU", "FLUK"),
-    StoreConnectionSlug("qa", "con_V6ddUiUSMQWi5uPi", "FLNA", "FLCA"),
-    StoreConnectionSlug("qa", "con_XzxGPACc6UdzjmqO", "FLNA", "FLUS"),
+    StoreConnectionSlug('qa', 'con_Uv0WOoM8zXsbSi3S', 'FLEU', 'FLDE'),
+    StoreConnectionSlug('qa', 'con_zayoRDTKkdbSG71N', 'FLEU', 'FLDK'),
+    StoreConnectionSlug('qa', 'con_8vtymWM9GWoTy6k1', 'FLEU', 'FLES'),
+    StoreConnectionSlug('qa', 'con_p8nsk6PYlY0tLxjQ', 'FLEU', 'FLFR'),
+    StoreConnectionSlug('qa', 'con_OvFADv5X5dwVTlY7', 'FLEU', 'FLNL'),
+    StoreConnectionSlug('qa', 'con_X2WbSrPrviMu5ZLO', 'FLEU', 'FLSE'),
+    StoreConnectionSlug('qa', 'con_c5vrwp2q3qOC7jTr', 'FLEU', 'FLUK'),
+    StoreConnectionSlug('qa', 'con_V6ddUiUSMQWi5uPi', 'FLNA', 'FLCA'),
+    StoreConnectionSlug('qa', 'con_XzxGPACc6UdzjmqO', 'FLNA', 'FLUS'),
     # Savage X
-    StoreConnectionSlug("qa", "con_crsuj29pCNNUNbrP", "SXEU", "SXDE"),
-    StoreConnectionSlug("qa", "con_GDyTThqXoidKizVU", "SXEU", "SXES"),
-    StoreConnectionSlug("qa", "con_ZN2Wi22ffZuk26pz", "SXEU", "SXFR"),
-    StoreConnectionSlug("qa", "con_T6ghcIeZquVLuAI3", "SXEU", "SXUK"),
-    StoreConnectionSlug("qa", "con_ooPpa8zJK4Qeyk8e", "SXNA", "SXUS"),
-    StoreConnectionSlug("qa", "con_zlqurmSZxMqhCKWp", "SXEU", "SXEU"),
+    StoreConnectionSlug('qa', 'con_crsuj29pCNNUNbrP', 'SXEU', 'SXDE'),
+    StoreConnectionSlug('qa', 'con_GDyTThqXoidKizVU', 'SXEU', 'SXES'),
+    StoreConnectionSlug('qa', 'con_ZN2Wi22ffZuk26pz', 'SXEU', 'SXFR'),
+    StoreConnectionSlug('qa', 'con_T6ghcIeZquVLuAI3', 'SXEU', 'SXUK'),
+    StoreConnectionSlug('qa', 'con_ooPpa8zJK4Qeyk8e', 'SXNA', 'SXUS'),
+    StoreConnectionSlug('qa', 'con_zlqurmSZxMqhCKWp', 'SXEU', 'SXEU'),
 ]
 
 with dag:
-    check_is_full_load = BranchPythonOperator(
-        task_id="check_time", python_callable=check_time
-    )
+    check_is_full_load = BranchPythonOperator(task_id="check_time", python_callable=check_time)
 
-    full_task_group = TaskGroup("full_load")
-    incremental_task_group = TaskGroup("incremental_load")
+    full_task_group = TaskGroup('full_load')
+    incremental_task_group = TaskGroup('incremental_load')
 
     incremental = EmptyOperator(task_id="incremental")
     full = EmptyOperator(task_id="full")
 
     for connection_slug in connection_slugs:
         if connection_slug.env == environment:
-            if connection_slug.store_group_region.upper().startswith("FL"):
-                store_brand = "fbl"
+            if connection_slug.store_group_region.upper().startswith('FL'):
+                store_brand = 'fbl'
                 mssql_conn_id = conn_ids.MsSql.dbd01_app_airflow
-                sftp_constructor_conn_id = "sftp_constructor_fl"
+                sftp_constructor_conn_id = 'sftp_constructor_fl'
             else:
-                store_brand = "sxf"
+                store_brand = 'sxf'
                 mssql_conn_id = conn_ids.MsSql.dbd01_app_airflow
-                sftp_constructor_conn_id = "sftp_constructor_sxf"
+                sftp_constructor_conn_id = 'sftp_constructor_sxf'
 
             with full_task_group:
                 full_load = MsSqlConstructorFeedOperator(
                     task_id=f"exec_pr_personalization_product_feed_{connection_slug.slug_abbr}_full",
                     mssql_conn_id=mssql_conn_id,
                     is_full_load=True,
-                    tgt_database="ultrasearch",
+                    tgt_database='ultrasearch',
                     store_group_region=connection_slug.store_group_region,
                     store_region=connection_slug.store_region,
                 )
 
                 bcp_export_full = KubernetesPythonOperator(
-                    task_id=f"bcp_to_sftp_export_{connection_slug.slug_abbr}_full",
+                    task_id=f'bcp_to_sftp_export_{connection_slug.slug_abbr}_full',
                     python_script=bcp_export_python_script,
                     conn_id_list=[mssql_conn_id, sftp_constructor_conn_id],
                     env_variables={
-                        "file_name": f"{connection_slug.connection_slug}_full",
+                        "file_name": f'{connection_slug.connection_slug}_full',
                         "store_brand": store_brand,
                         "store_group_region": connection_slug.store_group_region,
                         "store_region": connection_slug.store_region,
-                        "is_full_load": "1",
+                        "is_full_load": '1',
                     },
                 )
 
                 full_load_completed = MsSqlConstructorFeedOperator(
-                    task_id=f"delete_full_load_{connection_slug.slug_abbr}_product_ids",
+                    task_id=f'delete_full_load_{connection_slug.slug_abbr}_product_ids',
                     mssql_conn_id=mssql_conn_id,
-                    tgt_database="ultrasearch",
+                    tgt_database='ultrasearch',
                     store_group_region=connection_slug.store_group_region,
                     store_region=connection_slug.store_region,
                     is_full_load=True,
@@ -355,28 +342,28 @@ with dag:
                     task_id=f"exec_pr_personalization_product_feed_{connection_slug.slug_abbr}_incremental",
                     mssql_conn_id=mssql_conn_id,
                     is_full_load=False,
-                    tgt_database="ultrasearch",
+                    tgt_database='ultrasearch',
                     store_group_region=connection_slug.store_group_region,
                     store_region=connection_slug.store_region,
                 )
 
                 bcp_export_incremental = KubernetesPythonOperator(
-                    task_id=f"bcp_to_sftp_export_{connection_slug.slug_abbr}_incremental",
+                    task_id=f'bcp_to_sftp_export_{connection_slug.slug_abbr}_incremental',
                     python_script=bcp_export_python_script,
                     conn_id_list=[mssql_conn_id, sftp_constructor_conn_id],
                     env_variables={
-                        "file_name": f"{connection_slug.connection_slug}_patch_delta_ignore",
+                        "file_name": f'{connection_slug.connection_slug}_patch_delta_ignore',
                         "store_brand": store_brand,
                         "store_group_region": connection_slug.store_group_region,
                         "store_region": connection_slug.store_region,
-                        "is_full_load": "0",
+                        "is_full_load": '0',
                     },
                 )
 
                 incremental_load_completed = MsSqlConstructorFeedOperator(
-                    task_id=f"delete_incremental_{connection_slug.slug_abbr}_product_ids",
+                    task_id=f'delete_incremental_{connection_slug.slug_abbr}_product_ids',
                     mssql_conn_id=mssql_conn_id,
-                    tgt_database="ultrasearch",
+                    tgt_database='ultrasearch',
                     store_group_region=connection_slug.store_group_region,
                     store_region=connection_slug.store_region,
                     is_full_load=False,
@@ -389,9 +376,4 @@ with dag:
 
             full_load >> bcp_export_full
 
-            (
-                incremental
-                >> incremental_load
-                >> bcp_export_incremental
-                >> incremental_load_completed
-            )
+            incremental >> incremental_load >> bcp_export_incremental >> incremental_load_completed

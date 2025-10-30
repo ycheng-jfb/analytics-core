@@ -1,22 +1,20 @@
 from typing import List
 
-from include.airflow.operators.snowflake_mart_base import (
-    BaseSnowflakeMartUpsertOperator,
-    Column,
-)
+from include.airflow.operators.snowflake_mart_base import BaseSnowflakeMartUpsertOperator, Column
 from include.utils.string import unindent_auto
 
 
 class SnowflakeMartFactOperator(BaseSnowflakeMartUpsertOperator):
-    ui_fgcolor = "#000000"
-    ui_color = "#C8EDF5"
+
+    ui_fgcolor = '#000000'
+    ui_color = '#C8EDF5'
 
     @property
     def base_table_meta_cols(self) -> List[Column]:
         base_table_meta_cols = [
-            Column("meta_row_hash", "INT"),
-            Column("meta_create_datetime", "TIMESTAMP_LTZ"),
-            Column("meta_update_datetime", "TIMESTAMP_LTZ"),
+            Column('meta_row_hash', 'INT'),
+            Column('meta_create_datetime', 'TIMESTAMP_LTZ'),
+            Column('meta_update_datetime', 'TIMESTAMP_LTZ'),
         ]
         return base_table_meta_cols
 

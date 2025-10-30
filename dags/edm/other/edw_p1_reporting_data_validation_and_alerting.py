@@ -4,10 +4,7 @@ import pendulum
 from airflow.models import DAG
 
 from include.airflow.callbacks.slack import slack_failure_edm
-from include.airflow.operators.snowflake import (
-    SnowflakeAlertOperator,
-    SnowflakeProcedureOperator,
-)
+from include.airflow.operators.snowflake import SnowflakeAlertOperator, SnowflakeProcedureOperator
 from include.config import email_lists, owners
 
 default_args = {
@@ -191,7 +188,7 @@ with dag:
             task_id=i.task_id,
             sql_or_path=i.sql_or_path,
             distribution_list=i.distribution_list,
-            database="EDW_PROD",
+            database='EDW_PROD',
             subject=i.subject,
             body=i.body,
         )

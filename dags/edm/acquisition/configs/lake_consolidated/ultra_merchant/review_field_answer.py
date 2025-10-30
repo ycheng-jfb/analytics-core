@@ -6,7 +6,7 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.VALUE_COLUMN,
-    table="review_field_answer",
+    table='review_field_answer',
     company_join_sql="""
     SELECT DISTINCT
         L.REVIEW_FIELD_ANSWER_ID,
@@ -61,20 +61,20 @@ table_config = TableConfig(
 
          """,
     column_list=[
-        Column("review_field_answer_id", "INT", uniqueness=True, key=True),
-        Column("review_id", "INT", key=True),
-        Column("review_template_field_id", "INT", key=True),
-        Column("review_template_field_answer_id", "INT", key=True),
-        Column("value", "VARCHAR(2000)"),
-        Column("comment", "VARCHAR(512)"),
+        Column('review_field_answer_id', 'INT', uniqueness=True, key=True),
+        Column('review_id', 'INT', key=True),
+        Column('review_template_field_id', 'INT', key=True),
+        Column('review_template_field_answer_id', 'INT', key=True),
+        Column('value', 'VARCHAR(2000)'),
+        Column('comment', 'VARCHAR(512)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

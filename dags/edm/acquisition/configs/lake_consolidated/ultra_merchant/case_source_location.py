@@ -6,14 +6,14 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table="case_source_location",
+    table='case_source_location',
     column_list=[
-        Column("case_source_location_id", "INT", uniqueness=True),
-        Column("label", "VARCHAR(100)"),
+        Column('case_source_location_id', 'INT', uniqueness=True),
+        Column('label', 'VARCHAR(100)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_added",
+    watermark_column='datetime_added',
 )

@@ -5,9 +5,9 @@ from include.utils.environment import temporary_env_vars
 
 def get_conn(metastore_conn_uri, fernet_key, conn_id):
     env_dict = {
-        "AIRFLOW__DATABASE__SQL_ALCHEMY_CONN": metastore_conn_uri,
-        "AIRFLOW__CORE__FERNET_KEY": fernet_key,
-        "TFG_CREATE_META_TABLES": "False",
+        'AIRFLOW__DATABASE__SQL_ALCHEMY_CONN': metastore_conn_uri,
+        'AIRFLOW__CORE__FERNET_KEY': fernet_key,
+        'TFG_CREATE_META_TABLES': 'False',
     }
     with temporary_env_vars(env_dict):
         from airflow.hooks.base import BaseHook
@@ -18,9 +18,9 @@ def get_conn(metastore_conn_uri, fernet_key, conn_id):
 
 def add_conn(metastore_conn_uri, fernet_key, conn_kwargs):
     env_dict = {
-        "AIRFLOW__DATABASE__SQL_ALCHEMY_CONN": metastore_conn_uri,
-        "AIRFLOW__CORE__FERNET_KEY": fernet_key,
-        "TFG_CREATE_META_TABLES": "False",
+        'AIRFLOW__DATABASE__SQL_ALCHEMY_CONN': metastore_conn_uri,
+        'AIRFLOW__CORE__FERNET_KEY': fernet_key,
+        'TFG_CREATE_META_TABLES': 'False',
     }
     with temporary_env_vars(env_dict):
         from airflow.models import Connection
@@ -42,33 +42,33 @@ def get_uri(conn):
     """
 
     def get_scheme(conn_type):
-        return "{}://".format(str(conn_type).lower().replace("_", "-"))
+        return '{}://'.format(str(conn_type).lower().replace('_', '-'))
 
     def get_authority_block(login, password):
-        authority_block = ""
+        authority_block = ''
         if login is not None:
-            authority_block += quote(login, safe="")
+            authority_block += quote(login, safe='')
         if password is not None:
-            authority_block += ":" + quote(password, safe="")
-        if authority_block > "":
-            authority_block += "@"
+            authority_block += ':' + quote(password, safe='')
+        if authority_block > '':
+            authority_block += '@'
         return authority_block
 
     def get_host_block(host, port, schema):
-        host_block = ""
+        host_block = ''
         if host:
-            host_block += quote(host, safe="")
+            host_block += quote(host, safe='')
         if conn.port:
-            if host_block > "":
-                host_block += ":{}".format(port)
+            if host_block > '':
+                host_block += ':{}'.format(port)
             else:
-                host_block += "@:{}".format(port)
+                host_block += '@:{}'.format(port)
         if schema:
-            host_block += "/{}".format(quote(schema, safe=""))
+            host_block += '/{}'.format(quote(schema, safe=''))
         return host_block
 
     def get_extra(extra_dejson):
-        return "?{}".format(urlencode(extra_dejson)) if extra_dejson else ""
+        return '?{}'.format(urlencode(extra_dejson)) if extra_dejson else ''
 
     uri = get_scheme(conn_type=conn.conn_type)
     uri += get_authority_block(login=conn.login, password=conn.password)

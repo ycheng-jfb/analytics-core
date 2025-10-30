@@ -13,7 +13,7 @@ from include.config.email_lists import airflow_media_support
 default_args = {
     "start_date": pendulum.datetime(2024, 1, 1, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.data_integrations,
+    'owner': owners.data_integrations,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "sla": timedelta(hours=1),
@@ -35,7 +35,7 @@ with dag:
     sync_users = FivetranUserMapOperator(
         task_id=f"sync_users",
         request_params=None,
-        path="",
+        path='',
     )
     unused_connectors = SnowflakeAlertOperator(
         task_id="alert_for_deleted_fivetran_schemas",

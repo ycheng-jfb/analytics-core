@@ -20,7 +20,7 @@ from include.utils.context_managers import ConnClosing
 
 
 def bin_to_hex(val):
-    return hexlify(val).decode("utf-8")
+    return hexlify(val).decode('utf-8')
 
 
 class MsSqlToS3Operator(BaseOperator, SkipMixin):
@@ -77,7 +77,7 @@ class MsSqlToS3Operator(BaseOperator, SkipMixin):
         return f"000000{num}"[-6:]
 
     def build_key(self, part_num):
-        return self.key.replace("*", self.part_id(part_num))
+        return self.key.replace('*', self.part_id(part_num))
 
     @staticmethod
     def get_row_count(cur):
@@ -86,7 +86,7 @@ class MsSqlToS3Operator(BaseOperator, SkipMixin):
         return rowcount
 
     def write_sql_to_s3_split(self, cnx, sql, temp_dir):
-        temp_file_name = Path(temp_dir, "tmpfile").as_posix()
+        temp_file_name = Path(temp_dir, 'tmpfile').as_posix()
         cur = cnx.cursor()
         batch_count = 0
         file_count = 0
@@ -101,7 +101,7 @@ class MsSqlToS3Operator(BaseOperator, SkipMixin):
                     dialect="unix",
                     delimiter=self.FIELD_DELIMITER,
                     quoting=csv.QUOTE_MINIMAL,
-                    escapechar="\\",
+                    escapechar='\\',
                 )
                 while True:
                     batch_count += 1
@@ -126,7 +126,7 @@ class MsSqlToS3Operator(BaseOperator, SkipMixin):
         return self.get_row_count(cur)
 
     def write_sql_to_s3(self, cnx, sql, temp_dir):
-        temp_file_name = Path(temp_dir, "tmpfile").as_posix()
+        temp_file_name = Path(temp_dir, 'tmpfile').as_posix()
         print(sql)
         cur = cnx.cursor()
         batch_count = 0
@@ -137,7 +137,7 @@ class MsSqlToS3Operator(BaseOperator, SkipMixin):
                 dialect="unix",
                 delimiter=self.FIELD_DELIMITER,
                 quoting=csv.QUOTE_MINIMAL,
-                escapechar="\\",
+                escapechar='\\',
             )
             rows = cur.fetchmany(self.batch_size)
             while rows:
@@ -152,7 +152,7 @@ class MsSqlToS3Operator(BaseOperator, SkipMixin):
 
     @staticmethod
     def split_statements(val):
-        sql_statements = [x.strip() for x in val.split(";") if x.strip()]
+        sql_statements = [x.strip() for x in val.split(';') if x.strip()]
         last_stmt = sql_statements.pop()
         return sql_statements, last_stmt
 
@@ -161,10 +161,8 @@ class MsSqlToS3Operator(BaseOperator, SkipMixin):
 
     def execute(self, context):
         mssqlhook = MsSqlOdbcHook(mssql_conn_id=self.mssql_conn_id)
-        file_split = "*" in self.key
-        with tempfile.TemporaryDirectory() as td, ConnClosing(
-            mssqlhook.get_conn()
-        ) as cnx:
+        file_split = '*' in self.key
+        with tempfile.TemporaryDirectory() as td, ConnClosing(mssqlhook.get_conn()) as cnx:
             cnx.add_output_converter(SQL_VARBINARY, bin_to_hex)
             cnx.add_output_converter(SQL_BINARY, bin_to_hex)
 
@@ -176,22 +174,16 @@ class MsSqlToS3Operator(BaseOperator, SkipMixin):
 
             if file_split:
                 print("found '*' in s3 key; implementing file splitting")
-                rowcount = self.write_sql_to_s3_split(
-                    cnx=cnx, sql=last_stmt, temp_dir=td
-                )
+                rowcount = self.write_sql_to_s3_split(cnx=cnx, sql=last_stmt, temp_dir=td)
             else:
                 rowcount = self.write_sql_to_s3(cnx=cnx, sql=last_stmt, temp_dir=td)
 
         if rowcount < 1 and self.skip_downstream_if_no_rows:
             print("skipping downstream immediate task")
             if context:
-                downstream_tasks = context["task"].get_direct_relatives(upstream=False)
+                downstream_tasks = context['task'].get_direct_relatives(upstream=False)
                 if downstream_tasks:
-                    self.skip(
-                        context["dag_run"],
-                        context["ti"].execution_date,
-                        downstream_tasks,
-                    )
+                    self.skip(context['dag_run'], context['ti'].execution_date, downstream_tasks)
         else:
             print(f"row count: {rowcount}")
 
@@ -266,14 +258,10 @@ class MsSqlToSmbCsvOperator(MsSqlOperator):
         self.remote_path = remote_path
         self.compress = compress
 
-        if self.compress and not self.remote_path.endswith(".gz"):
-            raise ValueError(
-                "remote_path should end with .gz when compress is set to True"
-            )
-        elif not self.compress and not self.remote_path.endswith(".csv"):
-            raise ValueError(
-                "remote_path should end with .csv when no compression is set"
-            )
+        if self.compress and not self.remote_path.endswith('.gz'):
+            raise ValueError('remote_path should end with .gz when compress is set to True')
+        elif not self.compress and not self.remote_path.endswith('.csv'):
+            raise ValueError('remote_path should end with .csv when no compression is set')
 
     @property
     def open(self):
@@ -284,9 +272,7 @@ class MsSqlToSmbCsvOperator(MsSqlOperator):
         return SMBHook(self.smb_conn_id)
 
     def write_query_results_to_file(self, fp):
-        with ConnClosing(self.mssql_hook.get_conn()) as conn, self.open(
-            fp.name, "wt"
-        ) as f:
+        with ConnClosing(self.mssql_hook.get_conn()) as conn, self.open(fp.name, 'wt') as f:
             cur = conn.cursor()
             cur.execute(self.sql)
             result = cur.fetchall()
@@ -341,23 +327,19 @@ class MsSqlAlertOperator(MsSqlOperator):
                 column_list = [x[0] for x in cur.description]
                 df = pd.DataFrame(data=last_rows, columns=column_list)
                 html_content = f"{self.body}<br><br>{df.to_html(index=False)}"
-                if self.alert_type == "mail":
+                if self.alert_type == 'mail':
                     send_email(
-                        to=self.distribution_list,
-                        subject=self.subject,
-                        html_content=html_content,
+                        to=self.distribution_list, subject=self.subject, html_content=html_content
                     )
-                elif self.alert_type == "user_notification":
+                elif self.alert_type == 'user_notification':
                     for index, row in df.iterrows():
-                        to_email = str(row["NAME"])
-                        subject = self.subject.replace("USERNAME", to_email)
+                        to_email = str(row['NAME'])
+                        subject = self.subject.replace('USERNAME', to_email)
                         html_content = f"{self.body.replace('USERNAME', to_email)}"
                         to_email = to_email.lower()
                         print(to_email)
                         print(subject)
                         print(html_content)
-                        send_email(
-                            to=to_email, subject=subject, html_content=html_content
-                        )
+                        send_email(to=to_email, subject=subject, html_content=html_content)
             else:
                 self.log.info("no rows retrieved; skipping alert.")

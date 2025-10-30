@@ -22,7 +22,7 @@ class TaskState(Base):
     value = Column(String, nullable=True)
     timestamp = Column(UtcDateTime, default=pendulum.DateTime.utcnow())
 
-    __table_args__ = (PrimaryKeyConstraint("dag_id", "task_id"),)
+    __table_args__ = (PrimaryKeyConstraint('dag_id', 'task_id'),)
 
     def __repr__(self):
         return (

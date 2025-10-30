@@ -130,12 +130,12 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2023, 11, 1, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.data_integrations,
+    'owner': owners.data_integrations,
     "email": data_integration_support,
 }
 
 dag = DAG(
-    dag_id="edm_outbound_fl_stylitics_product_feed",
+    dag_id='edm_outbound_fl_stylitics_product_feed',
     default_args=default_args,
     schedule="0 6 * * *",
     catchup=False,
@@ -145,11 +145,11 @@ dag = DAG(
 
 with dag:
     post_to_sftp = SnowflakeToSFTPOperator(
-        task_id="fl_stylitics_product_feed",
+        task_id='fl_stylitics_product_feed',
         sql_or_path=fl_stylitics_product_feed_sql,
         sftp_conn_id=conn_ids.SFTP.ftp_fl_stylitics_product,
         filename=f"{{{{ ds_nodash }}}}_Fabletics_Stylitics_Product_Feed.csv",
         sftp_dir="",
-        field_delimiter=",",
+        field_delimiter=',',
         header=True,
     )

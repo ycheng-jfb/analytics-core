@@ -54,10 +54,7 @@ class MssqlToSFTPOperator(BaseOperator):
         with ConnClosing(hook.get_conn()) as con:
             query_result = pd.read_sql_query(query, con)
             query_result.to_csv(
-                local_path,
-                header=self.header,
-                index=False,
-                compression=self.compression,
+                local_path, header=self.header, index=False, compression=self.compression
             )
 
     def upload_to_sftp(self, local_path):
@@ -65,8 +62,7 @@ class MssqlToSFTPOperator(BaseOperator):
 
         with sftp_hook.get_conn() as sftp_client:
             sftp_client.put(
-                localpath=local_path,
-                remotepath=Path(self.remote_dir, self.filename).as_posix(),
+                localpath=local_path, remotepath=Path(self.remote_dir, self.filename).as_posix()
             )
 
     def execute(self, context):

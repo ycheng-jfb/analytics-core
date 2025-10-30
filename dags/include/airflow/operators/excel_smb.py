@@ -35,7 +35,7 @@ class SheetConfig:
     dtype: Optional[dict] = None
     add_meta_cols: Optional[dict] = None
     s3_replace: bool = True
-    default_schema_version: str = "v1"
+    default_schema_version: str = 'v1'
 
     def __post_init__(self):
         if not self.add_meta_cols:
@@ -45,10 +45,7 @@ class SheetConfig:
         )
         if not self.s3_replace:
             utc_time = (
-                pendulum.DateTime.utcnow()
-                .isoformat()[0:-6]
-                .replace("-", "")
-                .replace(":", "")
+                pendulum.DateTime.utcnow().isoformat()[0:-6].replace("-", "").replace(":", "")
             )
             self.s3_key = (
                 f"lake/{self.schema}.{self.table}/{self.default_schema_version}/"
@@ -85,7 +82,7 @@ class ExcelSMBToS3Operator(BaseOperator):
         remove_header_new_lines: bool = False,
         is_archive_file: bool = False,
         archive_folder: str = "archive",
-        default_schema_version: str = "v1",
+        default_schema_version: str = 'v1',
         *args,
         **kwargs,
     ):
@@ -115,12 +112,10 @@ class ExcelSMBToS3Operator(BaseOperator):
     def load_file(self, smb_client, s3_hook, file_name):
         with tempfile.TemporaryDirectory() as td:
             local_excel_path = (Path(td) / Path(file_name).name).as_posix()
-            with open(local_excel_path, "wb") as file:
-                smb_client.retrieveFile(
-                    service_name=self.share_name, path=file_name, file_obj=file
-                )
+            with open(local_excel_path, 'wb') as file:
+                smb_client.retrieveFile(service_name=self.share_name, path=file_name, file_obj=file)
 
-            print("Downloaded file: ", Path(file_name).name)
+            print('Downloaded file: ', Path(file_name).name)
 
             for sheet in self.sheet_configs:
                 df = self.read_excel(
@@ -133,29 +128,28 @@ class ExcelSMBToS3Operator(BaseOperator):
                 )
 
                 if self.remove_header_new_lines:
-                    df.columns = df.columns.map(lambda x: x.replace("\n", ""))
+                    df.columns = df.columns.map(lambda x: x.replace('\n', ''))
                 if sheet.add_meta_cols:
                     for k, v in sheet.add_meta_cols.items():
-                        df[k] = f"{v}"
+                        df[k] = f'{v}'
 
-                local_path = Path(
-                    td, str(sheet.sheet_name).lower() + ".csv.gz"
-                ).as_posix()
+                local_path = Path(td, str(sheet.sheet_name).lower() + '.csv.gz').as_posix()
 
                 df.to_csv(
                     local_path,
-                    encoding="utf-8",
+                    encoding='utf-8',
                     sep="|",
                     index=False,
                     quoting=csv.QUOTE_NONNUMERIC,
                     quotechar='"',
-                    line_terminator="\n",
-                    mode="w",
-                    compression="gzip",
+                    line_terminator='\n',
+                    mode='w',
+                    compression='gzip',
                 )
 
                 s3_file_name = f"{Path(file_name).stem}-{str(sheet.sheet_name)}"
                 if not sheet.s3_replace:
+
                     utc_time = (
                         pendulum.DateTime.utcnow()
                         .isoformat()[0:-6]
@@ -179,15 +173,10 @@ class ExcelSMBToS3Operator(BaseOperator):
                     bucket_name=self.bucket,
                     replace=True,
                 )
-                print("Loaded sheet: ", sheet.sheet_name)
+                print('Loaded sheet: ', sheet.sheet_name)
 
     def archive_file(self, smb_client, smb_dir, file_name):
-        utc_time = (
-            pendulum.DateTime.utcnow()
-            .isoformat()[0:-6]
-            .replace("-", "")
-            .replace(":", "")
-        )
+        utc_time = pendulum.DateTime.utcnow().isoformat()[0:-6].replace("-", "").replace(":", "")
         file_name_ts = f"{utc_time}_{file_name}"
         smb_client.rename(
             service_name=self.share_name,
@@ -199,9 +188,7 @@ class ExcelSMBToS3Operator(BaseOperator):
         smb_hook = SMBHook(smb_conn_id=self.smb_conn_id)
         s3_hook = S3Hook(self.s3_conn_id)
         with smb_hook.get_conn() as smb_client:
-            self.load_file(
-                s3_hook=s3_hook, smb_client=smb_client, file_name=self.smb_path
-            )
+            self.load_file(s3_hook=s3_hook, smb_client=smb_client, file_name=self.smb_path)
 
             if self.is_archive_file:
                 smb_dir = Path(self.smb_path).parent.as_posix()
@@ -228,15 +215,13 @@ class ExcelSMBToS3BatchOperator(ExcelSMBToS3Operator, SkipMixin):
         skip_downstream_if_no_files=False,
         **kwargs,
     ):
-        super().__init__(smb_path="", **kwargs)
+        super().__init__(smb_path='', **kwargs)
         self.smb_dir = smb_dir
         self.file_pattern_list = file_pattern_list
         self.skip_downstream_if_no_files = skip_downstream_if_no_files
 
     def get_file_list(self, smb_client):
-        file_list = [
-            f.filename for f in smb_client.listPath(self.share_name, self.smb_dir)
-        ]
+        file_list = [f.filename for f in smb_client.listPath(self.share_name, self.smb_dir)]
 
         remote_file_list = []
         for file_pattern in self.file_pattern_list:
@@ -266,19 +251,13 @@ class ExcelSMBToS3BatchOperator(ExcelSMBToS3Operator, SkipMixin):
         if len(files) < 1 and self.skip_downstream_if_no_files:
             print("skipping downstream immediate task as there was no files processed")
             if context:
-                downstream_tasks = context["task"].get_direct_relatives(upstream=False)
+                downstream_tasks = context['task'].get_direct_relatives(upstream=False)
                 if downstream_tasks:
-                    self.skip(
-                        context["dag_run"],
-                        context["ti"].execution_date,
-                        downstream_tasks,
-                    )
+                    self.skip(context['dag_run'], context['ti'].execution_date, downstream_tasks)
 
 
 class ExcelSMBToS3UseColNamesOperator(ExcelSMBToS3BatchOperator):
-    def read_excel(
-        self, local_excel_path, sheet_name, usecols, header, dtype, skip_footer
-    ):
+    def read_excel(self, local_excel_path, sheet_name, usecols, header, dtype, skip_footer):
         for sheet in self.sheet_configs:
             if sheet.sheet_name == sheet_name:
                 col_names = [x.source_name for x in sheet.column_list]

@@ -15,9 +15,7 @@ class BaseWatermarkOperator(BaseOperator):
         initial_load_value: on first run, the value that should be used for low watermark
     """
 
-    def __init__(
-        self, initial_load_value: str = "1900-01-01T00:00:00+00:00", *args, **kwargs
-    ):
+    def __init__(self, initial_load_value: str = '1900-01-01T00:00:00+00:00', *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initial_load_value = initial_load_value
         self.low_watermark = None
@@ -113,9 +111,7 @@ class DeprecatedBaseTaskWatermarkOperator(BaseWatermarkOperator):
         Update database watermark with value.
         """
         if value:
-            return TaskState.set_value(
-                dag_id=self.dag_id, task_id=self.task_id, value=value
-            )
+            return TaskState.set_value(dag_id=self.dag_id, task_id=self.task_id, value=value)
 
 
 class BaseProcessWatermarkOperator(BaseWatermarkOperator):
@@ -135,7 +131,7 @@ class BaseProcessWatermarkOperator(BaseWatermarkOperator):
         self,
         process_name,
         namespace,
-        initial_load_value: str = "1900-01-01T00:00:00+00:00",
+        initial_load_value: str = '1900-01-01T00:00:00+00:00',
         **kwargs,
     ):
         super().__init__(initial_load_value=initial_load_value, **kwargs)
@@ -166,9 +162,7 @@ class BaseTaskWatermarkOperator(BaseWatermarkOperator):
         """
         Grab last high watermark from database.
         """
-        task_state_val = ProcessState.get_value(
-            namespace=self.dag_id, process_name=self.task_id
-        )
+        task_state_val = ProcessState.get_value(namespace=self.dag_id, process_name=self.task_id)
         return task_state_val or self.initial_load_value
 
     def update_progress(self, value):

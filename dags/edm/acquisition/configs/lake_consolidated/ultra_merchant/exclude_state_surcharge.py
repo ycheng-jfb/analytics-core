@@ -6,15 +6,15 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table="exclude_state_surcharge",
+    table='exclude_state_surcharge',
     column_list=[
-        Column("exclude_state_surcharge_id", "INT", uniqueness=True),
-        Column("state", "VARCHAR(20)"),
-        Column("active", "BOOLEAN"),
-        Column("datetime_start_date", "TIMESTAMP_NTZ(3)"),
-        Column("datetime_end_date", "TIMESTAMP_NTZ(3)"),
-        Column("datetime_added", "TIMESTAMP_NTZ(3)"),
-        Column("datetime_modified", "TIMESTAMP_NTZ(3)"),
+        Column('exclude_state_surcharge_id', 'INT', uniqueness=True),
+        Column('state', 'VARCHAR(20)'),
+        Column('active', 'BOOLEAN'),
+        Column('datetime_start_date', 'TIMESTAMP_NTZ(3)'),
+        Column('datetime_end_date', 'TIMESTAMP_NTZ(3)'),
+        Column('datetime_added', 'TIMESTAMP_NTZ(3)'),
+        Column('datetime_modified', 'TIMESTAMP_NTZ(3)'),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

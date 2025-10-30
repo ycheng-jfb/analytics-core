@@ -5,7 +5,7 @@ from include.utils.acquisition.lake_consolidated_table_config import TableType
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="meta_data",
+    table='meta_data',
     table_type=TableType.REGULAR_GLOBAL,
     company_join_sql="""
     SELECT DISTINCT
@@ -18,11 +18,11 @@ table_config = TableConfig(
         WHERE company_id IS NOT NULL
         ) AS DS""",
     column_list=[
-        Column("meta_data_id", "INT", uniqueness=True, key=True),
-        Column("object", "VARCHAR(50)"),
-        Column("object_id", "INT"),
-        Column("html_content", "VARCHAR"),
-        Column("field", "VARCHAR(50)"),
-        Column("field_content", "VARCHAR"),
+        Column('meta_data_id', 'INT', uniqueness=True, key=True),
+        Column('object', 'VARCHAR(50)'),
+        Column('object_id', 'INT'),
+        Column('html_content', 'VARCHAR'),
+        Column('field', 'VARCHAR(50)'),
+        Column('field_content', 'VARCHAR'),
     ],
 )

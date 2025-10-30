@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="session_media_data",
+    table='session_media_data',
     company_join_sql="""
            SELECT DISTINCT
                L.session_id,
@@ -15,19 +15,19 @@ table_config = TableConfig(
            INNER JOIN {database}.{source_schema}.session_media_data AS L
            on L.session_id=s.session_id""",
     column_list=[
-        Column("session_id", "INT", uniqueness=True, key=True),
-        Column("placement_media_code_id", "INT", key=True),
-        Column("creative_media_code_id", "INT", key=True),
-        Column("ad_media_code_id", "INT", key=True),
-        Column("sub_media_code_id", "INT", key=True),
+        Column('session_id', 'INT', uniqueness=True, key=True),
+        Column('placement_media_code_id', 'INT', key=True),
+        Column('creative_media_code_id', 'INT', key=True),
+        Column('ad_media_code_id', 'INT', key=True),
+        Column('sub_media_code_id', 'INT', key=True),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

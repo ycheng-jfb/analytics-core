@@ -6,10 +6,7 @@ from airflow.utils.task_group import TaskGroup
 
 from include.airflow.callbacks.slack import slack_failure_edm
 from include.airflow.operators.sftp_to_s3 import SFTPToS3BatchOperator
-from include.airflow.operators.snowflake import (
-    SnowflakeProcedureOperator,
-    SnowflakeSqlOperator,
-)
+from include.airflow.operators.snowflake import SnowflakeProcedureOperator, SnowflakeSqlOperator
 from include.airflow.operators.snowflake_load import SnowflakeCopyOperator
 from include.config import conn_ids, owners, s3_buckets, stages
 from include.config.email_lists import data_integration_support
@@ -19,7 +16,7 @@ stage_name = stages.tsos_da_int_inbound
 default_args = {
     "start_date": pendulum.datetime(2020, 1, 28, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.data_integrations,
+    'owner': owners.data_integrations,
     "email": data_integration_support,
     "on_failure_callback": slack_failure_edm,
 }
@@ -137,7 +134,7 @@ class ShoppertrakConfig:
         return SnowflakeSqlOperator(
             task_id=f"target_data_load_{self.schema}.{self.table}",
             sql_or_path=merge_statement,
-            warehouse="DA_WH_ETL_LIGHT",
+            warehouse='DA_WH_ETL_LIGHT',
         )
 
 
@@ -146,17 +143,17 @@ shoppertrak_config_list = [
         schema="shoppertrak",
         table="traffic_counter",
         sftp_conn_id=conn_ids.SFTP.sftp_shoppertrak,
-        remote_dir="",
-        file_pattern="Fabletics_*.csv",
-        task_group="Fabletics-Traffic-Counter",
+        remote_dir='',
+        file_pattern='Fabletics_*.csv',
+        task_group='Fabletics-Traffic-Counter',
     ),
     ShoppertrakConfig(
         schema="shoppertrak",
         table="traffic_counter_sxf",
         sftp_conn_id=conn_ids.SFTP.sftp_shoppertrak_sxf,
-        remote_dir="",
-        file_pattern="savagex_*.csv",
-        task_group="SavageX-Traffic-Counter",
+        remote_dir='',
+        file_pattern='savagex_*.csv',
+        task_group='SavageX-Traffic-Counter',
     ),
 ]
 
@@ -169,10 +166,10 @@ with dag:
 
             to_s3 >> copy_query_exec >> to_lake
 
-            if cfg.task_group == "SavageX-Traffic-Counter":
+            if cfg.task_group == 'SavageX-Traffic-Counter':
                 retail_traffic = SnowflakeProcedureOperator(
-                    procedure="sxf.retail_traffic.sql",
-                    database="reporting_prod",
-                    warehouse="DA_WH_ETL_LIGHT",
+                    procedure='sxf.retail_traffic.sql',
+                    database='reporting_prod',
+                    warehouse='DA_WH_ETL_LIGHT',
                 )
                 to_lake >> retail_traffic

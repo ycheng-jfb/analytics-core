@@ -17,7 +17,7 @@ class OpenpathHook(BaseHook):
         payload = {"email": self.login, "password": self.password}
         headers = {"accept": "application/json", "content-type": "application/json"}
         response = requests.post(auth_url, json=payload, headers=headers)
-        token = response.json()["data"]["token"]
+        token = response.json()['data']['token']
         headers = {"accept": "application/json", "Authorization": token}
         session = requests.session()
         session.headers = headers

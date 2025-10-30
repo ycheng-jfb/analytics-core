@@ -8,9 +8,9 @@ from include.config import conn_ids, owners
 
 default_args = {
     "start_date": pendulum.datetime(2020, 11, 1, tz="America/Los_Angeles"),
-    "owner": owners.data_science,
-    "email": "datascience@techstyle.com",
-    "on_failure_callback": SlackFailureCallback("slack_alert_data_science"),
+    'owner': owners.data_science,
+    "email": 'datascience@techstyle.com',
+    "on_failure_callback": SlackFailureCallback('slack_alert_data_science'),
 }
 
 # start early evening to be finished before nightly algorithm runs
@@ -26,24 +26,22 @@ dag = DAG(
 with dag:
     chain_tasks(
         SnowflakeProcedureOperator(
-            procedure="data_science.product_recommendation_tags.sql",
-            database="reporting_base_prod",
+            procedure='data_science.product_recommendation_tags.sql',
+            database='reporting_base_prod',
         ),
         SnowflakeProcedureOperator(
-            procedure="data_science.product_recommendation_tags_pivoted.sql",
-            database="reporting_base_prod",
+            procedure='data_science.product_recommendation_tags_pivoted.sql',
+            database='reporting_base_prod',
         ),
         SnowflakeProcedureOperator(
-            procedure="data_science.ad_id_source_data.sql",
-            database="reporting_base_prod",
+            procedure='data_science.ad_id_source_data.sql',
+            database='reporting_base_prod',
         ),
         DatabricksRunNowOperator(
-            task_id="ad_id",
-            databricks_conn_id=conn_ids.Databricks.duplo,
-            job_id=165244648727689,
+            task_id="ad_id", databricks_conn_id=conn_ids.Databricks.duplo, job_id=165244648727689
         ),
         SnowflakeProcedureOperator(
-            procedure="data_science.ad_id_tableau.sql",
-            database="reporting_base_prod",
+            procedure='data_science.ad_id_tableau.sql',
+            database='reporting_base_prod',
         ),
     )

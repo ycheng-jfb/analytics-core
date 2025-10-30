@@ -43,8 +43,8 @@ class RokuHook(BaseHook):
         r.raise_for_status()
 
         rdict = r.json()
-        token = rdict["id_token"]
-        session.headers.update({"Authorization": "Bearer " + token})
+        token = rdict['id_token']
+        session.headers.update({"Authorization": 'Bearer ' + token})
         return session
 
     def make_request(self, method, endpoint, params=None, json=None, data=None):

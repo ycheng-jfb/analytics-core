@@ -38,18 +38,18 @@ class WindowsExecutableOperator(BaseOperator):
         with hook.get_conn() as client:
             stdout, stderr, rc = client.run_executable(
                 executable=self.executable_file_loc,
-                arguments=f'"{self.executable_arguments}"',
+                arguments=f"\"{self.executable_arguments}\"",
                 username=f"{hook.domain}\\{hook.username}",
                 password=hook.password,
             )
-            exception_msg = f"Task {self.task_id} failed with exit code {rc}"
+            exception_msg = f'Task {self.task_id} failed with exit code {rc}'
             if rc == 0:
                 return
-            elif rc in self.warning_return_codes or "0xc0000121" in exception_msg:
+            elif rc in self.warning_return_codes or '0xc0000121' in exception_msg:
                 warnings.warn(message=exception_msg)
                 send_email(
                     to=self.email,
-                    subject=f"Warning:  {self.task_id} exited nonzero",
+                    subject=f'Warning:  {self.task_id} exited nonzero',
                     html_content=exception_msg,
                 )
             else:

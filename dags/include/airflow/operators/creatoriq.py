@@ -52,9 +52,7 @@ class CreatorIQToS3Operator(BaseOperator):
         """
         s3_hook = S3Hook(self.s3_conn_id)
         if file:
-            s3_hook.load_file(
-                filename=file, key=self.key, bucket_name=self.bucket, replace=True
-            )
+            s3_hook.load_file(filename=file, key=self.key, bucket_name=self.bucket, replace=True)
             print(f"uploaded to {self.key}")
 
     def get_sql_data(self):
@@ -130,9 +128,7 @@ class CreatorIQPatchOperator(BaseOperator):
 
     @cached_property
     def hook(self):
-        return CreatorIQHook(
-            creatoriq_conn_id=self.creatoriq_conn_id, key_name="x-api-key"
-        )
+        return CreatorIQHook(creatoriq_conn_id=self.creatoriq_conn_id, key_name="x-api-key")
 
     async def patch(
         self, session: aiohttp.ClientSession, semaphore, id: str, **kwargs
@@ -147,12 +143,12 @@ class CreatorIQPatchOperator(BaseOperator):
         Returns:
             returns the json response.
         """
-        url = f"https://apis.creatoriq.com/crm/v1/api/campaign/{id}/updateActivity"
+        url = f'https://apis.creatoriq.com/crm/v1/api/campaign/{id}/updateActivity'
         async with semaphore:
             print(f"Requesting {url}")
-            resp = await session.request("PATCH", url=url, **kwargs)
+            resp = await session.request('PATCH', url=url, **kwargs)
             response = await resp.json()
-            response["CampaignId"] = id
+            response['CampaignId'] = id
         return dict(response)
 
     async def make_request_asnyc(self, id_list, **kwargs):
@@ -169,9 +165,7 @@ class CreatorIQPatchOperator(BaseOperator):
         async with session:
             tasks = []
             for id_ in id_list:
-                tasks.append(
-                    self.patch(session=session, semaphore=semaphore, id=id_, **kwargs)
-                )
+                tasks.append(self.patch(session=session, semaphore=semaphore, id=id_, **kwargs))
             responses = await asyncio.gather(*tasks, return_exceptions=True)
             return responses
 
@@ -197,9 +191,9 @@ class CreatorIQPatchOperator(BaseOperator):
             try:
                 responses = asyncio.run(self.make_request_asnyc(id_list))
                 for response in responses:
-                    status = response.get("TaskStatus", None)
+                    status = response.get('TaskStatus', None)
                     if status == "DONE":
-                        completed.extend([response["CampaignId"]])
+                        completed.extend([response['CampaignId']])
                     if status is None:
                         print("request failed")
                         print(response)
@@ -207,14 +201,10 @@ class CreatorIQPatchOperator(BaseOperator):
                 id_list = list(set(id_list) - set(completed))
                 if id_list:
                     wait_seconds = next(waiter)
-                    print(
-                        f"campaigns {id_list} not done; waiting {wait_seconds} seconds"
-                    )
+                    print(f"campaigns {id_list} not done; waiting {wait_seconds} seconds")
                     time.sleep(wait_seconds)
                 else:
                     break
             except Exception as e:
                 print(f"unable to complete patch for {id_list} campaign ids in 1 hour")
-                raise e(
-                    f"unable to complete patch for {id_list} campaign ids in 1 hour"
-                )
+                raise e(f"unable to complete patch for {id_list} campaign ids in 1 hour")

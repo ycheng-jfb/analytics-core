@@ -22,28 +22,24 @@ class RoktHook(BaseHook):
 
         session.headers.update(
             {
-                "Content-Type": "application/x-www-form-urlencoded",
+                'Content-Type': 'application/x-www-form-urlencoded',
                 "Authorization": f"Basic {self.password}",
             }
         )
-        payload = "grant_type=client_credentials"
+        payload = 'grant_type=client_credentials'
 
         r = session.post(url=signin_url, data=payload)
         r.raise_for_status()
 
         rdict = r.json()
-        token = rdict["access_token"]
+        token = rdict['access_token']
         session.headers.update({"Authorization": f"Bearer {token}"})
         return session
 
     def make_request(self, method, endpoint, params=None, json=None, data=None):
         endpoint = endpoint[1:] if endpoint[0] == "/" else endpoint
         r = self.session.request(
-            method=method,
-            url=f"{self.base_url}/{endpoint}",
-            params=params,
-            json=json,
-            data=data,
+            method=method, url=f"{self.base_url}/{endpoint}", params=params, json=json, data=data
         )
         r.raise_for_status()
         return r

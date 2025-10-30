@@ -9,16 +9,17 @@ from airflow.utils import timezone
 
 
 class hvr_sensor(BaseSensorOperator):
+
     def __init__(
         self,
         schema,
         execution_date=None,
         lookback_minutes=30,
         snowflake_conn_id=conn_ids.Snowflake.default,
-        database="all",
-        table_group="all",
+        database='all',
+        table_group='all',
         poke_interval=60 * 1,
-        mode="poke",
+        mode='poke',
         timeout=60 * 360,
         **kwargs,
     ):
@@ -38,9 +39,7 @@ class hvr_sensor(BaseSensorOperator):
 
     def calculate_time_cutoff(self, context):
         current_time = context["macros"].datetime.today()
-        current_time_pst = timezone.convert_to_utc(current_time).in_timezone(
-            "America/Los_Angeles"
-        )
+        current_time_pst = timezone.convert_to_utc(current_time).in_timezone("America/Los_Angeles")
 
         self.time_cutoff = current_time_pst.subtract(minutes=self.lookback_minutes)
 
@@ -60,7 +59,7 @@ class hvr_sensor(BaseSensorOperator):
             Define what LAKE Brand database needs to be monitored.
             Default to "all LAKE Brand DBs".
         """
-        if database != "ALL":
+        if database != 'ALL':
             cmd += f"    AND DATABASE = '{database}' \n"
 
         cmd += f"    AND SCHEMA ILIKE '{schema}' \n"
@@ -69,7 +68,7 @@ class hvr_sensor(BaseSensorOperator):
             Define what Table_Group needs to be monitored.
             Default to "all Table Groups in the Schema will be monitored".
         """
-        if table_group != "ALL":
+        if table_group != 'ALL':
             cmd += f"    AND TABLE_GROUP = '{table_group}' \n"
         cmd += "; "
         return cmd
@@ -78,9 +77,7 @@ class hvr_sensor(BaseSensorOperator):
         self.calculate_time_cutoff(context)
 
         cmd = self.hvr_query(self.database, self.schema, self.table_group)
-        query_tag_cmd = snowflake.generate_query_tag_cmd(
-            dag_id=self.dag_id, task_id=self.task_id
-        )
+        query_tag_cmd = snowflake.generate_query_tag_cmd(dag_id=self.dag_id, task_id=self.task_id)
         snowflake_hook = SnowflakeHook(snowflake_conn_id=self.snowflake_conn_id)
         with ConnClosing(snowflake_hook.get_conn()) as conn:
             cur = conn.cursor()

@@ -11,12 +11,12 @@ class FixInnerJoin(SqlFix):
     """
 
     def fix_line(self, line, line_num) -> str:
-        return re.sub(r"inner\s+join", "JOIN", line, flags=re.IGNORECASE)  # type: ignore
+        return re.sub(r'inner\s+join', 'JOIN', line, flags=re.IGNORECASE)  # type: ignore
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Replace inner join with join.")
-    parser.add_argument("filenames", nargs="*", help="Filenames to check")
+    parser = argparse.ArgumentParser(description='Replace inner join with join.')
+    parser.add_argument('filenames', nargs='*', help='Filenames to check')
     args = parser.parse_args(argv)
     retv = 0
 
@@ -27,5 +27,5 @@ def main(argv=None):
     return retv
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     exit(main())

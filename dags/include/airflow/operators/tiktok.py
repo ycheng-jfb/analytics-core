@@ -159,12 +159,12 @@ class TiktokConversionsExportOperator(SnowflakeWatermarkSqlOperator):
         )
 
         response_raw = response.json()
-        if response_raw["code"] != 0:
+        if response_raw['code'] != 0:
             raise ValueError(f"POST request failed with('{response_raw}').")
         print(response_raw)
 
     def watermark_execute(self, context=None):
         for df in self.prepare_batch():
-            df["REVENUE"] = df["REVENUE"].fillna(0)
+            df['REVENUE'] = df['REVENUE'].fillna(0)
             json_data = self.prepare_json(df)
             self.post_data(json_data)

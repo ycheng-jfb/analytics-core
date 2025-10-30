@@ -46,7 +46,7 @@ class ColumnList(list):
 
 
 class TableConfig:
-    UTCNOW_TEMPLATE = "{{ macros.tfgdt.utcnow_nodash() }}"
+    UTCNOW_TEMPLATE = '{{ macros.tfgdt.utcnow_nodash() }}'
 
     def __init__(
         self,
@@ -56,10 +56,10 @@ class TableConfig:
         target_database: str,
         target_schema: str,
         column_list: List[Column],
-        warehouse: str = "DA_WH_ETL_LIGHT",
+        warehouse: str = 'DA_WH_ETL_LIGHT',
         source_column_mapping: Optional[dict] = None,
         watermark_column: Optional[str] = None,
-        initial_load_value: Optional[str] = "1900-01-01",
+        initial_load_value: Optional[str] = '1900-01-01',
         use_select_star: bool = False,
         high_watermark_cls: Type[BaseHighWatermarkQuery] = HighWatermarkMaxVarcharSS,
         strict_inequality=False,
@@ -67,7 +67,7 @@ class TableConfig:
         target_lookback_func: Optional[BaseTargetLookback] = None,
         fetch_batch_size: int = 50000,
         split_files: bool = False,
-        schema_version_prefix: str = "v1",
+        schema_version_prefix: str = 'v1',
     ):
         """
         :param database: source database
@@ -110,7 +110,7 @@ class TableConfig:
         self.target_lookback_func = target_lookback_func
         self.source_lookback_func = source_lookback_func
         self.fetch_batch_size = fetch_batch_size
-        self.mssql_conn_id = "mssql_edw01_app_airflow"
+        self.mssql_conn_id = 'mssql_edw01_app_airflow'
         self.split_files = split_files
         self.validate_column_list()
         self.validate_params()
@@ -123,7 +123,7 @@ class TableConfig:
 
         param_names = [k for k, v in signature.parameters.items()]
         sort_map = {name: idx for idx, name in enumerate(signature.parameters)}
-        sort_map["column_list"] = 10000
+        sort_map['column_list'] = 10000
 
         for p in sorted(param_names, key=lambda x: sort_map.get(x)):
             actual_attr = getattr(self, p)
@@ -138,8 +138,8 @@ class TableConfig:
 
     @property
     def filename(self):
-        file_part = "_*" if self.split_files else ""
-        suffix = f"_{self.UTCNOW_TEMPLATE}" if self.watermark_column else ""
+        file_part = '_*' if self.split_files else ''
+        suffix = f"_{self.UTCNOW_TEMPLATE}" if self.watermark_column else ''
         return f"{self.full_table_name}{suffix}{file_part}.csv.gz".lower()
 
     @property
@@ -154,15 +154,13 @@ class TableConfig:
     def source_column_name_list(self):
         mapping = self.source_column_mapping or {}
         if self.use_select_star:
-            return ["*"]
+            return ['*']
         else:
-            return [
-                self.rename_metas(mapping.get(x.name, x.name)) for x in self.column_list
-            ]
+            return [self.rename_metas(mapping.get(x.name, x.name)) for x in self.column_list]
 
     @staticmethod
     def rename_metas(column_name):
-        if column_name[0:6] == "__meta":
+        if column_name[0:6] == '__meta':
             return column_name[2:]
         else:
             return column_name
@@ -171,20 +169,16 @@ class TableConfig:
         cl = ColumnList(self.column_list)
         if self.watermark_column:
             if not cl.has_uniqueness:
-                raise Exception(
-                    "Column list must have uniqueness cols if using watermark column"
-                )
+                raise Exception("Column list must have uniqueness cols if using watermark column")
             if not cl.has_delta_column:
-                raise Exception(
-                    "Column list must have delta col if using watermark column"
-                )
+                raise Exception("Column list must have delta col if using watermark column")
 
     @property
     def pre_merge_command(self):
         if not self.target_lookback_func:
             return None
 
-        inequality = ">" if self.strict_inequality else ">="
+        inequality = '>' if self.strict_inequality else '>='
         cmd = f"""
             DELETE FROM {self.full_target_table_name}
             WHERE {self.watermark_column} {inequality} (
@@ -196,6 +190,4 @@ class TableConfig:
 
     def validate_params(self):
         if self.use_select_star and self.source_column_mapping:
-            raise Exception(
-                "source_column_mapping is not used when use_select_star=True"
-            )
+            raise Exception("source_column_mapping is not used when use_select_star=True")

@@ -23,7 +23,7 @@ class TFGTriggerDagRunOperator(TriggerDagRunOperator, SkipMixin):
     def execute(self, context):
         skip = self.skip_downstream_if_paused and self.target_is_paused
         if skip:
-            ti: TaskInstance = context["ti"]
+            ti: TaskInstance = context['ti']
             message = f"Warning: target dag_id {self.trigger_dag_id} is disabled; skipping trigger;"
             send_email(
                 to=self.email,

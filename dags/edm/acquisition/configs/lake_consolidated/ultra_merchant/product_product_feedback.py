@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="product_product_feedback",
+    table='product_product_feedback',
     company_join_sql="""
     SELECT l.product_product_feedback_id, ds.company_id
         FROM {database}.{source_schema}.product_product_feedback l
@@ -46,19 +46,19 @@ table_config = TableConfig(
                     ) AS ps
                    ON ps.product_id = l.product_id""",
     column_list=[
-        Column("product_product_feedback_id", "INT", uniqueness=True, key=True),
-        Column("cart_id", "INT", key=True),
-        Column("product_feedback_id", "INT", key=True),
-        Column("product_id", "INT", key=True),
-        Column("lpn_code", "VARCHAR(255)"),
+        Column('product_product_feedback_id', 'INT', uniqueness=True, key=True),
+        Column('cart_id', 'INT', key=True),
+        Column('product_feedback_id', 'INT', key=True),
+        Column('product_id', 'INT', key=True),
+        Column('lpn_code', 'VARCHAR(255)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

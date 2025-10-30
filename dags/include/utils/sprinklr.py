@@ -12,12 +12,7 @@ from include.utils.string import camel_to_snake
 
 
 def pandas_type_to_sql(panda_type):
-    pandas_sql_map = {
-        "object": "string",
-        "float64": "float",
-        "int64": "bigint",
-        "bool": "boolean",
-    }
+    pandas_sql_map = {'object': 'string', 'float64': 'float', 'int64': 'bigint', 'bool': 'boolean'}
     return pandas_sql_map[panda_type]
 
 
@@ -28,7 +23,7 @@ def generate_column_config_from_df(
     for col in df.columns:
         col_name = camel_to_snake(col) if convert_camel_to_snake else col.lower()
         col_type = (
-            "TIMESTAMP_LTZ(7)"
+            'TIMESTAMP_LTZ(7)'
             if col in datetime_columns
             else pandas_type_to_sql(df.dtypes[col].__str__())
         )
@@ -53,14 +48,14 @@ def modify_report_payload(report_payload):
     count_of_headings = {}
     if len(report_payload) == 1:
         modified_payload = report_payload[0]
-        modified_payload["pageSize"] = 1000
-        modified_payload["page"] = 0
-        modified_payload["startTime"] = 0
-        modified_payload["endTime"] = 0
-        modified_payload["timeZone"] = "America/Los_Angeles"
-        for i, group_by in enumerate(modified_payload["groupBys"]):
+        modified_payload['pageSize'] = 1000
+        modified_payload['page'] = 0
+        modified_payload['startTime'] = 0
+        modified_payload['endTime'] = 0
+        modified_payload['timeZone'] = 'America/Los_Angeles'
+        for i, group_by in enumerate(modified_payload['groupBys']):
             # Modify the heading if it's a repeat
-            heading = group_by["heading"]
+            heading = group_by['heading']
             if heading in count_of_headings:
                 modified_heading = heading + str(count_of_headings[heading])
                 count_of_headings[heading] += 1
@@ -69,11 +64,9 @@ def modify_report_payload(report_payload):
                 count_of_headings[heading] = 1
 
             # Set the name
-            modified_payload["groupBys"][i]["heading"] = modified_heading
+            modified_payload['groupBys'][i]['heading'] = modified_heading
     else:
-        raise Exception(
-            "Len of report_payload is not equal to 1. Need new implementation"
-        )
+        raise Exception('Len of report_payload is not equal to 1. Need new implementation')
     return modified_payload
 
 
@@ -91,12 +84,12 @@ def add_report_payload(file_path, report_name):
     modified_d = modify_report_payload(d)
     payloads = PAYLOADS
     payloads[report_name] = modified_d
-    py_file_path = INCLUDE_DIR / "airflow" / "operators" / "sprinklr.py"
+    py_file_path = INCLUDE_DIR / 'airflow' / 'operators' / 'sprinklr.py'
     with open(py_file_path) as f:
         py_file = f.read()
     regex = r"^PAYLOADS = {(.|\n)*"
     new_py_file = re.sub(regex, f"PAYLOADS = {payloads}", py_file)
-    with open(py_file_path, "w") as f:
+    with open(py_file_path, 'w') as f:
         f.write(new_py_file)
 
 
@@ -112,9 +105,9 @@ def create_sprinklr_config(report_name, extract_case_id=False, **context):
     payload = PAYLOADS[report_name]
 
     s = SprinklrToS3Operator(
-        task_id="s",
-        key="",
-        bucket="",
+        task_id='s',
+        key='',
+        bucket='',
         endpoint=report_name,
         extract_case_id=extract_case_id,
         from_date=(context["macros"].datetime.today() - timedelta(hours=4)).isoformat(),
@@ -123,10 +116,7 @@ def create_sprinklr_config(report_name, extract_case_id=False, **context):
 
     df = pd.DataFrame(s.get_rows(payload))
     column_list = generate_column_config_from_df(
-        df,
-        unique_cols=["CASE_ID"],
-        delta_cols=["load_time"],
-        datetime_columns=["load_time"],
+        df, unique_cols=['CASE_ID'], delta_cols=['load_time'], datetime_columns=['load_time']
     )
     print(SprinklrConfig(endpoint=report_name, column_list=column_list))
 

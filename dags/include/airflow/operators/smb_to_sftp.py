@@ -47,14 +47,14 @@ class SMBToSFTPOperator(BaseOperator):
         self.share_name = share_name
         self.sftp_conn_id = sftp_conn_id
         self.compression = compression
-        if self.compression not in (None, "gzip"):
+        if self.compression not in (None, 'gzip'):
             raise ValueError("compression may only be None or 'gzip'")
-        if self.compression and remote_path.endswith(".gz"):
-            raise ValueError("file already compressed")
+        if self.compression and remote_path.endswith('.gz'):
+            raise ValueError('file already compressed')
 
     @property
     def open_func(self):
-        if self.compression == "gzip":
+        if self.compression == 'gzip':
             return gzip.open
         else:
             return open
@@ -64,8 +64,7 @@ class SMBToSFTPOperator(BaseOperator):
 
         with sftp_hook.get_conn() as sftp_client:
             sftp_client.put(
-                localpath=local_path,
-                remotepath=Path(self.target_dir, self.filename).as_posix(),
+                localpath=local_path, remotepath=Path(self.target_dir, self.filename).as_posix()
             )
 
     def execute(self, context=None):

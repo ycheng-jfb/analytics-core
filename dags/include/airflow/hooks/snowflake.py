@@ -56,43 +56,40 @@ class SnowflakeHook(DbApiHook):
         :ref:`howto/operator:SnowflakeOperator`
     """
 
-    conn_name_attr = "snowflake_conn_id"
-    default_conn_name = "snowflake_default"
-    conn_type = "snowflake"
-    hook_name = "Snowflake"
+    conn_name_attr = 'snowflake_conn_id'
+    default_conn_name = 'snowflake_default'
+    conn_type = 'snowflake'
+    hook_name = 'Snowflake'
     supports_autocommit = True
 
     @staticmethod
     def get_connection_form_widgets() -> Dict[str, Any]:
         """Returns connection widgets to add to connection form"""
-        from flask_appbuilder.fieldwidgets import (
-            BS3PasswordFieldWidget,
-            BS3TextFieldWidget,
-        )
+        from flask_appbuilder.fieldwidgets import BS3PasswordFieldWidget, BS3TextFieldWidget
         from flask_babel import lazy_gettext
         from wtforms import PasswordField, StringField
 
         return {
             "extra__snowflake__account": StringField(
-                lazy_gettext("Account"), widget=BS3TextFieldWidget()
+                lazy_gettext('Account'), widget=BS3TextFieldWidget()
             ),
             "extra__snowflake__warehouse": StringField(
-                lazy_gettext("Warehouse"), widget=BS3TextFieldWidget()
+                lazy_gettext('Warehouse'), widget=BS3TextFieldWidget()
             ),
             "extra__snowflake__database": StringField(
-                lazy_gettext("Database"), widget=BS3TextFieldWidget()
+                lazy_gettext('Database'), widget=BS3TextFieldWidget()
             ),
             "extra__snowflake__region": StringField(
-                lazy_gettext("Region"), widget=BS3TextFieldWidget()
+                lazy_gettext('Region'), widget=BS3TextFieldWidget()
             ),
             "extra__snowflake__aws_access_key_id": StringField(
-                lazy_gettext("AWS Access Key"), widget=BS3TextFieldWidget()
+                lazy_gettext('AWS Access Key'), widget=BS3TextFieldWidget()
             ),
             "extra__snowflake__aws_secret_access_key": PasswordField(
-                lazy_gettext("AWS Secret Key"), widget=BS3PasswordFieldWidget()
+                lazy_gettext('AWS Secret Key'), widget=BS3PasswordFieldWidget()
             ),
             "extra__snowflake__role": StringField(
-                lazy_gettext("Role"), widget=BS3TextFieldWidget()
+                lazy_gettext('Role'), widget=BS3TextFieldWidget()
             ),
         }
 
@@ -102,10 +99,10 @@ class SnowflakeHook(DbApiHook):
         import json
 
         return {
-            "hidden_fields": ["port"],
+            "hidden_fields": ['port'],
             "relabeling": {},
             "placeholders": {
-                "extra": json.dumps(
+                'extra': json.dumps(
                     {
                         "authenticator": "snowflake oauth",
                         "private_key_file": "private key",
@@ -113,17 +110,17 @@ class SnowflakeHook(DbApiHook):
                     },
                     indent=1,
                 ),
-                "host": "snowflake hostname",
-                "schema": "snowflake schema",
-                "login": "snowflake username",
-                "password": "snowflake password",
-                "extra__snowflake__account": "snowflake account name",
-                "extra__snowflake__warehouse": "snowflake warehouse name",
-                "extra__snowflake__database": "snowflake db name",
-                "extra__snowflake__region": "snowflake hosted region",
-                "extra__snowflake__aws_access_key_id": "aws access key id (S3ToSnowflakeOperator)",
-                "extra__snowflake__aws_secret_access_key": "aws secret access key (S3ToSnowflakeOperator)",
-                "extra__snowflake__role": "snowflake role",
+                'host': 'snowflake hostname',
+                'schema': 'snowflake schema',
+                'login': 'snowflake username',
+                'password': 'snowflake password',
+                'extra__snowflake__account': 'snowflake account name',
+                'extra__snowflake__warehouse': 'snowflake warehouse name',
+                'extra__snowflake__database': 'snowflake db name',
+                'extra__snowflake__region': 'snowflake hosted region',
+                'extra__snowflake__aws_access_key_id': 'aws access key id (S3ToSnowflakeOperator)',
+                'extra__snowflake__aws_secret_access_key': 'aws secret access key (S3ToSnowflakeOperator)',
+                'extra__snowflake__role': 'snowflake role',
             },
         }
 
@@ -147,43 +144,46 @@ class SnowflakeHook(DbApiHook):
         """
         conn = self.get_connection(self.snowflake_conn_id)  # type: ignore[attr-defined]
 
-        account = conn.host or conn.extra_dejson.get("account", "")
+        account = conn.host or conn.extra_dejson.get('account', '')
         warehouse = conn.extra_dejson.get(
-            "extra__snowflake__warehouse", ""
-        ) or conn.extra_dejson.get("warehouse", "")
-        database = conn.extra_dejson.get(
-            "extra__snowflake__database", ""
-        ) or conn.extra_dejson.get("database", "")
-        region = conn.extra_dejson.get(
-            "extra__snowflake__region", ""
-        ) or conn.extra_dejson.get("region", "")
-        role = conn.extra_dejson.get(
-            "extra__snowflake__role", ""
-        ) or conn.extra_dejson.get("role", "")
-        schema = conn.schema or ""
-        authenticator = conn.extra_dejson.get("authenticator", "snowflake")
-        session_parameters = conn.extra_dejson.get("session_parameters")
-        timezone = conn.extra_dejson.get("timezone")
+            'extra__snowflake__warehouse', ''
+        ) or conn.extra_dejson.get('warehouse', '')
+        database = conn.extra_dejson.get('extra__snowflake__database', '') or conn.extra_dejson.get(
+            'database', ''
+        )
+        region = conn.extra_dejson.get('extra__snowflake__region', '') or conn.extra_dejson.get(
+            'region', ''
+        )
+        role = conn.extra_dejson.get('extra__snowflake__role', '') or conn.extra_dejson.get(
+            'role', ''
+        )
+        schema = conn.schema or ''
+        authenticator = conn.extra_dejson.get('authenticator', 'snowflake')
+        session_parameters = conn.extra_dejson.get('session_parameters')
+        timezone = conn.extra_dejson.get('timezone')
 
         # Extract private key (if present)
         private_key = conn.extra_dejson.get(
-            "extra__snowflake_private_key", ""
-        ) or conn.extra_dejson.get("private_key", "")
+            'extra__snowflake_private_key', ''
+        ) or conn.extra_dejson.get('private_key', '')
 
         # Prepare connection config
 
+
         with open("dags/rsa_key.p8", "rb") as key_file:  # The guidance is in README.md
             p_key = serialization.load_pem_private_key(
-                key_file.read(), password=None, backend=default_backend()
+                key_file.read(),
+                password=None,
+                backend=default_backend()
             )
 
         # Convert private key to Snowflake-compatible format
         private_key = p_key.private_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption(),
+            encryption_algorithm=serialization.NoEncryption()
         )
-
+        
         conn_config = {
             "user": conn.login,
             "schema": self.schema or schema,
@@ -205,8 +205,8 @@ class SnowflakeHook(DbApiHook):
         """Override DbApiHook get_uri method for get_sqlalchemy_engine()"""
         conn_config = self._get_conn_params()
         uri = (
-            "snowflake://{user}:{password}@{account}/{database}/{schema}"
-            "?warehouse={warehouse}&role={role}&authenticator={authenticator}"
+            'snowflake://{user}:{password}@{account}/{database}/{schema}'
+            '?warehouse={warehouse}&role={role}&authenticator={authenticator}'
         )
         return uri.format(**conn_config)
 

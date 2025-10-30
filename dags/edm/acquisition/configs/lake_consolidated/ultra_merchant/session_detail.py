@@ -5,7 +5,7 @@ from include.utils.acquisition.lake_consolidated_table_config import TableType
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="session_detail",
+    table='session_detail',
     table_type=TableType.NAME_VALUE_COLUMN,
     company_join_sql="""
         SELECT DISTINCT
@@ -17,20 +17,20 @@ table_config = TableConfig(
         INNER JOIN {database}.{source_schema}.session_detail AS L
             ON L.SESSION_ID = S.SESSION_ID """,
     column_list=[
-        Column("session_detail_hash_id", "INT"),
-        Column("session_detail_id", "INT", uniqueness=True, key=True),
-        Column("session_id", "INT", key=True),
-        Column("name", "VARCHAR(50)"),
-        Column("value", "VARCHAR(4000)"),
+        Column('session_detail_hash_id', 'INT'),
+        Column('session_detail_id', 'INT', uniqueness=True, key=True),
+        Column('session_id', 'INT', key=True),
+        Column('name', 'VARCHAR(50)'),
+        Column('value', 'VARCHAR(4000)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
-        Column("session_hash_id", "INT"),
+        Column('session_hash_id', 'INT'),
     ],
-    watermark_column="repl_timestamp",
+    watermark_column='repl_timestamp',
 )

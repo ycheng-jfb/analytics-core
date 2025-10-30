@@ -3,10 +3,7 @@ from airflow import DAG
 
 from include.airflow.callbacks.slack import slack_failure_edm
 from include.config import email_lists, owners, stages
-from include.airflow.operators.segment import (
-    SegmentLoadRawData,
-    SegmentRawToTargetTables,
-)
+from include.airflow.operators.segment import SegmentLoadRawData, SegmentRawToTargetTables
 
 from task_configs.dag_config.segment.segment_config import segment_configs
 
@@ -14,7 +11,7 @@ default_args = {
     "start_date": pendulum.datetime(2024, 8, 9, tz="America/Los_Angeles"),
     "owner": owners.data_integrations,
     "email": email_lists.data_integration_support,
-    "on_failure_callback": slack_failure_edm,
+    'on_failure_callback': slack_failure_edm,
 }
 
 dag = DAG(
@@ -37,8 +34,8 @@ dag = DAG(
 with dag:
     for cfg in segment_configs:
         load_raw = SegmentLoadRawData(
-            task_id=f"segment_load_raw_{cfg.grouping}",
-            stage_path=f"{stages.tsos_da_int_segment}/lake_202304",
+            task_id=f'segment_load_raw_{cfg.grouping}',
+            stage_path=f'{stages.tsos_da_int_segment}/lake_202304',
             grouping=cfg.grouping,
             table_prefix=cfg.get_table_prefix(),
             s3_folders=cfg.s3_folders,
@@ -46,11 +43,11 @@ with dag:
             raw_schema=cfg.raw_schema,
             raw_suffix=cfg.raw_suffix,
             connection_dict={
-                "warehouse": "DA_WH_ETL_HEAVY",
+                'warehouse': 'DA_WH_ETL_HEAVY',
             },
         )
         raw_to_target = SegmentRawToTargetTables(
-            task_id=f"segment_raw_to_targets_{cfg.grouping}",
+            task_id=f'segment_raw_to_targets_{cfg.grouping}',
             grouping=cfg.grouping,
             table_prefix=cfg.get_table_prefix(),
             grouping_struct=cfg.struct_definition,
@@ -62,15 +59,15 @@ with dag:
             target_schema=cfg.target_schema,
             raw_suffix=cfg.raw_suffix,
             stage_suffix=cfg.stage_suffix,
-            flatten_udtf_name="util.public.flatten_and_explode",
-            segment_shard_udf_name="util.public.segment_shard_from_filename",
-            country_udf_name="util.public.country_from_shard",
+            flatten_udtf_name='util.public.flatten_and_explode',
+            segment_shard_udf_name='util.public.segment_shard_from_filename',
+            country_udf_name='util.public.country_from_shard',
             explicit_event_list=cfg.explicit_event_list,
-            explode_column_list=["PROPERTIES_PRODUCTS"],
+            explode_column_list=['PROPERTIES_PRODUCTS'],
             drop_stage=True,
             delete_raw=True,
             connection_dict={
-                "warehouse": "DA_WH_ETL_HEAVY",
+                'warehouse': 'DA_WH_ETL_HEAVY',
             },
         )
         load_raw >> raw_to_target

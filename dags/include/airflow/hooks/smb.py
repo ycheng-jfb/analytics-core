@@ -21,6 +21,7 @@ class SMBHook(BaseHook):
         self.domain = self.extras.get("domain")
 
     def get_conn(self):
+
         conn = SMBConnection(
             username=self.username,
             password=self.password,
@@ -32,5 +33,5 @@ class SMBHook(BaseHook):
         return conn
 
     def upload(self, share_name, remote_path, local_path):
-        with open(local_path, "rb") as f, self.get_conn() as cnx:
+        with open(local_path, 'rb') as f, self.get_conn() as cnx:
             cnx.storeFile(share_name, remote_path, f)

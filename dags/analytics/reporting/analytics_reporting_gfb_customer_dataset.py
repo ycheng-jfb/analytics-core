@@ -7,11 +7,11 @@ from include.config import owners
 from include.config.email_lists import analytics_support
 
 default_args = {
-    "depends_on_past": False,
-    "start_date": pendulum.datetime(2019, 1, 1, 7, tz="America/Los_Angeles"),
-    "retries": 1,
-    "owner": owners.jfb_analytics,
-    "email": analytics_support,
+    'depends_on_past': False,
+    'start_date': pendulum.datetime(2019, 1, 1, 7, tz='America/Los_Angeles'),
+    'retries': 1,
+    'owner': owners.jfb_analytics,
+    'email': analytics_support,
 }
 
 
@@ -26,80 +26,80 @@ dag = DAG(
 
 with dag:
     gfb_customer_dataset_base = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_base.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_base.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_cycle_action = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_cycle_action.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_cycle_action.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_email_action = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_email_action.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_email_action.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_gms_actions = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_gms_actions.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_gms_actions.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_last_order = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_last_order.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_last_order.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_loyalty_action = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_loyalty_action.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_loyalty_action.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_misc_action = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_misc_action.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_misc_action.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_preorder_action = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_preorder_action.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_preorder_action.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_product_purchases = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_product_purchases.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_product_purchases.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_product_review = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_product_review.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_product_review.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_promo_usage = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_promo_usage.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_promo_usage.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_psources = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_psources.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_psources.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb_customer_dataset_final = SnowflakeProcedureOperator(
-        procedure="gfb.gfb_customer_dataset_final.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb_customer_dataset_final.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 

@@ -18,14 +18,14 @@ table_config = TableConfig(
                 ON R.ORDER_ID = O.ORDER_ID
                 INNER JOIN {database}.{source_schema}.refund_detail AS L
                  ON L.REFUND_ID=R.REFUND_ID """,
-    table="refund_detail",
+    table='refund_detail',
     column_list=[
-        Column("refund_detail_id", "INT", uniqueness=True, key=True),
-        Column("refund_id", "INT", key=True),
-        Column("name", "VARCHAR(50)"),
-        Column("value", "VARCHAR(255)"),
-        Column("datetime_added", "TIMESTAMP_NTZ(3)"),
-        Column("datetime_modified", "TIMESTAMP_NTZ(3)"),
+        Column('refund_detail_id', 'INT', uniqueness=True, key=True),
+        Column('refund_id', 'INT', key=True),
+        Column('name', 'VARCHAR(50)'),
+        Column('value', 'VARCHAR(255)'),
+        Column('datetime_added', 'TIMESTAMP_NTZ(3)'),
+        Column('datetime_modified', 'TIMESTAMP_NTZ(3)'),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

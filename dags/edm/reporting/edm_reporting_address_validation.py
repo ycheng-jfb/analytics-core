@@ -16,9 +16,9 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id="edm_reporting_address_validation",
+    dag_id='edm_reporting_address_validation',
     default_args=default_args,
-    schedule="0 1 24 * *",
+    schedule='0 1 24 * *',
     catchup=False,
     max_active_runs=1,
 )
@@ -46,9 +46,9 @@ with dag:
         task_id="address_validation",
         sql_or_path=sql_or_path,
         distribution_list=[
-            "lars@techstyle.com",
-            "cfernandes@techstyle.com",
-            "dataanalyticsoperations@techstyle.com",
+            'lars@techstyle.com',
+            'cfernandes@techstyle.com',
+            'dataanalyticsoperations@techstyle.com',
         ],
         subject=f"Address validation calls / DE - > FL & JF {{ macros.datetime.today().strftime('%Y-%m-%d') }}",
         body="Address validation calls from last month 21 to current month 20",

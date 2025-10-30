@@ -37,7 +37,7 @@ class TiktokAds:
             "start_date": "{{ macros.ds_add(data_interval_end.strftime('%Y-%m-%d'), -7) }}",
             "page": 1,
             "report_type": "BASIC",
-            "dimensions": json.dumps(["ad_id", "stat_time_day"]),
+            "dimensions": json.dumps(['ad_id', 'stat_time_day']),
         }
 
 
@@ -64,7 +64,7 @@ class TiktokAdsHourly:
                     x.source_name
                     for x in self.column_list
                     if x.source_name
-                    not in ["ad_id", "stat_time_hour", "advertiser_id", "updated_at"]
+                    not in ["ad_id", 'stat_time_hour', "advertiser_id", "updated_at"]
                 ]
             ),
             "data_level": "AUCTION_AD",
@@ -74,7 +74,7 @@ class TiktokAdsHourly:
             "start_date": "{{ data_interval_end.strftime('%Y-%m-%d') }}",
             "page": 1,
             "report_type": "BASIC",
-            "dimensions": json.dumps(["ad_id", "stat_time_hour"]),
+            "dimensions": json.dumps(['ad_id', 'stat_time_hour']),
         }
 
 

@@ -6,9 +6,6 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table="statuscode",
-    column_list=[
-        Column("statuscode", "INT", uniqueness=True),
-        Column("label", "VARCHAR(50)"),
-    ],
+    table='statuscode',
+    column_list=[Column('statuscode', 'INT', uniqueness=True), Column('label', 'VARCHAR(50)')],
 )

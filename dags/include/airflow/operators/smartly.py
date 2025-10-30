@@ -27,9 +27,7 @@ class SmartlyToS3Operator(BaseOperator):
         self.account_ids = account_ids
 
     def execute(self, context=None):
-        hook = SmartlyHook(
-            smartly_conn_id=self.smartly_conn_id, s3_conn_id=self.s3_conn_id
-        )
+        hook = SmartlyHook(smartly_conn_id=self.smartly_conn_id, s3_conn_id=self.s3_conn_id)
         self.report_params["account_id"] = self.account_ids
         endpoint = f"https://stats-api.smartly.io/api/{hook.version}/stats"
         hook.get_report_to_s3(

@@ -87,9 +87,7 @@ class MoveS3FilesOperator(BaseOperator):
         return S3Hook(self.s3_conn_id)
 
     def get_keys(self):
-        keys = self.hook.list_keys(
-            bucket_name=self.source_bucket, prefix=self.source_prefix
-        )
+        keys = self.hook.list_keys(bucket_name=self.source_bucket, prefix=self.source_prefix)
         return keys
 
     def dry_run(self):

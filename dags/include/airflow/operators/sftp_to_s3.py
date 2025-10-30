@@ -39,8 +39,8 @@ def gzip_compress_file(path_in: Path, path_out: Path):
     """
     Take file at ``path_in`` and gzip compress out to ``path_out``.
     """
-    with open(path_in.as_posix(), "rb") as f_in:
-        with gzip.open(path_out, "wb") as f_out:
+    with open(path_in.as_posix(), 'rb') as f_in:
+        with gzip.open(path_out, 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
 
 
@@ -52,7 +52,7 @@ def move_file(path_in: Path, path_out: Path):
 
 
 def is_gzipped(filename):
-    return Path(filename).as_posix().endswith("gz")
+    return Path(filename).as_posix().endswith('gz')
 
 
 class SFTPToS3Operator(BaseOperator):
@@ -70,7 +70,7 @@ class SFTPToS3Operator(BaseOperator):
     :param compression: If 'gzip', will gzip compress files not ending in '.gz'
     """
 
-    template_fields = ("s3_key", "remote_path")
+    template_fields = ('s3_key', 'remote_path')
 
     def __init__(
         self,
@@ -89,14 +89,14 @@ class SFTPToS3Operator(BaseOperator):
         self.s3_key = s3_key
         self.s3_conn_id = s3_conn_id
         self.compression = compression
-        if self.compression not in (None, "gzip"):
+        if self.compression not in (None, 'gzip'):
             raise ValueError("compression may only be None or 'gzip'")
-        if self.compression and remote_path.endswith(".gz"):
-            raise ValueError("file already compressed")
+        if self.compression and remote_path.endswith('.gz'):
+            raise ValueError('file already compressed')
 
     @property
     def open_func(self):
-        if self.compression == "gzip":
+        if self.compression == 'gzip':
             return gzip.open
         else:
             return open
@@ -108,9 +108,7 @@ class SFTPToS3Operator(BaseOperator):
 
         with TemporaryDirectory() as td:
             filename = Path(td) / "tmpfile"
-            with self.open_func(
-                filename, "w"
-            ) as f, ssh_client.open_sftp() as sftp_client:
+            with self.open_func(filename, "w") as f, ssh_client.open_sftp() as sftp_client:
                 sftp_client.getfo(self.remote_path, f)
 
             s3_hook.load_file(
@@ -145,7 +143,7 @@ class BaseSFTPToS3BatchOperator(BaseOperator):
     :param remove_remote_files: remove file from SFTP remote location after copied to s3
     """
 
-    template_fields = ["s3_prefix"]
+    template_fields = ['s3_prefix']
 
     def __init__(
         self,
@@ -161,10 +159,10 @@ class BaseSFTPToS3BatchOperator(BaseOperator):
     ):
         super().__init__(**kwargs)
         self.sftp_conn_id = sftp_conn_id
-        self.remote_dir = remote_dir.rstrip("/")
+        self.remote_dir = remote_dir.rstrip('/')
         self.file_pattern = file_pattern
         self.s3_bucket = s3_bucket
-        self.s3_prefix = s3_prefix.strip("/")
+        self.s3_prefix = s3_prefix.strip('/')
         self.s3_conn_id = s3_conn_id
         self.files_per_batch = files_per_batch
         self.remove_remote_files = remove_remote_files
@@ -197,9 +195,7 @@ class BaseSFTPToS3BatchOperator(BaseOperator):
         with self.ssh_client.open_sftp() as sftp_client:
             file_list = sftp_client.listdir(self.remote_dir)
             if self.file_pattern:
-                file_list = self.filter_files(
-                    file_list=file_list, pattern=self.file_pattern
-                )
+                file_list = self.filter_files(file_list=file_list, pattern=self.file_pattern)
         return file_list  # type: ignore
 
     def execute(self, context=None):
@@ -241,7 +237,7 @@ class SFTPToS3BatchOperator(BaseSFTPToS3BatchOperator):
         """
         Take uncompressed remote file, and write to ``local_path`` with gzip compression.
         """
-        with gzip.open(Path(local_dir / f"{remote_path.name}.gz"), "wb") as f:
+        with gzip.open(Path(local_dir / f"{remote_path.name}.gz"), 'wb') as f:
             sftp_client.getfo(remote_path.as_posix(), f)
 
 
@@ -254,10 +250,8 @@ class SFTPToS3BatchZipOperator(BaseSFTPToS3BatchOperator):
         """
         Take remote zip file, extract, and if files are uncompressed, gzip them.
         """
-        zip_file_base_name = remote_path.name.replace(".zip", "")
-        with NamedTemporaryFile(
-            mode="wb", delete=True
-        ) as f, TemporaryDirectory() as zip_temp_dir:
+        zip_file_base_name = remote_path.name.replace('.zip', '')
+        with NamedTemporaryFile(mode='wb', delete=True) as f, TemporaryDirectory() as zip_temp_dir:
             sftp_client.getfo(remote_path.as_posix(), f)
             f.flush()
             try:
@@ -267,10 +261,10 @@ class SFTPToS3BatchZipOperator(BaseSFTPToS3BatchOperator):
                 return
             for file in Path(zip_temp_dir).iterdir():
                 tgt_file_path = local_dir / f"{zip_file_base_name}_{file.name}"
-                if tgt_file_path.as_posix().endswith(".gz"):
+                if tgt_file_path.as_posix().endswith('.gz'):
                     move_file(file, tgt_file_path)
                     print(f"moving to {local_dir / tgt_file_path}")
                 else:
-                    tgt_file_path = Path(tgt_file_path.as_posix() + ".gz")
+                    tgt_file_path = Path(tgt_file_path.as_posix() + '.gz')
                     gzip_compress_file(file, tgt_file_path)
                     print(f"compressing to {tgt_file_path}")

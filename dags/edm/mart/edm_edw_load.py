@@ -14,15 +14,15 @@ from include.airflow.operators.dagrun_operator import TFGTriggerDagRunOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 
 default_args = {
-    "start_date": pendulum.datetime(2020, 4, 19, tz="America/Los_Angeles"),
-    "retries": 3,
-    "owner": owners.analytics_engineering,
-    "email": edw_support,
+    'start_date': pendulum.datetime(2020, 4, 19, tz='America/Los_Angeles'),
+    'retries': 3,
+    'owner': owners.analytics_engineering,
+    'email': edw_support,
     "on_failure_callback": slack_failure_p1_edw,
 }
 
 dag = DAG(
-    dag_id="edm_edw_load",
+    dag_id='edm_edw_load',
     default_args=default_args,
     schedule=None,
     catchup=False,
@@ -34,7 +34,7 @@ mart_operators: Dict[str, Any] = {}
 
 
 def get_next_execution_date(execution_date, context):
-    return context["data_interval_end"]
+    return context['data_interval_end']
 
 
 def load_operator(table_name):
@@ -45,12 +45,12 @@ def load_operator(table_name):
 
 def get_all_table_names():
     table_names = []
-    configs_dir = Path(DAGS_DIR, "edm", "mart", "configs")
-    for file in configs_dir.rglob("*.py"):
-        if "__init__.py" in file.name:
+    configs_dir = Path(DAGS_DIR, 'edm', 'mart', 'configs')
+    for file in configs_dir.rglob('*.py'):
+        if '__init__.py' in file.name:
             continue
-        partial_file_name = file.as_posix().replace(configs_dir.as_posix(), "")
-        table_name = partial_file_name[1:-3].replace("/", ".")
+        partial_file_name = file.as_posix().replace(configs_dir.as_posix(), '')
+        table_name = partial_file_name[1:-3].replace('/', '.')
         table_names.append(table_name)
     return table_names
 
@@ -63,7 +63,8 @@ no_dependencies = [
     # 'edw_prod.stg.fact_ebs_bulk_shipment',
     # 'edw_prod.stg.dim_universal_product',
     # 'edw_prod.stg.dim_address',
-    "edw_prod.stg.dim_discount",
+     'edw_prod.stg.dim_discount',
+
 ]
 
 table_config = {
@@ -291,7 +292,7 @@ def validate():
     if unimported_tables:
         for t in unimported_tables:
             warnings.warn(f"edw table {t} unimported")
-        raise Exception("unscheduled tables found")
+        raise Exception('unscheduled tables found')
 
     def dict_is_sorted(dict_):
         sorted_dict = {}
@@ -303,5 +304,5 @@ def validate():
         raise Exception("table config is not sorted")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     validate()

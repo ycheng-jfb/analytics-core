@@ -5,7 +5,7 @@ class Pivot88Hook(BaseWebApiHook):
     def __init__(
         self,
         conn_id="pivot88_default",
-        host="https://techstyle.pivot88.com/rest/operation",
+        host='https://techstyle.pivot88.com/rest/operation',
         version="v1",
     ):
         super().__init__(
@@ -15,9 +15,9 @@ class Pivot88Hook(BaseWebApiHook):
         )
 
     def get_base_url(self):
-        return f"{self.host}/{self.version}"
+        return f'{self.host}/{self.version}'
 
     def get_base_headers(self):
         return {
-            "api-key": self.extras.get("api_key"),
+            'api-key': self.extras.get('api_key'),
         }

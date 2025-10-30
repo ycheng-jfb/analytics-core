@@ -64,7 +64,7 @@ class SlackHook(BaseHook):
 
     @cached_property
     def oauth_token(self):
-        conn = self.get_connection("slack_app")
+        conn = self.get_connection('slack_app')
         return conn.password
 
     def get_token(self):
@@ -109,7 +109,7 @@ class SlackHook(BaseHook):
         if attachments:
             cmd["attachments"] = attachments
         if thread_ts:
-            cmd["thread_ts"] = thread_ts
+            cmd['thread_ts'] = thread_ts
 
         cmd["text"] = message
 
@@ -122,37 +122,32 @@ class SlackHook(BaseHook):
         )
 
     def get_channel_id(self, channel_name):
-        url = "https://slack.com/api/conversations.list"
-        params = {"token": self.oauth_token}
+        url = 'https://slack.com/api/conversations.list'
+        params = {'token': self.oauth_token}
         while True:
             r = requests.get(url, params)
-            for channel in r.json()["channels"]:
-                if channel["name"] == channel_name:
-                    return channel["id"]
-            params["cursor"] = r.json()["response_metadata"]["next_cursor"]
-            if not params[
-                "cursor"
-            ]:  # Cursor will return an empty string once it reaches end
+            for channel in r.json()['channels']:
+                if channel['name'] == channel_name:
+                    return channel['id']
+            params['cursor'] = r.json()['response_metadata']['next_cursor']
+            if not params['cursor']:  # Cursor will return an empty string once it reaches end
                 raise ValueError(f"Could not find channel {channel_name}")
 
     def get_message(self, channel_id, dag_id, data_interval_start):
-        url = "https://slack.com/api/conversations.history"
+        url = 'https://slack.com/api/conversations.history'
         params = {
-            "token": self.oauth_token,
-            "channel": channel_id,
-            "oldest": pendulum.DateTime.utcnow().add(days=-1).timestamp(),
+            'token': self.oauth_token,
+            'channel': channel_id,
+            'oldest': pendulum.DateTime.utcnow().add(days=-1).timestamp(),
         }
         while True:
             r = requests.get(url, params)
-            for message in r.json()["messages"]:
-                if (
-                    dag_id in message["text"]
-                    and str(data_interval_start) in message["text"]
-                ):
+            for message in r.json()['messages']:
+                if dag_id in message['text'] and str(data_interval_start) in message['text']:
                     return message
-            if not r.json()["has_more"]:
+            if not r.json()['has_more']:
                 break
-            params["cursor"] = r.json()["response_metadata"]["next_cursor"]
+            params['cursor'] = r.json()['response_metadata']['next_cursor']
 
     def send_alert(self, message, channel_name, dag_id, data_interval_start):
         """
@@ -164,8 +159,6 @@ class SlackHook(BaseHook):
         channel_id = self.get_channel_id(channel_name)
         existing_message = self.get_message(channel_id, dag_id, data_interval_start)
         if existing_message:
-            self.send_message(
-                message.replace("<!here>", ""), thread_ts=existing_message["ts"]
-            )
+            self.send_message(message.replace('<!here>', ''), thread_ts=existing_message['ts'])
         else:
             self.send_message(message)

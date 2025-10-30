@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="featured_product_location_reward_tier",
+    table='featured_product_location_reward_tier',
     company_join_sql="""
        SELECT DISTINCT
            L.FEATURED_PRODUCT_LOCATION_REWARD_TIER_ID,
@@ -15,10 +15,8 @@ table_config = TableConfig(
        INNER JOIN {database}.{source_schema}.featured_product_location_reward_tier AS L
            ON L.FEATURED_PRODUCT_LOCATION_ID = FPL.FEATURED_PRODUCT_LOCATION_ID """,
     column_list=[
-        Column(
-            "featured_product_location_reward_tier_id", "INT", uniqueness=True, key=True
-        ),
-        Column("featured_product_location_id", "INT", key=True),
-        Column("points", "INT"),
+        Column('featured_product_location_reward_tier_id', 'INT', uniqueness=True, key=True),
+        Column('featured_product_location_id', 'INT', key=True),
+        Column('points', 'INT'),
     ],
 )

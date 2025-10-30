@@ -7,21 +7,22 @@ from include.config import email_lists, owners
 
 default_args = {
     "start_date": pendulum.datetime(2022, 5, 1, 7, tz="America/Los_Angeles"),
-    "owner": owners.data_integrations,
+    'owner': owners.data_integrations,
     "email": email_lists.data_integration_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 
 dag = DAG(
-    dag_id="edm_reporting_retail_drive_time_monthly",
+    dag_id='edm_reporting_retail_drive_time_monthly',
     default_args=default_args,
-    schedule="0 2 1 * *",
+    schedule='0 2 1 * *',
     catchup=False,
     max_active_tasks=1,
     max_active_runs=1,
 )
 with dag:
+
     retail_drive_time = SnowflakeProcedureOperator(
         procedure="retail.retail_drive_time.sql", database="reporting_prod"
     )

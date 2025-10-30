@@ -54,9 +54,7 @@ class SmartlyHook(BaseHook):
             response.raise_for_status()
         return response
 
-    def get_report_to_file(
-        self, filename, endpoint: str, params: dict, compression="gzip"
-    ):
+    def get_report_to_file(self, filename, endpoint: str, params: dict, compression="gzip"):
         open_func = gzip.open if compression == "gzip" else open
         with open_func(filename, "wb") as f:  # type: ignore
             for batch in chunk_list(params["account_id"]):
@@ -68,9 +66,7 @@ class SmartlyHook(BaseHook):
                 for chunk in response.iter_content():
                     f.write(chunk)
 
-    def get_report_to_s3(
-        self, bucket, key, endpoint: str, params: dict, s3_replace=True
-    ):
+    def get_report_to_s3(self, bucket, key, endpoint: str, params: dict, s3_replace=True):
         with tempfile.TemporaryDirectory() as td:
             filename = Path(td, str(date.today()) + ".csv.gz")
             print(filename)

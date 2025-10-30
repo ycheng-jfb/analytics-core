@@ -25,7 +25,7 @@ class SnowflakeSqlToMSSqlOperator(SnowflakeSqlOperator):
         tgt_database: str,
         tgt_schema: str,
         tgt_table: str,
-        warehouse: str = "DA_WH_ETL_LIGHT",
+        warehouse: str = 'DA_WH_ETL_LIGHT',
         snowflake_conn_id=conn_ids.Snowflake.default,
         mssql_conn_id=conn_ids.MsSql.default,
         if_exists="replace",
@@ -43,9 +43,7 @@ class SnowflakeSqlToMSSqlOperator(SnowflakeSqlOperator):
     @cached_property
     def mssql_hook(self):
         return MsSqlOdbcHook(
-            mssql_conn_id=self.mssql_conn_id,
-            database=self.tgt_database,
-            schema=self.tgt_schema,
+            mssql_conn_id=self.mssql_conn_id, database=self.tgt_database, schema=self.tgt_schema
         )
 
     def execute(self, context=None):
@@ -90,9 +88,7 @@ class SnowflakeSqlToMSSqlOperatorTruncateAndLoad(SnowflakeSqlToMSSqlOperator):
             )
 
 
-class SnowflakeSqlToMSSqlWatermarkOperator(
-    SnowflakeSqlToMSSqlOperator, BaseTaskWatermarkOperator
-):
+class SnowflakeSqlToMSSqlWatermarkOperator(SnowflakeSqlToMSSqlOperator, BaseTaskWatermarkOperator):
     """
     The operator loads Snowflake data to MSSQL incrementally.
     If custom_sql is passed,
@@ -127,10 +123,10 @@ class SnowflakeSqlToMSSqlWatermarkOperator(
         custom_sql=None,
         strict_inequality=None,
         initial_load=True,
-        initial_load_value="1900-01-01",
+        initial_load_value='1900-01-01',
         **kwargs,
     ):
-        super().__init__(sql_or_path="", **kwargs)
+        super().__init__(sql_or_path='', **kwargs)
         self.column_list = column_list
         self.watermark_column = watermark_column
         self.custom_sql = custom_sql
@@ -143,15 +139,15 @@ class SnowflakeSqlToMSSqlWatermarkOperator(
         self.sql_or_path = None
 
     def build_query(self):
-        inequality = ">" if self.strict_inequality else ">="
+        inequality = '>' if self.strict_inequality else '>='
         select_list = (
-            ", ".join([f"{x.source_name}" for x in self.column_list])
-            if self.column_list
-            else "*"
+            ', '.join([f"{x.source_name}" for x in self.column_list]) if self.column_list else '*'
         )
-        where_clause = ""
+        where_clause = ''
         if self.watermark_column:
-            where_clause = f"WHERE s.{self.watermark_column} {inequality} '{self.get_low_watermark()}'"
+            where_clause = (
+                f"WHERE s.{self.watermark_column} {inequality} '{self.get_low_watermark()}'"
+            )
         full_table_name = f"{self.src_database}.{self.src_schema}.{self.src_table}"
         query = f"""
         SELECT DISTINCT {select_list}
@@ -179,25 +175,25 @@ class SnowflakeSqlToMSSqlWatermarkOperator(
             cur.execute(cmd)
             k = cur.fetchone()
             val = k[0]
-            if hasattr(val, "isoformat"):
+            if hasattr(val, 'isoformat'):
                 return val.isoformat()
             else:
                 return val
 
     def return_sql_alchemy_datatype(self, datatype):
-        if "VARCHAR" in datatype:
+        if 'VARCHAR' in datatype:
             return types.VARCHAR
-        elif "DATETIME" in datatype:
+        elif 'DATETIME' in datatype:
             return types.DateTime
-        elif datatype == "BIGINT":
+        elif datatype == 'BIGINT':
             return types.BIGINT
-        elif "INT" in datatype:
+        elif 'INT' in datatype:
             return types.INTEGER
-        elif datatype == "DATE":
+        elif datatype == 'DATE':
             return types.DATE
-        elif "DECIMAL" in datatype:
+        elif 'DECIMAL' in datatype:
             return types.NUMERIC
-        elif datatype in ("BIT", "BOOLEAN"):
+        elif datatype in ('BIT', 'BOOLEAN'):
             return types.Boolean
         else:
             return datatype
@@ -205,20 +201,18 @@ class SnowflakeSqlToMSSqlWatermarkOperator(
     @property
     def base_table_meta_cols(self) -> List[Column]:
         base_table_meta_cols = [
-            Column("meta_create_datetime", "DATETIME"),
-            Column("meta_update_datetime", "DATETIME"),
+            Column('meta_create_datetime', 'DATETIME'),
+            Column('meta_update_datetime', 'DATETIME'),
         ]
         return base_table_meta_cols
 
     @property
     def merge_update_names_str(self) -> str:
-        update_names_str = ",\n\t".join(
-            [f"t.{x.name} = s.{x.name}" for x in self.column_list]
-        )
+        update_names_str = ',\n\t'.join([f"t.{x.name} = s.{x.name}" for x in self.column_list])
         return update_names_str
 
     def get_tbl_ddl(self, column_list) -> str:
-        newline_char = "\n"
+        newline_char = '\n'
         cmd = f"""
         IF OBJECT_ID('{self.tgt_database}.{self.tgt_schema}.{self.tgt_table}') IS NULL
         BEGIN
@@ -231,17 +225,16 @@ class SnowflakeSqlToMSSqlWatermarkOperator(
         return unindent_auto(cmd)
 
     def merge_into_base_table(self) -> str:
-        uniqueness_join = "\n    AND ".join(
+        uniqueness_join = '\n    AND '.join(
             [
                 f"COALESCE(t.{x.name},'') = COALESCE(s.{x.name},'')"
                 for x in self.column_list
                 if x.uniqueness
             ]
         )
-        col_select_list = ", ".join([x.name for x in self.column_list])
-        full_col_select_list = ", ".join(
-            [x.name for x in self.column_list]
-            + [x.name for x in self.base_table_meta_cols]
+        col_select_list = ', '.join([x.name for x in self.column_list])
+        full_col_select_list = ', '.join(
+            [x.name for x in self.column_list] + [x.name for x in self.base_table_meta_cols]
         )
         cmd = f"""
             MERGE INTO {self.tgt_database}.{self.tgt_schema}.{self.tgt_table} t
@@ -269,15 +262,11 @@ class SnowflakeSqlToMSSqlWatermarkOperator(
             row_count = 0
             batch_number = 1
             for rows in pd.read_sql_query(
-                sql=sql,
-                con=cnx,
-                index_col=None,
-                params=self.parameters,
-                chunksize=100000,
+                sql=sql, con=cnx, index_col=None, params=self.parameters, chunksize=100000
             ):
                 rows.columns = [x.name.lower() for x in self.column_list]
                 with self.mssql_hook.get_sqlalchemy_connection(
-                    engine_kwargs={"fast_executemany": True}
+                    engine_kwargs={'fast_executemany': True}
                 ) as conn_mssql:
                     if batch_number == 1:
                         stg_delete_cmd = f"""IF OBJECT_ID('{self.tgt_database}.{self.tgt_schema}.{self.tgt_table}_stg')
@@ -288,7 +277,7 @@ class SnowflakeSqlToMSSqlWatermarkOperator(
                         self.log.info(f"Executing: {stg_delete_cmd}")
                         conn_mssql.execute(unindent_auto(stg_delete_cmd))
                     rows.to_sql(
-                        name=self.tgt_table + "_stg",
+                        name=self.tgt_table + '_stg',
                         schema=f"{self.tgt_database}.{self.tgt_schema}",
                         con=conn_mssql,
                         index=False,
@@ -298,9 +287,7 @@ class SnowflakeSqlToMSSqlWatermarkOperator(
                             for x in self.column_list
                         },
                     )
-                    self.log.info(
-                        f"Batch {batch_number} rows extracted: {rows.shape[0]}"
-                    )
+                    self.log.info(f"Batch {batch_number} rows extracted: {rows.shape[0]}")
                     row_count += rows.shape[0]
                     batch_number += 1
             self.log.info(f"Stage table rows extracted: {row_count}")
@@ -337,14 +324,12 @@ class SnowflakeToMSSqlFastMany(SnowflakeSqlToMSSqlOperatorTruncateAndLoad):
             sql = self.get_sql_cmd(self.sql_or_path)
 
             with self.mssql_hook.get_sqlalchemy_connection(
-                engine_kwargs={"fast_executemany": True}
+                engine_kwargs={'fast_executemany': True}
             ) as conn_mssql:
                 conn_mssql.execute(self.sql_truncate)
 
                 cnt = 1
-                for rows in pd.read_sql_query(
-                    sql=sql, con=conn, chunksize=self.chunk_size
-                ):
+                for rows in pd.read_sql_query(sql=sql, con=conn, chunksize=self.chunk_size):
                     rows.to_sql(
                         name=self.tgt_table,
                         schema=self.tgt_schema,
@@ -394,30 +379,27 @@ class SnowflakeToMsSqlBCPOperator(BaseOperator):
         super().__init__(**kwargs)
 
     def return_sql_alchemy_datatype(
-        self,
-        datatype: str,
-        precision: Optional[int] = None,
-        scale: Optional[int] = None,
+        self, datatype: str, precision: Optional[int] = None, scale: Optional[int] = None
     ) -> Any:
-        if "VARCHAR" in datatype or "TEXT" in datatype:
+        if 'VARCHAR' in datatype or 'TEXT' in datatype:
             if precision:
                 return types.VARCHAR(length=precision)
             return types.VARCHAR
-        elif "DATETIME" in datatype or "TIMESTAMP" in datatype:
+        elif 'DATETIME' in datatype or 'TIMESTAMP' in datatype:
             return types.DateTime
-        elif datatype == "BIGINT":
+        elif datatype == 'BIGINT':
             return types.BIGINT
-        elif "NUMBER" in datatype or "DECIMAL" in datatype:
+        elif 'NUMBER' in datatype or 'DECIMAL' in datatype:
             if precision and scale:
                 return types.NUMERIC(precision=precision, scale=scale)
             return types.NUMERIC
-        elif "INT" in datatype:
+        elif 'INT' in datatype:
             return types.INTEGER
-        elif datatype == "FLOAT":
+        elif datatype == 'FLOAT':
             return types.FLOAT
-        elif datatype == "DATE":
+        elif datatype == 'DATE':
             return types.DATE
-        elif datatype in ("BIT", "BOOLEAN"):
+        elif datatype in ('BIT', 'BOOLEAN'):
             return types.Boolean
         else:
             return datatype
@@ -440,9 +422,7 @@ class SnowflakeToMsSqlBCPOperator(BaseOperator):
 
     @property
     def snowflake_full_table_name(self) -> str:
-        return (
-            f"{self.snowflake_database}.{self.snowflake_schema}.{self.snowflake_table}"
-        )
+        return f"{self.snowflake_database}.{self.snowflake_schema}.{self.snowflake_table}"
 
     @cached_property
     def column_list(self) -> List[ColumnMetaData]:
@@ -543,9 +523,7 @@ class SnowflakeToMsSqlBCPOperator(BaseOperator):
 
     @property
     def merge_update_names_str(self) -> str:
-        return ",".join(
-            f"t.{i['colname']} = s.{i['colname']}" for i in self.column_list
-        )
+        return ",".join(f"t.{i['colname']} = s.{i['colname']}" for i in self.column_list)
 
     @property
     def mssql_merge_cmd(self) -> str:
@@ -594,7 +572,7 @@ class SnowflakeToMsSqlBCPOperator(BaseOperator):
                             delimiter="\x01",
                             lineterminator="\x02",
                             quoting=csv.QUOTE_MINIMAL,
-                            escapechar="\\",
+                            escapechar='\\',
                         )
                         writer.writerows(rows)
                         batch_count += 1

@@ -60,19 +60,17 @@ class BaseSMBToMsSqlOperator(BaseOperator):
 
     def execute(self, context):
         smb_hook = SMBHook(smb_conn_id=self.smb_conn_id)
-        mssql_hook = MsSqlOdbcHook(
-            mssql_conn_id=self.mssql_conn_id, database=self.database
-        )
+        mssql_hook = MsSqlOdbcHook(mssql_conn_id=self.mssql_conn_id, database=self.database)
         with tempfile.TemporaryDirectory() as td:
-            filename = Path(td, "temp_file").as_posix()
-            with open(file=filename, mode="wb") as f, smb_hook.get_conn() as smb_client:
+            filename = Path(td, 'temp_file').as_posix()
+            with open(file=filename, mode='wb') as f, smb_hook.get_conn() as smb_client:
                 smb_client.retrieveFile(
                     service_name=self.share_name, path=self.remote_path, file_obj=f
                 )
             df = self.get_as_df(filename=filename)
             with mssql_hook.get_sqlalchemy_connection() as mssql_cnx:
                 if self.truncate_table:
-                    cmd = "truncate table " + self.schema + "." + self.table
+                    cmd = 'truncate table ' + self.schema + '.' + self.table
                     mssql_cnx.execute(cmd)
                 df.to_sql(
                     name=self.table,
@@ -94,14 +92,12 @@ class SMBExcelToMsSqlOperator(BaseSMBToMsSqlOperator):
 
 
 class SMBCSVToMsSqlOperator(BaseSMBToMsSqlOperator):
-    def __init__(self, header="infer", skiprows=None, names=None, **kwargs):
+    def __init__(self, header='infer', skiprows=None, names=None, **kwargs):
         self.header = header
         self.skiprows = skiprows
         self.names = names
         super().__init__(**kwargs)
 
     def get_as_df(self, filename):
-        df = pd.read_csv(
-            filename, header=self.header, skiprows=self.skiprows, names=self.names
-        )
+        df = pd.read_csv(filename, header=self.header, skiprows=self.skiprows, names=self.names)
         return df

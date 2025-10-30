@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="order_discount",
+    table='order_discount',
     company_join_sql="""
         SELECT DISTINCT
             L.ORDER_DISCOUNT_ID,
@@ -15,23 +15,23 @@ table_config = TableConfig(
         INNER JOIN {database}.{source_schema}.order_discount AS L
             ON L.ORDER_ID = O.ORDER_ID""",
     column_list=[
-        Column("order_discount_id", "INT", uniqueness=True, key=True),
-        Column("order_id", "INT", key=True),
-        Column("discount_type_id", "INT"),
-        Column("discount_id", "INT", key=True),
-        Column("promo_id", "INT", key=True),
-        Column("applied_to", "VARCHAR(15)"),
-        Column("amount", "NUMBER(19, 4)"),
+        Column('order_discount_id', 'INT', uniqueness=True, key=True),
+        Column('order_id', 'INT', key=True),
+        Column('discount_type_id', 'INT'),
+        Column('discount_id', 'INT', key=True),
+        Column('promo_id', 'INT', key=True),
+        Column('applied_to', 'VARCHAR(15)'),
+        Column('amount', 'NUMBER(19, 4)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
     post_sql="""
         UPDATE {database}.{schema}.order_discount
         SET discount_id = meta_company_id

@@ -2,18 +2,18 @@ from include.utils.acquisition.table_config import TableConfig
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    database="Merlin",
-    schema="dbo",
-    table="StyleBrand",
-    watermark_column="oid",
-    initial_load_value="0",
+    database='Merlin',
+    schema='dbo',
+    table='StyleBrand',
+    watermark_column='oid',
+    initial_load_value='0',
     strict_inequality=True,
     enable_archive=False,
-    schema_version_prefix="v2",
+    schema_version_prefix='v2',
     column_list=[
-        Column("oid", "INT", uniqueness=True, delta_column=True, source_name="OID"),
-        Column("brand", "VARCHAR(50)", source_name="Brand"),
-        Column("optimistic_lock_field", "INT", source_name="OptimisticLockField"),
-        Column("gc_record", "INT", source_name="GCRecord"),
+        Column('oid', 'INT', uniqueness=True, delta_column=True, source_name='OID'),
+        Column('brand', 'VARCHAR(50)', source_name='Brand'),
+        Column('optimistic_lock_field', 'INT', source_name='OptimisticLockField'),
+        Column('gc_record', 'INT', source_name='GCRecord'),
     ],
 )

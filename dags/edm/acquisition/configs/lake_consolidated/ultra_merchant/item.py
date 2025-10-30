@@ -76,22 +76,22 @@ table_config = TableConfig(
     ) AS ds
     ON l.item_id = ds.item_id and ds.company_id <> 40
     """,
-    table="item",
+    table='item',
     column_list=[
-        Column("item_id", "INT", uniqueness=True, key=True),
-        Column("item_type_id", "INT"),
-        Column("item_number", "VARCHAR(30)"),
-        Column("description", "VARCHAR(255)"),
-        Column("current_cost", "NUMBER(19, 4)"),
-        Column("datetime_added", "TIMESTAMP_NTZ(3)"),
-        Column("datetime_modified", "TIMESTAMP_NTZ(3)"),
-        Column("coo_iso2", "VARCHAR(2)"),
-        Column("market", "BOOLEAN"),
-        Column("primary_store_group_id", "INT"),
-        Column("fulfillment_partner_id", "INT"),
-        Column("partner_item_number", "varchar(50)"),
+        Column('item_id', 'INT', uniqueness=True, key=True),
+        Column('item_type_id', 'INT'),
+        Column('item_number', 'VARCHAR(30)'),
+        Column('description', 'VARCHAR(255)'),
+        Column('current_cost', 'NUMBER(19, 4)'),
+        Column('datetime_added', 'TIMESTAMP_NTZ(3)'),
+        Column('datetime_modified', 'TIMESTAMP_NTZ(3)'),
+        Column('coo_iso2', 'VARCHAR(2)'),
+        Column('market', 'BOOLEAN'),
+        Column('primary_store_group_id', 'INT'),
+        Column('fulfillment_partner_id', 'INT'),
+        Column('partner_item_number', 'varchar(50)'),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
     post_sql="""
     DELETE FROM {database}.ultra_merchant.item
     WHERE item_id IN (SELECT item_id

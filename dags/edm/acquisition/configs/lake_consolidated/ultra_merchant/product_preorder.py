@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="product_preorder",
+    table='product_preorder',
     company_join_sql="""
         SELECT l.product_preorder_id, ds.company_id
         FROM {database}.{source_schema}.product_preorder l
@@ -46,19 +46,19 @@ table_config = TableConfig(
                     ) AS ps
                    ON ps.product_id = l.product_id""",
     column_list=[
-        Column("product_preorder_id", "INT", uniqueness=True, key=True),
-        Column("product_id", "INT", key=True),
-        Column("quantity", "INT"),
-        Column("date_available", "DATE"),
+        Column('product_preorder_id', 'INT', uniqueness=True, key=True),
+        Column('product_id', 'INT', key=True),
+        Column('quantity', 'INT'),
+        Column('date_available', 'DATE'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
-        Column("datetime_inventory_available", "TIMESTAMP_NTZ(3)"),
+        Column('datetime_inventory_available', 'TIMESTAMP_NTZ(3)'),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

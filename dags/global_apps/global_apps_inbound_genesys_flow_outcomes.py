@@ -8,22 +8,22 @@ from include.config import conn_ids, email_lists, owners, s3_buckets, stages
 from include.utils.snowflake import Column, CopyConfigJson
 
 column_list = [
-    Column("conversationId", "STRING", uniqueness=True),
-    Column("flowOutcomeId", "STRING", uniqueness=True),
-    Column("flowOutcome", "STRING"),
-    Column("flowOutcomeValue", "STRING"),
-    Column("flowName", "STRING"),
-    Column("mediaType", "STRING"),
-    Column("updated_at", "TIMESTAMP_LTZ(9)", delta_column=True),
+    Column('conversationId', 'STRING', uniqueness=True),
+    Column('flowOutcomeId', 'STRING', uniqueness=True),
+    Column('flowOutcome', 'STRING'),
+    Column('flowOutcomeValue', 'STRING'),
+    Column('flowName', 'STRING'),
+    Column('mediaType', 'STRING'),
+    Column('updated_at', 'TIMESTAMP_LTZ(9)', delta_column=True),
 ]
 
 
 default_args = {
-    "start_date": pendulum.datetime(2020, 9, 30, tz="America/Los_Angeles"),
-    "retries": 3,
-    "owner": owners.data_integrations,
-    "email": email_lists.data_integration_support,
-    "on_failure_callback": slack_failure_gsc,
+    'start_date': pendulum.datetime(2020, 9, 30, tz="America/Los_Angeles"),
+    'retries': 3,
+    'owner': owners.data_integrations,
+    'email': email_lists.data_integration_support,
+    'on_failure_callback': slack_failure_gsc,
 }
 
 
@@ -36,7 +36,7 @@ dag = DAG(
     max_active_runs=1,
 )
 
-s3_prefix = "lake/lake.genesys.flow_outcomes/v2"
+s3_prefix = 'lake/lake.genesys.flow_outcomes/v2'
 
 with dag:
     genesys_to_s3 = GenesysFlowOutcomesToS3Operator(
@@ -48,12 +48,12 @@ with dag:
         fail_on_no_rows=False,
     )
     to_snowflake = SnowflakeIncrementalLoadOperator(
-        task_id="genesys_s3_to_snowflake",
-        database="lake",
-        schema="genesys",
-        table="flow_outcomes",
-        staging_database="lake_stg",
-        view_database="lake_view",
+        task_id='genesys_s3_to_snowflake',
+        database='lake',
+        schema='genesys',
+        table='flow_outcomes',
+        staging_database='lake_stg',
+        view_database='lake_view',
         snowflake_conn_id=conn_ids.Snowflake.default,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}/",

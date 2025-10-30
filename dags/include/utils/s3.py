@@ -107,12 +107,12 @@ def get_filename(key):
     Given key, returns the filename; i.e. strips the prefix
 
     """
-    if key.endswith("/"):
+    if key.endswith('/'):
         raise ValueError("key should not end with '/'")
-    if key.endswith(" "):
+    if key.endswith(' '):
         raise ValueError("key should not end with whitespace")
     try:
-        return key.rsplit("/", 1)[1]
+        return key.rsplit('/', 1)[1]
     except IndexError:
         return key
 
@@ -167,14 +167,7 @@ class ClientWrap(object):
         return list(_list_objects_wrap(self=self, prefix=prefix, bucket=bucket))
 
     def copy_objects_wrap(
-        self,
-        *,
-        keys,
-        new_prefix,
-        replace=None,
-        src_bucket=None,
-        tgt_bucket=None,
-        dry_run=False,
+        self, *, keys, new_prefix, replace=None, src_bucket=None, tgt_bucket=None, dry_run=False
     ):
         """
         :param keys: list of keys to copy
@@ -239,14 +232,7 @@ class ClientWrap(object):
         print("Done. Deleted %s files" % len(deleted))
 
     def move_objects_wrap(
-        self,
-        *,
-        keys,
-        new_prefix,
-        replace=None,
-        src_bucket=None,
-        tgt_bucket=None,
-        dry_run=False,
+        self, *, keys, new_prefix, replace=None, src_bucket=None, tgt_bucket=None, dry_run=False
     ):
         if replace.__class__ != tuple or len(replace) != 2:
             raise Exception("replace param must be tuple of dimension 2")
@@ -269,22 +255,14 @@ class ClientWrap(object):
                 self.delete_objects_wrap(keys=subset, bucket=src_bucket)
 
     def upload_files_wrap(
-        self,
-        *,
-        file_list=None,
-        file_glob=None,
-        target_prefix=None,
-        bucket=None,
-        dry_run=False,
+        self, *, file_list=None, file_glob=None, target_prefix=None, bucket=None, dry_run=False
     ):
         """
         Takes a glob or list of files, and loops through, calling client.upload_file()
 
         :type self: pyboto3.s3|ClientWrap"""
         if file_list and file_glob:
-            raise Exception(
-                "Must supply only one of file_list and file_glob; both supplied."
-            )
+            raise Exception("Must supply only one of file_list and file_glob; both supplied.")
         elif not file_list and not file_glob:
             raise Exception("Must supply file_list or file_glob")
 

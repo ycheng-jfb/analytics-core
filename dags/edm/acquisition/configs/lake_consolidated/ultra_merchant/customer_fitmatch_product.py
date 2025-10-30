@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="customer_fitmatch_product",
+    table='customer_fitmatch_product',
     company_join_sql="""
      SELECT DISTINCT
          L.customer_fitmatch_product_id,
@@ -15,22 +15,22 @@ table_config = TableConfig(
      INNER JOIN {database}.{source_schema}.customer_fitmatch_product AS L
      ON CF.customer_fitmatch_id=L.customer_fitmatch_id """,
     column_list=[
-        Column("customer_fitmatch_product_id", "INT", uniqueness=True, key=True),
-        Column("customer_fitmatch_id", "INT", key=True),
-        Column("product_id", "INT", key=True),
-        Column("sku", "VARCHAR(50)"),
-        Column("size", "VARCHAR(50)"),
-        Column("style", "VARCHAR(50)"),
-        Column("score", "INT"),
+        Column('customer_fitmatch_product_id', 'INT', uniqueness=True, key=True),
+        Column('customer_fitmatch_id', 'INT', key=True),
+        Column('product_id', 'INT', key=True),
+        Column('sku', 'VARCHAR(50)'),
+        Column('size', 'VARCHAR(50)'),
+        Column('style', 'VARCHAR(50)'),
+        Column('score', 'INT'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
-        Column("product_category_id", "INT"),
+        Column('product_category_id', 'INT'),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

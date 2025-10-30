@@ -7,7 +7,7 @@ def datetime_to_str_int(dt, no_tz=True):
     pattern = r"T|\.|:|-|000$"
     if no_tz:
         pattern += r"|(\+|\-)\d{2}:\d{2}$"
-    if hasattr(dt, "isoformat"):
+    if hasattr(dt, 'isoformat'):
         return re.sub(pattern, "", dt.isoformat())
 
 
@@ -15,7 +15,7 @@ def datetime_to_str_iso(dt, no_tz=True):
     pattern = r"\.\d+$|-|:"
     if no_tz:
         pattern += r"|(\+|\-)\d{2}:\d{2}$"
-    if hasattr(dt, "isoformat"):
+    if hasattr(dt, 'isoformat'):
         return re.sub(pattern, "", dt.isoformat())
 
 

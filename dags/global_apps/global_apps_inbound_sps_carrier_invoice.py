@@ -11,40 +11,30 @@ from airflow.models import DAG
 
 from include.airflow.callbacks.slack import slack_failure_gsc
 from include.airflow.operators.sftp_to_s3 import SFTPToS3BatchOperator
-from include.airflow.operators.snowflake import (
-    SnowflakeProcedureOperator,
-    TableDependencyTzLtz,
-)
+from include.airflow.operators.snowflake import SnowflakeProcedureOperator, TableDependencyTzLtz
 from include.airflow.operators.snowflake_load import SnowflakeCopyOperator
-from include.config import (
-    conn_ids,
-    email_lists,
-    owners,
-    s3_buckets,
-    snowflake_roles,
-    stages,
-)
+from include.config import conn_ids, email_lists, owners, s3_buckets, snowflake_roles, stages
 
 default_args = {
-    "start_date": pendulum.datetime(2020, 1, 1, tz="America/Los_Angeles"),
-    "retries": 1,
-    "owner": owners.data_integrations,
-    "email": email_lists.data_integration_support,
-    "on_failure_callback": slack_failure_gsc,
+    'start_date': pendulum.datetime(2020, 1, 1, tz='America/Los_Angeles'),
+    'retries': 1,
+    'owner': owners.data_integrations,
+    'email': email_lists.data_integration_support,
+    'on_failure_callback': slack_failure_gsc,
 }
 
 
 dag = DAG(
-    dag_id="global_apps_inbound_sps_carrier_invoice",
+    dag_id='global_apps_inbound_sps_carrier_invoice',
     default_args=default_args,
-    schedule="0 8 * * *",
+    schedule='0 8 * * *',
     catchup=False,
     max_active_tasks=6,
     max_active_runs=1,
     doc_md=__doc__,
 )
 
-s3_prefix = "lake/sps.carrier_invoice/v2/{{ ts_nodash }}"
+s3_prefix = 'lake/sps.carrier_invoice/v2/{{ ts_nodash }}'
 
 with dag:
     query = f"""
@@ -90,14 +80,14 @@ with dag:
     """
 
     to_s3 = SFTPToS3BatchOperator(
-        task_id="sftp_sps_carrier_invoice",
+        task_id='sftp_sps_carrier_invoice',
         s3_prefix=s3_prefix,
         s3_bucket=s3_buckets.tsos_da_int_inbound,
         sftp_conn_id=conn_ids.SFTP.sftp_sps_spscommerce,
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
         files_per_batch=100,
-        remote_dir="/out",
-        file_pattern="*.json",
+        remote_dir='/out',
+        file_pattern='*.json',
         remove_remote_files=True,
     )
 
@@ -110,80 +100,72 @@ with dag:
         schema="sps",
     )
     carrier_invoice = SnowflakeProcedureOperator(
-        database="reporting_prod",
-        procedure="sps.carrier_invoice.sql",
+        database='reporting_prod',
+        procedure='sps.carrier_invoice.sql',
         watermark_tables=[
             TableDependencyTzLtz(
                 table_name="lake.sps.carrier_invoice",
-                column_name="meta_create_datetime",
+                column_name='meta_create_datetime',
             )
         ],
-        warehouse="DA_WH_ETL_LIGHT",
+        warehouse='DA_WH_ETL_LIGHT',
     )
     carrier_invoice_billing = SnowflakeProcedureOperator(
-        database="reporting_prod",
-        procedure="sps.carrier_invoice_billing.sql",
+        database='reporting_prod',
+        procedure='sps.carrier_invoice_billing.sql',
         watermark_tables=[
             TableDependencyTzLtz(
                 table_name="lake.sps.carrier_invoice",
-                column_name="meta_create_datetime",
+                column_name='meta_create_datetime',
             )
         ],
-        warehouse="DA_WH_ETL_LIGHT",
+        warehouse='DA_WH_ETL_LIGHT',
     )
     carrier_invoice_package = SnowflakeProcedureOperator(
-        database="reporting_prod",
-        procedure="sps.carrier_invoice_package.sql",
+        database='reporting_prod',
+        procedure='sps.carrier_invoice_package.sql',
         watermark_tables=[
             TableDependencyTzLtz(
                 table_name="lake.sps.carrier_invoice",
-                column_name="meta_create_datetime",
+                column_name='meta_create_datetime',
             )
         ],
-        warehouse="DA_WH_ETL_LIGHT",
+        warehouse='DA_WH_ETL_LIGHT',
     )
     carrier_invoice_package_charge = SnowflakeProcedureOperator(
-        database="reporting_prod",
-        procedure="sps.carrier_invoice_package_charge.sql",
+        database='reporting_prod',
+        procedure='sps.carrier_invoice_package_charge.sql',
         watermark_tables=[
             TableDependencyTzLtz(
                 table_name="lake.sps.carrier_invoice",
-                column_name="meta_create_datetime",
+                column_name='meta_create_datetime',
             )
         ],
-        warehouse="DA_WH_ETL_LIGHT",
+        warehouse='DA_WH_ETL_LIGHT',
     )
     carrier_invoice_package_shipment = SnowflakeProcedureOperator(
-        database="reporting_prod",
-        procedure="sps.carrier_invoice_package_shipment.sql",
+        database='reporting_prod',
+        procedure='sps.carrier_invoice_package_shipment.sql',
         watermark_tables=[
             TableDependencyTzLtz(
                 table_name="lake.sps.carrier_invoice",
-                column_name="meta_create_datetime",
+                column_name='meta_create_datetime',
             )
         ],
-        warehouse="DA_WH_ETL_LIGHT",
+        warehouse='DA_WH_ETL_LIGHT',
     )
     carrier_invoice_package_milestone = SnowflakeProcedureOperator(
-        database="reporting_prod",
-        procedure="sps.carrier_invoice_package_milestone.sql",
+        database='reporting_prod',
+        procedure='sps.carrier_invoice_package_milestone.sql',
         watermark_tables=[
             TableDependencyTzLtz(
                 table_name="lake.sps.carrier_invoice",
-                column_name="meta_create_datetime",
+                column_name='meta_create_datetime',
             )
         ],
-        warehouse="DA_WH_ETL_LIGHT",
+        warehouse='DA_WH_ETL_LIGHT',
     )
 
-    (
-        to_s3
-        >> to_snowflake
-        >> carrier_invoice
-        >> [carrier_invoice_billing, carrier_invoice_package]
-    )
-    carrier_invoice_package >> [
-        carrier_invoice_package_charge,
-        carrier_invoice_package_shipment,
-    ]
+    to_s3 >> to_snowflake >> carrier_invoice >> [carrier_invoice_billing, carrier_invoice_package]
+    carrier_invoice_package >> [carrier_invoice_package_charge, carrier_invoice_package_shipment]
     carrier_invoice_package_shipment >> carrier_invoice_package_milestone

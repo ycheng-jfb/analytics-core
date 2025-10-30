@@ -36,6 +36,7 @@ class WindowsExecutableHook(BaseHook):
         self,
         remote_conn_id,
     ):
+
         self.remote_conn_id = remote_conn_id
         self.conn = self.get_connection(self.remote_conn_id)
         self.username = self.conn.login
@@ -46,11 +47,9 @@ class WindowsExecutableHook(BaseHook):
         self.domain = self.extras.get("domain")
 
     def get_conn(self):
+
         conn = Client(
-            server=self.servername,
-            username=self.username,
-            password=self.password,
-            port=445,
+            server=self.servername, username=self.username, password=self.password, port=445
         )
         conn.connect()
         return ManagedClient(conn)

@@ -75,9 +75,8 @@ with DAG(
             conn.close()
 
     @task(map_index_template="{{ task.op_kwargs['table_cfg']['table_name'] }}")
-    def process_one(
-        table_cfg: Dict, snowflake_conn_id: str = SNOWFLAKE_CONN_ID
-    ) -> Dict:
+    def process_one(table_cfg: Dict, snowflake_conn_id: str = SNOWFLAKE_CONN_ID) -> Dict:
+
         import logging
 
         src_db = table_cfg["source_db"]
@@ -85,7 +84,7 @@ with DAG(
         tgt_db = table_cfg["target_db"]
         tgt_schema = table_cfg["target_schema"]
         table = table_cfg["table_name"]
-        full = f"{tgt_db}.{tgt_schema}.{table}"
+        full = f'{tgt_db}.{tgt_schema}.{table}'
 
         hook = SnowflakeHook(snowflake_conn_id=snowflake_conn_id)
         conn = hook.get_conn()
@@ -113,10 +112,10 @@ with DAG(
 
             cur.execute(f'TRUNCATE TABLE "{tgt_db}"."{tgt_schema}"."{table}"')
             cur.execute(
-                f"""
+                f'''
                 INSERT INTO "{tgt_db}"."{tgt_schema}"."{table}"
                 SELECT * FROM "{src_db}"."{src_schema}"."{table}"
-                """
+                '''
             )
 
             rows = cur.rowcount if isinstance(cur.rowcount, int) else 0

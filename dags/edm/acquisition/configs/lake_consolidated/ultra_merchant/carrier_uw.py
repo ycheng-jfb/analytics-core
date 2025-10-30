@@ -6,24 +6,24 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table="carrier_uw",
+    table='carrier_uw',
     column_list=[
-        Column("carrier_uw_id", "INT", uniqueness=True),
+        Column('carrier_uw_id', 'INT', uniqueness=True),
         Column(
-            "carrier_id",
-            "INT",
+            'carrier_id',
+            'INT',
         ),
-        Column("label", "VARCHAR(255)"),
+        Column('label', 'VARCHAR(255)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
-        Column("tracking_url", "VARCHAR(255)"),
-        Column("carrier_hash", "BINARY(20)"),
+        Column('tracking_url', 'VARCHAR(255)'),
+        Column('carrier_hash', 'BINARY(20)'),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

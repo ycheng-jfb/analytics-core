@@ -46,20 +46,16 @@ class TatariToS3Operator(BaseOperator):
     def execute(self, context):
         now = datetime.now(timezone.utc) - timedelta(days=4)
         dest_s3 = S3Hook(self.s3_conn_id)
-        src_s3_client = self.hook.session.client("s3")
-        paginator = src_s3_client.get_paginator("list_objects_v2")
-        pages = paginator.paginate(
-            Bucket=self.tatari_bucket, Prefix=f"{self.src_file_path}"
-        )
+        src_s3_client = self.hook.session.client('s3')
+        paginator = src_s3_client.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=self.tatari_bucket, Prefix=f'{self.src_file_path}')
         with tempfile.TemporaryDirectory() as td:
             for page in pages:
-                for key_obj in filter(
-                    lambda x: x["LastModified"] >= now, page["Contents"]
-                ):
-                    local_file_path = Path(td, get_filename(key_obj["Key"]))
+                for key_obj in filter(lambda x: x['LastModified'] >= now, page['Contents']):
+                    local_file_path = Path(td, get_filename(key_obj['Key']))
                     src_s3_client.download_file(
                         Bucket=self.tatari_bucket,
-                        Key=key_obj["Key"],
+                        Key=key_obj['Key'],
                         Filename=local_file_path.as_posix(),
                     )
                     dest_s3.load_file(

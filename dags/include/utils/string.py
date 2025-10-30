@@ -11,17 +11,15 @@ def is_upper(val):
 
 def camel_to_snake(val: str) -> str:
     bad_chars = " -_/"
-    bad_char_trans = str.maketrans(bad_chars, len(bad_chars) * "_")
-    if re.search(
-        "|".join(bad_chars), val
-    ):  # value is not camel case, just make lowercase
+    bad_char_trans = str.maketrans(bad_chars, len(bad_chars) * '_')
+    if re.search('|'.join(bad_chars), val):  # value is not camel case, just make lowercase
         return val.translate(bad_char_trans).lower()
     if val == val.upper():
         return val.lower()
     if val[0] == val[0].lower():
         val = val[0].upper() + val[1:]
 
-    tokens = re.findall(r"[A-Z]+", val)
+    tokens = re.findall(r'[A-Z]+', val)
     words = []
 
     def split_token(token):
@@ -45,7 +43,7 @@ def camel_to_snake(val: str) -> str:
         words.append(curr_word)
         val = val[next_token_position:]
 
-    return "_".join(words).lower()
+    return '_'.join(words).lower()
 
 
 def unindent(val: str, char_count: int = 8) -> str:

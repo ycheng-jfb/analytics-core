@@ -9,9 +9,9 @@ from include.utils.snowflake import Column, CopyConfigCsv
 
 main_sheets = [
     SheetConfig(
-        sheet_name="Full Summary",
-        schema="excel",
-        table="gsc_factory_audit",
+        sheet_name='Full Summary',
+        schema='excel',
+        table='gsc_factory_audit',
         header_rows=1,
         column_list=[
             Column("scheduled_audit_date", "DATE", uniqueness=True),
@@ -61,9 +61,9 @@ main_sheets = [
         ],
     ),
     SheetConfig(
-        sheet_name="3rd Party Full Summary",
-        schema="excel",
-        table="gsc_factory_audit_3rd_party",
+        sheet_name='3rd Party Full Summary',
+        schema='excel',
+        table='gsc_factory_audit_3rd_party',
         header_rows=1,
         column_list=[
             Column("scheduled_audit_date", "DATE"),
@@ -108,9 +108,9 @@ main_sheets = [
 ]
 
 combo_sheet = SheetConfig(
-    sheet_name="Full Summary",
-    schema="excel",
-    table="gsc_factory_audit_combined",
+    sheet_name='Full Summary',
+    schema='excel',
+    table='gsc_factory_audit_combined',
     header_rows=1,
     column_list=[
         Column("scheduled_audit_date", "DATE"),
@@ -162,11 +162,11 @@ combo_sheet = SheetConfig(
 )
 
 default_args = {
-    "start_date": pendulum.datetime(2020, 3, 1, tz="America/Los_Angeles"),
-    "retries": 1,
-    "owner": owners.data_integrations,
-    "email": email_lists.data_integration_support,
-    "on_failure_callback": slack_failure_gsc,
+    'start_date': pendulum.datetime(2020, 3, 1, tz='America/Los_Angeles'),
+    'retries': 1,
+    'owner': owners.data_integrations,
+    'email': email_lists.data_integration_support,
+    'on_failure_callback': slack_failure_gsc,
 }
 
 
@@ -180,30 +180,30 @@ dag = DAG(
 )
 with dag:
     to_s3 = ExcelSMBToS3Operator(
-        task_id="excel_to_s3_new",
-        smb_path="Inbound/airflow.vendor_compliance/Factory Audit/Vendor Data Source/"
-        "New/SE_FactoryAudit_Dashboard_Main_Combo V2.xlsx",
-        share_name="BI",
+        task_id='excel_to_s3_new',
+        smb_path='Inbound/airflow.vendor_compliance/Factory Audit/Vendor Data Source/'
+        'New/SE_FactoryAudit_Dashboard_Main_Combo V2.xlsx',
+        share_name='BI',
         bucket=s3_buckets.tsos_da_int_inbound,
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
         smb_conn_id=conn_ids.SMB.nas01,
         sheet_configs=[combo_sheet],
-        default_schema_version="v2",
+        default_schema_version='v2',
     )
 
     to_snowflake = SnowflakeTruncateAndLoadOperator(
         task_id=f"{combo_sheet.schema}.{combo_sheet.table}.load_to_snowflake",
         files_path=f"{stages.tsos_da_int_inbound}/lake/{combo_sheet.schema}.{combo_sheet.table}/v2/"
         f"se_factoryaudit_dashboard_main_combo v2-{str(combo_sheet.sheet_name).lower()}.csv.gz",
-        database="lake",
-        staging_database="lake_stg",
+        database='lake',
+        staging_database='lake_stg',
         schema=combo_sheet.schema,
         table=combo_sheet.table,
         column_list=combo_sheet.column_list,
         initial_load=True,
         copy_config=CopyConfigCsv(
-            field_delimiter="|",
-            record_delimiter="\n",
+            field_delimiter='|',
+            record_delimiter='\n',
             header_rows=combo_sheet.header_rows,
             null_if="'',' '",
         ),

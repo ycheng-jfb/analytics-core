@@ -46,12 +46,12 @@ class SharepointToS3Operator(BaseOperator):
         )
 
         # filter files
-        files = list(filter(lambda obj: obj.get("file") is not None, res["value"]))
+        files = list(filter(lambda obj: obj.get('file') is not None, res['value']))
 
         for file in files:
-            download_url = file["@microsoft.graph.downloadUrl"]
-            file_name = file["name"]
-            file_id = file["id"]
+            download_url = file['@microsoft.graph.downloadUrl']
+            file_name = file['name']
+            file_id = file['id']
 
             # download_file
             file_response = self.ms_graph_sharepoint_hook.make_request(download_url)

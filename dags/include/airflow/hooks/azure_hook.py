@@ -20,12 +20,10 @@ class AzureHook(BaseHook):
         tenant_id = conn_obj.extra_dejson["tenant_id"]
         credentials = (client_id, secret_id)
         with tempfile.TemporaryDirectory() as td:
-            token_backend = FileSystemTokenBackend(
-                token_path=td, token_filename="tmp_token.txt"
-            )
+            token_backend = FileSystemTokenBackend(token_path=td, token_filename='tmp_token.txt')
             account = Account(
                 credentials,
-                auth_flow_type="credentials",
+                auth_flow_type='credentials',
                 tenant_id=tenant_id,
                 token_backend=token_backend,
             )

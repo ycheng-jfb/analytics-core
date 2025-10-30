@@ -16,19 +16,13 @@ class TableType(str, Enum):
     NAME_VALUE_COLUMN = "has_name_value_column"
     OBJECT_COLUMN = "has_object_column"
     OBJECT_COLUMN_NULL = "has_object_column_with_null"
-    OBJECT_COLUMN_NULL_AND_NAME_VALUE = (
-        "has_object_column_with_null_and_name_value_column"
-    )
+    OBJECT_COLUMN_NULL_AND_NAME_VALUE = "has_object_column_with_null_and_name_value_column"
     REGULAR = "regular"
     REGULAR_GLOBAL = "regular_multiple_company_ids"
 
     @property
     def include_datasource_id(self):
-        exclude_list = [
-            TableType.NSYNC,
-            TableType.VALUE_COLUMN,
-            TableType.OBJECT_COLUMN,
-        ]
+        exclude_list = [TableType.NSYNC, TableType.VALUE_COLUMN, TableType.OBJECT_COLUMN]
         return self not in exclude_list
 
     @property
@@ -44,24 +38,24 @@ class TableType(str, Enum):
 
 
 lake_databases_dict = {
-    "lake_jfb": "10",
-    "lake_fl": "20",
-    "lake_sxf": "30",
+    'lake_jfb': '10',
+    'lake_fl': '20',
+    'lake_sxf': '30',
 }
 
 lake_databases_companies_dict = {
-    "lake_jfb": "10",
-    "lake_fl": "20",
-    "lake_sxf": "30",
+    'lake_jfb': '10',
+    'lake_fl': '20',
+    'lake_sxf': '30',
 }
 
 schema_database_mapping = {
-    "ultra_cart": "ultracart",
-    "ultra_cms": "ultracms",
-    "ultra_identity": "ultraidentity",
-    "ultra_merchant": "ultramerchant",
-    "ultra_rollup": "ultrarollup",
-    "ultra_warehouse": "ultrawarehouse",
+    'ultra_cart': 'ultracart',
+    'ultra_cms': 'ultracms',
+    'ultra_identity': 'ultraidentity',
+    'ultra_merchant': 'ultramerchant',
+    'ultra_rollup': 'ultrarollup',
+    'ultra_warehouse': 'ultrawarehouse',
 }
 """
 Map Snowflake Target Schema --> SQL Server Source Database
@@ -98,11 +92,11 @@ class ColumnList(list):
 
     @property
     def data_types(self) -> List[str]:
-        return [(str(x.name) + " " + str(x.type)) for x in self]
+        return [(str(x.name) + ' ' + str(x.type)) for x in self]
 
 
 def remove_all_quoting(table_name):
-    return table_name.replace('"', "").replace("[", "").replace("]", "").lower()
+    return table_name.replace('"', '').replace('[', '').replace(']', '').lower()
 
 
 class LakeConsolidatedTableConfig:
@@ -132,27 +126,27 @@ class LakeConsolidatedTableConfig:
                 {schema} - snowflake schema; example: ultra_merchant
     """
 
-    UTCNOW_TEMPLATE = "{{ macros.tfgdt.utcnow_nodash() }}"
+    UTCNOW_TEMPLATE = '{{ macros.tfgdt.utcnow_nodash() }}'
 
     def __init__(
         self,
         table: str,
         column_list: List[Column],
         company_join_sql: Optional[str] = None,
-        database: str = "lake_consolidated",
-        schema: str = "ultra_merchant",
+        database: str = 'lake_consolidated',
+        schema: str = 'ultra_merchant',
         table_type: TableType = TableType.REGULAR,
         company_join_columns: Optional[List[str]] = None,
-        warehouse: str = "DA_WH_ETL_LIGHT",
+        warehouse: str = 'DA_WH_ETL_LIGHT',
         cluster_by: Optional[str] = None,
         partition_cols: Optional[List[str]] = None,
         watermark_column: Optional[str] = None,
         post_sql: Optional[str] = None,
     ):
         # Used to assist legacy migration, DO NOT REMOVE
-        if database == "ultra_merchant" and schema == "dbo":
-            database = "LAKE_CONSOLIDATED"
-            schema = "ULTRA_MERCHANT"
+        if database == 'ultra_merchant' and schema == 'dbo':
+            database = 'LAKE_CONSOLIDATED'
+            schema = 'ULTRA_MERCHANT'
         self.database = database
         self.schema = schema
         self.table = table
@@ -166,18 +160,18 @@ class LakeConsolidatedTableConfig:
 
     @property
     def base_table_name(self) -> str:
-        if self.table.lower() == "order":
+        if self.table.lower() == 'order':
             return f'"{self.table.upper()}"'
         else:
             return self.table.upper()
 
     @property
     def full_target_table_name(self):
-        return f"{self.database}.{self.schema}.{self.base_table_name}"
+        return f'{self.database}.{self.schema}.{self.base_table_name}'
 
     @property
     def base_task_id(self):
-        return self.full_target_table_name.replace('"', "").lower()
+        return self.full_target_table_name.replace('"', '').lower()
 
     @property
     def to_lake_consolidated_task_id(self):
@@ -237,28 +231,23 @@ class LakeConsolidatedTableConfig:
 
         """
         lake_consolidated_table = self.full_target_table_name
-        source_temp_delta = ""
-        uniqueness_str = ",".join(self.column_list.uniqueness_cols_str)
-        raw_column_str = ",\n        ".join(self.column_list.column_name_list)
-        source_column_str = ",\n            ".join(self.column_list.column_name_list)
+        source_temp_delta = ''
+        uniqueness_str = ','.join(self.column_list.uniqueness_cols_str)
+        raw_column_str = ',\n        '.join(self.column_list.column_name_list)
+        source_column_str = ',\n            '.join(self.column_list.column_name_list)
         if self.table_type.include_company_id is True:
-            full_column_str = raw_column_str + "".join(
-                [
-                    f",\n        meta_original_{x}"
-                    for x in self.column_list.keep_original_column
-                ]
+            full_column_str = raw_column_str + ''.join(
+                [f",\n        meta_original_{x}" for x in self.column_list.keep_original_column]
             )
         else:
             full_column_str = raw_column_str
         if self.table_type == TableType.NSYNC:
-            lake_db_dict = {"lake_fl": "20"}
+            lake_db_dict = {'lake_fl': '20'}
         else:
             lake_db_dict = lake_databases_dict
             lake_db_company_dict = lake_databases_companies_dict
 
-        create_table_cmd = (
-            f"CREATE TRANSIENT TABLE IF NOT EXISTS {lake_consolidated_table} ("
-        )
+        create_table_cmd = f"CREATE TRANSIENT TABLE IF NOT EXISTS {lake_consolidated_table} ("
 
         if self.table_type.include_datasource_id is True:
             create_table_cmd += "\n    data_source_id INT,"
@@ -282,9 +271,9 @@ class LakeConsolidatedTableConfig:
                     create_table_cmd += f"\n    meta_original_{col_datatype},"
         create_table_cmd += meta_rows
 
-        watermarks = ""
+        watermarks = ''
         for db in lake_db_dict:
-            lake_db_table = f"{db}.{self.schema}.{self.base_table_name}"
+            lake_db_table = f'{db}.{self.schema}.{self.base_table_name}'
             watermarks += (
                 f"SET {db}_watermark = ( \n"
                 f"SELECT MIN(last_update) \n"
@@ -314,18 +303,15 @@ class LakeConsolidatedTableConfig:
                 f");  \n"
             )
 
-        merge_cond = ""
-        if (
-            self.column_list.key_cols is not None
-            and self.table_type.include_datasource_id is True
-        ):
-            merge_cond += "s.data_source_id = t.data_source_id \n        AND"
+        merge_cond = ''
+        if self.column_list.key_cols is not None and self.table_type.include_datasource_id is True:
+            merge_cond += 's.data_source_id = t.data_source_id \n        AND'
         if self.table_type == TableType.REGULAR_GLOBAL:
-            merge_cond += " s.meta_company_id = t.meta_company_id \n        AND"
+            merge_cond += ' s.meta_company_id = t.meta_company_id \n        AND'
 
         for idx, col in enumerate(self.column_list.uniqueness_cols_str):
             if idx > 0:
-                merge_cond += "\n        AND"
+                merge_cond += '\n        AND'
             if (
                 col in self.column_list.keep_original_column
                 and self.table_type.include_company_id is True
@@ -335,10 +321,10 @@ class LakeConsolidatedTableConfig:
                 merge_cond += f" s.{col} = t.{col}"
 
         # Build the PreMerge statements
-        company_join_temp_tables = ""
-        source_union = ""
+        company_join_temp_tables = ''
+        source_union = ''
         for lake_db_loop, db in enumerate(lake_db_dict):
-            lake_db_table = f"{db}.{self.schema}.{self.base_table_name}"
+            lake_db_table = f'{db}.{self.schema}.{self.base_table_name}'
             lake_db_temp_table = f"_{db}_{self.schema}_{self.table}_delta"
 
             # Build the Source temp tables
@@ -359,15 +345,12 @@ class LakeConsolidatedTableConfig:
 
             # Build the Source Unions
             if lake_db_loop > 0:
-                source_union += "\n\n       UNION ALL\n"
+                source_union += '\n\n       UNION ALL\n'
             source_union += "    SELECT \n        A.* \n"
 
             # Build the Company_ID temp tables
 
-            if (
-                self.company_join_sql is not None
-                and self.table_type.include_company_id is True
-            ):
+            if self.company_join_sql is not None and self.table_type.include_company_id is True:
                 company_join_subquery = self.company_join_sql.format(
                     database=db,
                     source_schema=self.schema,
@@ -395,20 +378,20 @@ class LakeConsolidatedTableConfig:
                     f"    LEFT JOIN {company_join_temp_table} AS CJ \n"
                 )
 
-                company_join_cond = ""
+                company_join_cond = ''
                 if self.company_join_columns is not None:
                     for idx, col in enumerate(self.company_join_columns):
                         if idx == 0:
-                            company_join_cond += "\n        ON "
+                            company_join_cond += '\n        ON '
                         else:
-                            company_join_cond += "\n        AND "
+                            company_join_cond += '\n        AND '
                         company_join_cond += f" cj.{col} = a.{col}"
                 else:
                     for idx, col in enumerate(self.column_list.uniqueness_cols_str):
                         if idx == 0:
-                            company_join_cond += "\n        ON "
+                            company_join_cond += '\n        ON '
                         else:
-                            company_join_cond += "\n        AND "
+                            company_join_cond += '\n        AND '
                         company_join_cond += f" cj.{col} = a.{col}"
 
                 company_join_cond += f"""
@@ -419,12 +402,9 @@ class LakeConsolidatedTableConfig:
             else:
                 source_union += f"    FROM {lake_db_temp_table} AS A \n"
 
-        consolidated_column_merge_update = ""
+        consolidated_column_merge_update = ''
         for col in self.column_list.column_name_list:
-            if (
-                col in self.column_list.key_cols
-                and self.table_type.include_company_id is True
-            ):
+            if col in self.column_list.key_cols and self.table_type.include_company_id is True:
                 consolidated_column_merge_update += (
                     f"\n        t.{col} = CASE WHEN NULLIF(s.{col}, '0') IS NOT NULL "
                     f"THEN CONCAT(s.{col}, s.meta_company_id) "
@@ -442,12 +422,9 @@ class LakeConsolidatedTableConfig:
                     f"""\n        t.meta_original_{col} = s.{col},"""
                 )
 
-        consolidated_column_merge_insert = ""
+        consolidated_column_merge_insert = ''
         for col in self.column_list.column_name_list:
-            if (
-                col in self.column_list.key_cols
-                and self.table_type.include_company_id is True
-            ):
+            if col in self.column_list.key_cols and self.table_type.include_company_id is True:
                 consolidated_column_merge_insert += (
                     f"\n        CASE WHEN NULLIF(s.{col}, '0') IS NOT NULL THEN CONCAT(s.{col}, s.meta_company_id) "
                     f"ELSE NULL END,"
@@ -519,33 +496,27 @@ class LakeConsolidatedTableConfig:
         lake_consolidated_history_table = (
             f"lake_consolidated.{self.schema}_history.{self.base_table_name}"
         )
-        source_temp_delta = ""
-        source_union = ""
-        company_join_temp_tables = ""
-        uniqueness_str = ",".join(self.column_list.uniqueness_cols_str)
+        source_temp_delta = ''
+        source_union = ''
+        company_join_temp_tables = ''
+        uniqueness_str = ','.join(self.column_list.uniqueness_cols_str)
         column_list = self.column_list.column_name_list
-        raw_column_str = ",\n    ".join(self.column_list.column_name_list)
+        raw_column_str = ',\n    '.join(self.column_list.column_name_list)
         if self.table_type.include_company_id is True:
-            full_column_str = raw_column_str + "".join(
-                [
-                    f",\n    meta_original_{x}"
-                    for x in self.column_list.keep_original_column
-                ]
+            full_column_str = raw_column_str + ''.join(
+                [f",\n    meta_original_{x}" for x in self.column_list.keep_original_column]
             )
         else:
             full_column_str = raw_column_str
         if self.table_type == TableType.NSYNC:
-            lake_db_dict = {"lake_fl": "20"}
+            lake_db_dict = {'lake_fl': '20'}
         else:
             lake_db_dict = lake_databases_dict
             lake_db_company_dict = lake_databases_companies_dict
 
-        full_final_column_str = ""
+        full_final_column_str = ''
         for col in self.column_list.column_name_list:
-            if (
-                col in self.column_list.key_cols
-                and self.table_type.include_company_id is True
-            ):
+            if col in self.column_list.key_cols and self.table_type.include_company_id is True:
                 full_final_column_str += (
                     f"\n    CASE WHEN NULLIF(s.{col}, '0') IS NOT NULL THEN CONCAT(s.{col}, s.meta_company_id) "
                     f"ELSE NULL END as {col}, "
@@ -589,7 +560,7 @@ class LakeConsolidatedTableConfig:
                     create_history_table_cmd += f"\n    meta_original_{col_datatype},"
         create_history_table_cmd += meta_rows
 
-        watermarks = ""
+        watermarks = ''
         for db in lake_db_dict:
             lake_history_db_table = f"{db}.{self.schema}_history.{self.base_table_name}"
             watermarks += (
@@ -647,9 +618,7 @@ class LakeConsolidatedTableConfig:
             # Build the Company_ID temp tables
             if self.company_join_sql and self.table_type.include_company_id is True:
                 company_join_subquery = self.company_join_sql.format(
-                    database=db,
-                    source_schema=f"{self.schema}_history",
-                    schema=self.schema,
+                    database=db, source_schema=f"{self.schema}_history", schema=self.schema
                 )
                 company_join_temp_table = f"_{db}_company_{self.table}"
                 company_join_temp_tables += (
@@ -668,7 +637,7 @@ class LakeConsolidatedTableConfig:
 
                 # Build the Source Unions
                 if lake_db_loop > 0:
-                    source_union += "\n\n    UNION ALL\n"
+                    source_union += '\n\n    UNION ALL\n'
                 source_union += (
                     f"    SELECT "
                     f"\n        A.*"
@@ -677,20 +646,20 @@ class LakeConsolidatedTableConfig:
                     f"\n    LEFT JOIN {company_join_temp_table} AS CJ "
                 )
 
-                company_join_cond = ""
+                company_join_cond = ''
                 if self.company_join_columns is not None:
                     for idx, col in enumerate(self.company_join_columns):
                         if idx == 0:
-                            company_join_cond += "\n        ON"
+                            company_join_cond += '\n        ON'
                         else:
-                            company_join_cond += "\n        AND"
+                            company_join_cond += '\n        AND'
                         company_join_cond += f" cj.{col} = a.{col}"
                 else:
                     for idx, col in enumerate(self.column_list.uniqueness_cols_str):
                         if idx == 0:
-                            company_join_cond += "\n        ON"
+                            company_join_cond += '\n        ON'
                         else:
-                            company_join_cond += "\n        AND"
+                            company_join_cond += '\n        AND'
                         company_join_cond += f" cj.{col} = a.{col}"
 
                 company_join_cond += (
@@ -699,42 +668,38 @@ class LakeConsolidatedTableConfig:
                 )
                 source_union += company_join_cond
             else:
-                source_union += (
-                    f"    SELECT A.* FROM {lake_history_db_temp_table} AS A \n"
-                )
+                source_union += f"    SELECT A.* FROM {lake_history_db_temp_table} AS A \n"
 
-        merge_cond = ""
-        unique_cols = ""
-        effective_join_cols = ""
-        effective_unique_cols = ""
+        merge_cond = ''
+        unique_cols = ''
+        effective_join_cols = ''
+        effective_unique_cols = ''
         if self.table_type.include_datasource_id is True:
-            merge_cond = "s.data_source_id = t.data_source_id \n        AND "
-            unique_cols = "data_source_id, \n"
-            effective_join_cols = "s.data_source_id = t.data_source_id \n    AND "
-            effective_unique_cols = "s.data_source_id, \n"
+            merge_cond = 's.data_source_id = t.data_source_id \n        AND '
+            unique_cols = 'data_source_id, \n'
+            effective_join_cols = 's.data_source_id = t.data_source_id \n    AND '
+            effective_unique_cols = 's.data_source_id, \n'
         if self.table_type == TableType.REGULAR_GLOBAL:
-            merge_cond += " s.meta_company_id = t.meta_company_id \n        AND "
-            unique_cols += "meta_company_id, \n"
-            effective_join_cols += "s.meta_company_id = t.meta_company_id \n    AND "
-            effective_unique_cols += "s.meta_company_id, \n"
+            merge_cond += ' s.meta_company_id = t.meta_company_id \n        AND '
+            unique_cols += 'meta_company_id, \n'
+            effective_join_cols += 's.meta_company_id = t.meta_company_id \n    AND '
+            effective_unique_cols += 's.meta_company_id, \n'
 
         for idx, col in enumerate(self.column_list.uniqueness_cols_str):
             if idx == 0:
-                merge_cond += "        "
-                unique_cols += "\n    "
-                effective_join_cols += ""
-                effective_unique_cols += "\n    "
+                merge_cond += '        '
+                unique_cols += '\n    '
+                effective_join_cols += ''
+                effective_unique_cols += '\n    '
             else:
-                merge_cond += "\n        AND"
-                unique_cols += ",\n    "
-                effective_join_cols += "\n    AND"
-                effective_unique_cols += ",\n    "
+                merge_cond += '\n        AND'
+                unique_cols += ',\n    '
+                effective_join_cols += '\n    AND'
+                effective_unique_cols += ',\n    '
             if col in self.column_list.keep_original_column:
                 merge_cond += f" s.{col} = t.meta_original_{col}"
                 unique_cols += f"    meta_original_{col}"
-                effective_join_cols += (
-                    f"    s.meta_original_{col} = t.meta_original_{col}"
-                )
+                effective_join_cols += f"    s.meta_original_{col} = t.meta_original_{col}"
                 effective_unique_cols += f"    s.meta_original_{col}"
             else:
                 merge_cond += f" s.{col} = t.{col}"
@@ -742,12 +707,9 @@ class LakeConsolidatedTableConfig:
                 effective_join_cols += f"    s.{col} = t.{col}"
                 effective_unique_cols += f"    s.{col}"
 
-        consolidated_column_merge_insert = ""
+        consolidated_column_merge_insert = ''
         for col in self.column_list.column_name_list:
-            if (
-                col in self.column_list.key_cols
-                and self.table_type.include_company_id is True
-            ):
+            if col in self.column_list.key_cols and self.table_type.include_company_id is True:
                 consolidated_column_merge_insert += (
                     f"\n        CASE WHEN NULLIF(s.{col}, '0') IS NOT NULL THEN CONCAT(s.{col}, s.meta_company_id) "
                     f"ELSE NULL END,"
@@ -792,7 +754,7 @@ class LakeConsolidatedTableConfig:
             f"ORDER BY s.effective_start_datetime ASC;\n"
         )
 
-        effective_timestamps_update = ""
+        effective_timestamps_update = ''
         effective_timestamps_update += (
             f"CREATE OR REPLACE temp table _{self.table}_updates as \n"
             "SELECT s.*,\n"

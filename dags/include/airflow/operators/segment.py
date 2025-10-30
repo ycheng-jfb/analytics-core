@@ -22,19 +22,14 @@ from airflow.models import BaseOperator
 from typing import Optional, List
 from snowflake.snowpark import Session, DataFrame, AsyncJob, Window
 import snowflake.snowpark.functions as F
-from snowflake.snowpark.types import (
-    StructType,
-    StructField,
-    TimestampType,
-    VariantType,
-    StringType,
-)
+from snowflake.snowpark.types import StructType, StructField, TimestampType, VariantType, StringType
 
 
-LOGGER = logging.getLogger("ingest_segment_json")
+LOGGER = logging.getLogger('ingest_segment_json')
 
 
 class SegmentLoadRawData(BaseOperator):
+
     def __init__(
         self,
         stage_path: str,
@@ -43,7 +38,7 @@ class SegmentLoadRawData(BaseOperator):
         s3_folders: list,
         raw_database: str,
         raw_schema: str,
-        raw_suffix: str = "events",
+        raw_suffix: str = 'events',
         connection_dict: dict = {},
         **kwargs,
     ):
@@ -53,7 +48,7 @@ class SegmentLoadRawData(BaseOperator):
         self.s3_folders = s3_folders
         self.raw_database = raw_database
         self.raw_schema = raw_schema
-        self.raw_table = f"{self.table_prefix}_{raw_suffix}"
+        self.raw_table = f'{self.table_prefix}_{raw_suffix}'
         self.connection_dict = connection_dict
         super().__init__(**kwargs)
 
@@ -76,9 +71,7 @@ class SegmentLoadRawData(BaseOperator):
 
         qualified_table_name = f"{self.raw_database}.{self.raw_schema}.{self.raw_table}"
         # Check if table creation is required
-        if not table_exists(
-            session, self.raw_database, self.raw_schema, self.raw_table
-        ):
+        if not table_exists(session, self.raw_database, self.raw_schema, self.raw_table):
             # If raw table doesn't exist, create with table with only metadata columns
             # NOTE: this pattern may lead to and error for too many columns in schema evolution
             # If this happens, please talk with your Snowflake account team
@@ -123,6 +116,7 @@ class SegmentLoadRawData(BaseOperator):
 
 
 class SegmentRawToTargetTables(BaseOperator):
+
     def __init__(
         self,
         grouping: str,
@@ -137,8 +131,8 @@ class SegmentRawToTargetTables(BaseOperator):
         flatten_udtf_name: str,
         segment_shard_udf_name: str,
         country_udf_name: str,
-        raw_suffix: str = "events",
-        stage_suffix: str = "stage",
+        raw_suffix: str = 'events',
+        stage_suffix: str = 'stage',
         connection_dict: dict = {},
         stage_status_check_wait: int = 5,
         explicit_event_list: list = None,
@@ -155,7 +149,7 @@ class SegmentRawToTargetTables(BaseOperator):
         self.target_database = target_database
         self.raw_schema = raw_schema
         self.raw_qualified_table = (
-            f"{self.raw_database}.{self.raw_schema}.{self.table_prefix}_{raw_suffix}"
+            f'{self.raw_database}.{self.raw_schema}.{self.table_prefix}_{raw_suffix}'
         )
         self.stage_schema = stage_schema
         self.stage_suffix = stage_suffix
@@ -179,15 +173,13 @@ class SegmentRawToTargetTables(BaseOperator):
         return session
 
     def get_stage_qualified_table(self, event_type):
-        return f"{self.stage_database}.{self.stage_schema}.{self.table_prefix}_{FlattenAndExplode.normalize_field_name(event_type)}_{self.stage_suffix}".lower()
+        return f'{self.stage_database}.{self.stage_schema}.{self.table_prefix}_{FlattenAndExplode.normalize_field_name(event_type)}_{self.stage_suffix}'.lower()
 
     def get_target_qualified_table(self, event_type):
-        return f"{self.target_database}.{self.target_schema}.{self.table_prefix}_{FlattenAndExplode.normalize_field_name(event_type)}".lower()
+        return f'{self.target_database}.{self.target_schema}.{self.table_prefix}_{FlattenAndExplode.normalize_field_name(event_type)}'.lower()
 
     def manage_merge_into_target_jobs(self, session, event_type_staging_jobs, grouping):
-        running_jobs = {
-            event_type: async_job for event_type, async_job in event_type_staging_jobs
-        }
+        running_jobs = {event_type: async_job for event_type, async_job in event_type_staging_jobs}
         failed_job_ids = []
         final_merge_jobs = []
         while running_jobs:
@@ -225,9 +217,7 @@ class SegmentRawToTargetTables(BaseOperator):
 
         return final_merge_jobs, failed_job_ids
 
-    def perform_async_merge_into_target(
-        self, session, event_type: str, grouping: str
-    ) -> AsyncJob:
+    def perform_async_merge_into_target(self, session, event_type: str, grouping: str) -> AsyncJob:
         LOGGER.info(
             f"Performing async insert into lake table for event_type: {event_type}, grouping: {grouping}"
         )
@@ -255,38 +245,25 @@ class SegmentRawToTargetTables(BaseOperator):
             target_table_df = session.table(target_table)
             # TODO figure out proper logic for merge condition
             if "PROPERTIES_PRODUCTS_PRODUCT_ID" in new_events_df.schema.names:
-                merge_conditions = (
-                    new_events_df["MESSAGEID"] == target_table_df["MESSAGEID"]
-                ) & (
-                    new_events_df["PROPERTIES_PRODUCTS_PRODUCT_ID"]
-                    == target_table_df["PROPERTIES_PRODUCTS_PRODUCT_ID"]
+                merge_conditions = (new_events_df['MESSAGEID'] == target_table_df['MESSAGEID']) & (
+                    new_events_df['PROPERTIES_PRODUCTS_PRODUCT_ID']
+                    == target_table_df['PROPERTIES_PRODUCTS_PRODUCT_ID']
                 )
             else:
-                merge_conditions = (
-                    new_events_df["MESSAGEID"] == target_table_df["MESSAGEID"]
-                )
+                merge_conditions = new_events_df['MESSAGEID'] == target_table_df['MESSAGEID']
 
-            cols_to_update = {
-                col: new_events_df[col] for col in new_events_df.schema.names
-            }
+            cols_to_update = {col: new_events_df[col] for col in new_events_df.schema.names}
             metadata_col_to_update = {}  # "META_UPDATED_AT": F.current_timestamp()}
             updates = {**cols_to_update, **metadata_col_to_update}
 
-            merge_logic = [
-                F.when_matched().update(updates),
-                F.when_not_matched().insert(updates),
-            ]
+            merge_logic = [F.when_matched().update(updates), F.when_not_matched().insert(updates)]
             # noinspection PyTypeChecker
-            return target_table_df.merge(
-                new_events_df, merge_conditions, merge_logic, block=False
-            )
+            return target_table_df.merge(new_events_df, merge_conditions, merge_logic, block=False)
         else:
             # Silver table is new, so create it
             LOGGER.info(f"Writing to new target_table: {target_table}")
             # noinspection PyTypeChecker
-            return new_events_df.write.mode("overwrite").save_as_table(
-                target_table, block=False
-            )
+            return new_events_df.write.mode("overwrite").save_as_table(target_table, block=False)
 
     def execute(self, context=None):
         session = self.snowpark_session
@@ -298,7 +275,7 @@ class SegmentRawToTargetTables(BaseOperator):
 
         if self.explicit_event_list:
             events = [
-                (x, "non_track") if x in ["page", "identify"] else (x, "track")
+                (x, 'non_track') if x in ['page', 'identify'] else (x, 'track')
                 for x in self.explicit_event_list
             ]
             LOGGER.info(f"Processing only explicitly provided events: {events}")
@@ -309,9 +286,7 @@ class SegmentRawToTargetTables(BaseOperator):
                 .filter("type = 'track'")
                 .distinct()
             )
-            track_types = [
-                (row.as_dict()["EVENT"], "track") for row in track_types_df.collect()
-            ]
+            track_types = [(row.as_dict()['EVENT'], 'track') for row in track_types_df.collect()]
             LOGGER.info(f"Obtained distinct track_types: {track_types}")
             non_track_types_df = (
                 session.table(self.raw_qualified_table)
@@ -320,8 +295,7 @@ class SegmentRawToTargetTables(BaseOperator):
                 .distinct()
             )
             non_track_types = [
-                (row.as_dict()["TYPE"], "non_track")
-                for row in non_track_types_df.collect()
+                (row.as_dict()['TYPE'], 'non_track') for row in non_track_types_df.collect()
             ]
             LOGGER.info(f"Obtained distinct non_track_types: {non_track_types}")
             events = track_types + non_track_types
@@ -332,15 +306,13 @@ class SegmentRawToTargetTables(BaseOperator):
             try:
                 event_type = event[0]
                 # This first loop performs the fanout into many staging tables
-                LOGGER.info(
-                    f"Processing event type: {event_type}, for grouping: {self.grouping}"
-                )
+                LOGGER.info(f"Processing event type: {event_type}, for grouping: {self.grouping}")
                 # Select all new data for event type
-                if event[1] == "track":
+                if event[1] == 'track':
                     staged_event_df = session.table(self.raw_qualified_table).filter(
                         F.col("event") == event_type
                     )
-                elif event[1] == "non_track":
+                elif event[1] == 'non_track':
                     staged_event_df = session.table(self.raw_qualified_table).filter(
                         F.col("type") == event_type
                     )
@@ -348,7 +320,7 @@ class SegmentRawToTargetTables(BaseOperator):
                 # Perform dynamic flatten and explode using UDTF approach
                 flatten_and_explode_udtf = F.table_function(self.flatten_udtf_name)
                 staged_event_df = staged_event_df.with_column(
-                    "CONSTRUCTED_OBJECT", F.object_construct("*")
+                    'CONSTRUCTED_OBJECT', F.object_construct('*')
                 )
                 staged_event_df = staged_event_df.select(
                     flatten_and_explode_udtf(F.col("CONSTRUCTED_OBJECT"))
@@ -370,12 +342,7 @@ class SegmentRawToTargetTables(BaseOperator):
                             F.row_number().over(
                                 Window.partitionBy(
                                     ["MESSAGEID", "PROPERTIES_PRODUCTS_PRODUCT_ID"]
-                                ).orderBy(
-                                    *[
-                                        F.desc(c)
-                                        for c in ["RECEIVEDAT", "ORIGINALTIMESTAMP"]
-                                    ]
-                                )
+                                ).orderBy(*[F.desc(c) for c in ["RECEIVEDAT", "ORIGINALTIMESTAMP"]])
                             ),
                         )
                         .filter(F.col("rn") == 1)
@@ -387,10 +354,7 @@ class SegmentRawToTargetTables(BaseOperator):
                             "rn",
                             F.row_number().over(
                                 Window.partitionBy("MESSAGEID").orderBy(
-                                    *[
-                                        F.desc(c)
-                                        for c in ["RECEIVEDAT", "ORIGINALTIMESTAMP"]
-                                    ]
+                                    *[F.desc(c) for c in ["RECEIVEDAT", "ORIGINALTIMESTAMP"]]
                                 )
                             ),
                         )
@@ -399,12 +363,11 @@ class SegmentRawToTargetTables(BaseOperator):
                     )
 
                 staged_event_df = staged_event_df.with_column(
-                    "segment_shard",
-                    F.call_function(self.segment_shard_udf_name, (F.col("FILENAME"))),
+                    'segment_shard',
+                    F.call_function(self.segment_shard_udf_name, (F.col('FILENAME'))),
                 )
                 staged_event_df = staged_event_df.with_column(
-                    "country",
-                    F.call_function(self.country_udf_name, (F.col("segment_shard"))),
+                    'country', F.call_function(self.country_udf_name, (F.col('segment_shard')))
                 )
 
                 # Load flattened data into event-specific staging table
@@ -412,9 +375,9 @@ class SegmentRawToTargetTables(BaseOperator):
                 LOGGER.info(
                     f"Writing data to semi-structured event staging table: {event_staging_table}"
                 )
-                event_staging_job = staged_event_df.write.mode(
-                    "overwrite"
-                ).save_as_table(event_staging_table, block=False)
+                event_staging_job = staged_event_df.write.mode("overwrite").save_as_table(
+                    event_staging_table, block=False
+                )
                 event_type_staging_jobs.append((event_type, event_staging_job))
             except Exception as e:
                 error_job_ids.append(event[0])
@@ -441,34 +404,28 @@ class SegmentRawToTargetTables(BaseOperator):
             if self.drop_stage:
                 stage_schema_and_table = self.get_stage_qualified_table(event[0])
                 session.table(stage_schema_and_table).drop_table()
-                LOGGER.info(f"Dropped stage table: {stage_schema_and_table}")
+                LOGGER.info(f'Dropped stage table: {stage_schema_and_table}')
             if self.delete_raw:
                 raw_table = session.table(self.raw_qualified_table)
-                if event[1] == "track":
-                    raw_table.delete(raw_table["event"] == event[0])
-                elif event[1] == "non_track":
-                    raw_table.delete(raw_table["type"] == event[0])
-                LOGGER.info(
-                    f"Delete '{event[0]}' from raw table: {self.raw_qualified_table}"
-                )
+                if event[1] == 'track':
+                    raw_table.delete(raw_table['event'] == event[0])
+                elif event[1] == 'non_track':
+                    raw_table.delete(raw_table['type'] == event[0])
+                LOGGER.info(f"Delete '{event[0]}' from raw table: {self.raw_qualified_table}")
 
         # Check for errors
         if failed_stage_job_ids or failed_target_job_ids or error_job_ids:
             # Todo: clean this up
             if failed_stage_job_ids:
-                LOGGER.error(f"List of failed staging jobs: {failed_stage_job_ids}")
+                LOGGER.error(f'List of failed staging jobs: {failed_stage_job_ids}')
             if failed_target_job_ids:
-                LOGGER.error(
-                    f"List of failed merge-into-target jobs: {failed_target_job_ids}"
-                )
+                LOGGER.error(f'List of failed merge-into-target jobs: {failed_target_job_ids}')
             if error_job_ids:
-                LOGGER.error(
-                    f"Error appeared when processing these event/s: {error_job_ids}"
-                )
+                LOGGER.error(f'Error appeared when processing these event/s: {error_job_ids}')
             raise Exception(
-                "One or more staging and/or merge-into-target jobs failed, or there was"
-                " an error. Find list of events that had an issue above. Use event to "
-                "find more detailed ERROR message in log."
+                'One or more staging and/or merge-into-target jobs failed, or there was'
+                ' an error. Find list of events that had an issue above. Use event to '
+                'find more detailed ERROR message in log.'
             )
 
 
@@ -481,11 +438,11 @@ class FlattenAndExplode:
     def should_explode_list(self, key, explode_column_list: Optional[List[str]]):
         if explode_column_list is None:
             return False
-        lookup_key = key.rstrip("_").upper()
+        lookup_key = key.rstrip('_').upper()
         return any(lookup_key == col.upper() for col in explode_column_list)
 
     def flatten_json_to_rows(self, json_obj):
-        explode_column_list = ["PROPERTIES_PRODUCTS"]
+        explode_column_list = ['PROPERTIES_PRODUCTS']
 
         def flatten(current, rows, key, value):
             clean_key = self.normalize_field_name(key)
@@ -515,29 +472,29 @@ class FlattenAndExplode:
                     rows = rows + new_rows
 
             else:
-                current[clean_key.rstrip("_").upper()] = value
+                current[clean_key.rstrip('_').upper()] = value
 
         rows = []
         current = {}
-        flatten(current, rows, "", json_obj)
+        flatten(current, rows, '', json_obj)
 
         return rows
 
     @staticmethod
-    def normalize_field_name(input_key: str, delimiter="_"):
+    def normalize_field_name(input_key: str, delimiter='_'):
         new_key = input_key
         # Replace multiple whitespace with a single whitespace
-        new_key = re.sub(r"\s+", delimiter, new_key)
+        new_key = re.sub(r'\s+', delimiter, new_key)
         # Remove leading and trailing whitespace
         new_key = new_key.strip()
         # Convert any remaining whitespace to underscore
-        new_key = new_key.replace(" ", delimiter)
+        new_key = new_key.replace(' ', delimiter)
         # Escape delimiter to allow for special regex characters to be used
-        escaped_delimiter = "\\" + delimiter
+        escaped_delimiter = '\\' + delimiter
         # Remove all non-alphanumeric characters except delimiter
-        new_key = re.sub(rf"[^a-zA-Z0-9{escaped_delimiter}]", delimiter, new_key)
+        new_key = re.sub(fr'[^a-zA-Z0-9{escaped_delimiter}]', delimiter, new_key)
         # Replace multiple underscores with a single underscore
-        new_key = re.sub(r"_+", delimiter, new_key)
+        new_key = re.sub(r'_+', delimiter, new_key)
         # Remove leading and trailing underscores (if any)
         new_key = new_key.strip(delimiter)
         # Convert to uppercase

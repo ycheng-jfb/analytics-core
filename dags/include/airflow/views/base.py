@@ -13,16 +13,16 @@ class AirflowModelView(ModelView):
 
 
 def task_instance_link(attr):
-    dag_id = attr.get("dag_id")
-    task_id = attr.get("task_id")
+    dag_id = attr.get('dag_id')
+    task_id = attr.get('task_id')
     if not (dag_id and task_id):
         return None
     kwargs = dict(dag_id=dag_id, task_id=task_id)
-    data_interval_start = attr.get("data_interval_start")
+    data_interval_start = attr.get('data_interval_start')
     if data_interval_start:
         kwargs.update(data_interval_start=data_interval_start.isoformat())
-    url = url_for("Airflow.task", **kwargs)
-    url_root = url_for("Airflow.graph", **kwargs)
+    url = url_for('Airflow.task', **kwargs)
+    url_root = url_for('Airflow.graph', **kwargs)
     return Markup(
         """
         <span style="white-space: nowrap;">
@@ -38,13 +38,13 @@ def task_instance_link(attr):
 
 def dag_link(attr):
     kwargs = {}
-    dag_id = attr.get("dag_id")
+    dag_id = attr.get('dag_id')
     if dag_id:
         kwargs.update(dag_id=dag_id)
     else:
         return None
-    data_interval_start = attr.get("data_interval_start")
+    data_interval_start = attr.get('data_interval_start')
     if data_interval_start:
         kwargs.update(data_interval_start=data_interval_start)
-    url = url_for("Airflow.graph", **kwargs)
+    url = url_for('Airflow.graph', **kwargs)
     return Markup('<a href="{}">{}</a>').format(url, dag_id)

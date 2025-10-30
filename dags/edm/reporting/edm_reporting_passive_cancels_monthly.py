@@ -14,10 +14,7 @@ from include.airflow.dag_helpers import chain_tasks
 from include.airflow.hooks.mssql import MsSqlOdbcHook
 from include.airflow.hooks.snowflake import SnowflakeHook
 from include.airflow.operators.mssql import MsSqlToS3Operator
-from include.airflow.operators.snowflake import (
-    SnowflakeProcedureOperator,
-    SnowflakeSqlOperator,
-)
+from include.airflow.operators.snowflake import SnowflakeProcedureOperator, SnowflakeSqlOperator
 from include.airflow.operators.sqlagent import RunSqlAgent
 from include.config import conn_ids, email_lists, owners, s3_buckets, stages
 from include.utils import snowflake
@@ -26,23 +23,23 @@ from include.utils.decorators import retry_wrapper
 
 default_args = {
     "start_date": pendulum.datetime(2019, 1, 1, 7, tz="America/Los_Angeles"),
-    "owner": owners.data_integrations,
-    "email": email_lists.data_integration_support,
-    "on_failure_callback": SlackFailureCallback("slack_alert_edm"),
+    'owner': owners.data_integrations,
+    'email': email_lists.data_integration_support,
+    "on_failure_callback": SlackFailureCallback('slack_alert_edm'),
 }
 
 dag = DAG(
-    dag_id="edm_reporting_passive_cancels_monthly",
+    dag_id='edm_reporting_passive_cancels_monthly',
     default_args=default_args,
-    schedule="0 10 3,20 * *",
+    schedule='0 10 3,20 * *',
     catchup=False,
     max_active_tasks=20,
 )
 
 mssql_conn_id_server_dict = {
-    "jfb": {"conn_id": conn_ids.MsSql.justfab_app_airflow_rw, "brand_id": "10"},
-    "fl": {"conn_id": conn_ids.MsSql.fabletics_app_airflow_rw, "brand_id": "20"},
-    "sxf": {"conn_id": conn_ids.MsSql.savagex_app_airflow_rw, "brand_id": "30"},
+    'jfb': {'conn_id': conn_ids.MsSql.justfab_app_airflow_rw, 'brand_id': '10'},
+    'fl': {'conn_id': conn_ids.MsSql.fabletics_app_airflow_rw, 'brand_id': '20'},
+    'sxf': {'conn_id': conn_ids.MsSql.savagex_app_airflow_rw, 'brand_id': '30'},
 }
 
 
@@ -75,7 +72,7 @@ class SnowflakeToMSSQL(BaseOperator):
     def mssql_hook(self):
         return MsSqlOdbcHook(
             mssql_conn_id=self.mssql_conn_id,
-            database="ultramerchant",
+            database='ultramerchant',
         )
 
     def execute(self, context):
@@ -90,14 +87,14 @@ class SnowflakeToMSSQL(BaseOperator):
                 sql=self.snowflake_cmd, con=conn, chunksize=20000
             ):  # snowflake
                 with self.mssql_hook.get_sqlalchemy_connection() as conn_mssql:
-                    min_value = rows["MEMBERSHIP_ID"].min()
-                    max_value = rows["MEMBERSHIP_ID"].max()
+                    min_value = rows['MEMBERSHIP_ID'].min()
+                    max_value = rows['MEMBERSHIP_ID'].max()
                     filter_condition = f"{min_value} and {max_value}"
                     rows.to_sql(
                         name=self.mssql_target_table,
                         con=conn_mssql,
                         chunksize=20000,
-                        if_exists="append",
+                        if_exists='append',
                         index=False,
                     )
                     cur = conn.cursor()
@@ -110,14 +107,12 @@ class CheckEcomJobCompletionSensor(BaseSensorOperator):
         self,
         mssql_conn_id,
         poke_interval=60 * 10,
-        mode="reschedule",
+        mode='reschedule',
         timeout=60 * 60,
         **kwargs,
     ):
         self.mssql_conn_id = mssql_conn_id
-        super().__init__(
-            **kwargs, poke_interval=poke_interval, mode=mode, timeout=timeout
-        )
+        super().__init__(**kwargs, poke_interval=poke_interval, mode=mode, timeout=timeout)
 
     def poke(self, context):
         cmd = """
@@ -133,7 +128,7 @@ class CheckEcomJobCompletionSensor(BaseSensorOperator):
             result = cur.fetchone()
 
         if result is None or result[0] != 1:
-            print("Retrying")
+            print('Retrying')
             return False
 
         print("Job Executed")
@@ -141,7 +136,7 @@ class CheckEcomJobCompletionSensor(BaseSensorOperator):
 
 
 def check_day(**kwargs):
-    execution_date = kwargs["data_interval_end"]
+    execution_date = kwargs['data_interval_end']
     run_date = execution_date
     if run_date.day == 20:
         return crm_passive_cancel.task_id
@@ -163,7 +158,7 @@ def fetch_cursor_result_mssql(cur: Any):
 
 @retry_wrapper(3, Exception, sleep_time=60)
 def run_ecom_mssql_proc_fn(mssql_conn_id):
-    mssql_hook = MsSqlOdbcHook(mssql_conn_id=mssql_conn_id, database="ultramerchant")
+    mssql_hook = MsSqlOdbcHook(mssql_conn_id=mssql_conn_id, database='ultramerchant')
     sql = """DECLARE @success int
         EXEC [dbo].[pr_monthly_ecom_passive_cancels_process] @success = @success OUTPUT
         SELECT @success as N'@success'"""
@@ -183,24 +178,25 @@ def run_ecom_mssql_proc_fn(mssql_conn_id):
 
 
 with dag:
+
     day_check = BranchPythonOperator(
         python_callable=check_day,
-        task_id="check_day_branch",
+        task_id='check_day_branch',
     )
 
     crm_passive_cancel = SnowflakeProcedureOperator(
-        procedure="membership.monthly_crm_passive_cancels.sql",
-        database="reporting_prod",
+        procedure='membership.monthly_crm_passive_cancels.sql',
+        database='reporting_prod',
     )
 
     ecom_passive_cancel = SnowflakeProcedureOperator(
-        procedure="membership.monthly_ecom_passive_cancels.sql",
-        database="reporting_prod",
+        procedure='membership.monthly_ecom_passive_cancels.sql',
+        database='reporting_prod',
     )
 
     for brand, brand_db_details in mssql_conn_id_server_dict.items():
-        mssql_conn_id = brand_db_details["conn_id"]
-        company_ids = brand_db_details["brand_id"]
+        mssql_conn_id = brand_db_details['conn_id']
+        company_ids = brand_db_details['brand_id']
 
         pre_sql_cmd_crm = "[dbo].[pr_monthly_CRM_eligible_passive_cancels_init]"
 
@@ -228,8 +224,8 @@ with dag:
         export_cmd_db50_insert_crm = SnowflakeToMSSQL(
             pre_sql_cmd=pre_sql_cmd_crm,
             snowflake_cmd=export_cmd_crm,
-            task_id=f"insert_task_crm_{brand}",
-            mssql_target_table="monthly_CRM_eligible_passive_cancels",
+            task_id=f'insert_task_crm_{brand}',
+            mssql_target_table='monthly_CRM_eligible_passive_cancels',
             mssql_conn_id=mssql_conn_id,
             post_sql_cmd=post_sql_cmd_crm,
         )
@@ -261,8 +257,8 @@ with dag:
         export_cmd_db50_insert_ecom = SnowflakeToMSSQL(
             pre_sql_cmd=pre_sql_cmd_ecom,
             snowflake_cmd=export_cmd_ecom,
-            task_id=f"insert_task_ecom_{brand}",
-            mssql_target_table="membership_passive_cancels",
+            task_id=f'insert_task_ecom_{brand}',
+            mssql_target_table='membership_passive_cancels',
             mssql_conn_id=mssql_conn_id,
             post_sql_cmd=post_sql_cmd_ecom,
         )
@@ -286,7 +282,7 @@ with dag:
             mssql_conn_id=mssql_conn_id,
             s3_conn_id=conn_ids.S3.tsos_da_int_prod,
             s3_replace=True,
-            task_id=f"membership_passive_cancels_{brand}_to_s3",
+            task_id=f'membership_passive_cancels_{brand}_to_s3',
         )
 
         update_downgrade_status_query = f"""
@@ -318,18 +314,18 @@ with dag:
                 AND mecp.is_current_month = 1;"""
 
         update_downgrade_status = SnowflakeSqlOperator(
-            task_id=f"update_downgrade_status_{brand}",
+            task_id=f'update_downgrade_status_{brand}',
             sql_or_path=update_downgrade_status_query,
         )
 
         run_ecom_mssql_proc_job = RunSqlAgent(
-            task_id=f"ecom_mssql_job_{brand}",
+            task_id=f'ecom_mssql_job_{brand}',
             mssql_conn_id=mssql_conn_id,
-            mssql_job_name="Membership Passive Cancels",
-            wrapper_proc="sp_start_job",
+            mssql_job_name='Membership Passive Cancels',
+            wrapper_proc='sp_start_job',
         )
         check_job_completion = CheckEcomJobCompletionSensor(
-            task_id=f"check_job_completion_{brand}",
+            task_id=f'check_job_completion_{brand}',
             mssql_conn_id=mssql_conn_id,
         )
 

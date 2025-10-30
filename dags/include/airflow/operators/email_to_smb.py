@@ -15,7 +15,7 @@ class DepreciatedEmailToSMBOperator(BaseOperator):
         remote_path: str,
         smb_conn_id: str,
         filter_queries: list,
-        smb_file_name: str = "",
+        smb_file_name: str = '',
         imap_conn_id: str = "imap_default",
         share_name: str = "",
         file_extensions=None,
@@ -24,7 +24,7 @@ class DepreciatedEmailToSMBOperator(BaseOperator):
     ):
         super().__init__(*args, **kwargs)
         if file_extensions is None:
-            file_extensions = ["xls", "xlsx"]
+            file_extensions = ['xls', 'xlsx']
         self.remote_path = remote_path
         self.smb_conn_id = smb_conn_id
         self.imap_conn_id = imap_conn_id
@@ -41,21 +41,19 @@ class DepreciatedEmailToSMBOperator(BaseOperator):
             for messages in results:
                 for message in messages:
                     mail_time = datetime.strptime(
-                        message["Date"], "%a, %d %b %Y %H:%M:%S %z"
+                        message['Date'], '%a, %d %b %Y %H:%M:%S %z'
                     ).strftime("_%Y%m%d_%H%M%S")
                     for message_part in imap_hook.iterate_attachments(message):
                         data_bytes = message_part.get_payload(decode=True)
                         file_name = (
                             message_part.get_filename()
-                            if self.smb_file_name == ""
+                            if self.smb_file_name == ''
                             else self.smb_file_name
                         )
                         if file_name:
-                            file_parts = file_name.rsplit(".", 1)
+                            file_parts = file_name.rsplit('.', 1)
                             if file_parts[1] in self.file_extensions:
-                                file_name = (
-                                    f"{file_parts[0]}{mail_time}.{file_parts[1]}"
-                                )
+                                file_name = f"{file_parts[0]}{mail_time}.{file_parts[1]}"
                                 local_path = os.path.join(td, file_name)
                                 with open(local_path, "wb") as f:
                                     f.write(data_bytes)
@@ -63,9 +61,7 @@ class DepreciatedEmailToSMBOperator(BaseOperator):
                                 smb_hook = SMBHook(smb_conn_id=self.smb_conn_id)
                                 smb_hook.upload(
                                     share_name=self.share_name,
-                                    remote_path=os.path.join(
-                                        self.remote_path, file_name
-                                    ),
+                                    remote_path=os.path.join(self.remote_path, file_name),
                                     local_path=local_path,
                                 )
 
@@ -93,7 +89,7 @@ class EmailToSMBOperator(BaseOperator):
         smb_conn_id: str,
         resource_address: str,
         from_address: str,
-        msgraph_conn_id: str = "msgraph_default",
+        msgraph_conn_id: str = 'msgraph_default',
         share_name: str = "",
         subjects: list = None,
         attachments_list: list = None,
@@ -104,7 +100,7 @@ class EmailToSMBOperator(BaseOperator):
     ):
         super().__init__(*args, **kwargs)
         if file_extensions is None:
-            file_extensions = ["xls", "xlsx"]
+            file_extensions = ['xls', 'xlsx']
         self.remote_path = remote_path
         self.smb_conn_id = smb_conn_id
         self.resource_address = resource_address

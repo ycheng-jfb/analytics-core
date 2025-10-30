@@ -43,6 +43,7 @@ class BaseRowsToS3CsvOperator(BaseOperator):
         endpoint=None,
         **kwargs,
     ):
+
         self.s3_conn_id = s3_conn_id
         self.bucket = bucket
         self.key = key
@@ -68,10 +69,7 @@ class BaseRowsToS3CsvOperator(BaseOperator):
 
     @staticmethod
     def write_dict_rows_to_file(
-        rows: Iterable[Dict],
-        filename: str,
-        column_list: List[str],
-        write_header: bool = False,
+        rows: Iterable[Dict], filename: str, column_list: List[str], write_header: bool = False
     ):
         """
         Iterates through ``rows`` and writes to file as csv.
@@ -102,7 +100,7 @@ class BaseRowsToS3CsvOperator(BaseOperator):
                     writer.writerow(row)
 
     def BaseRowsToS3CsvOperator_execute(self):
-        with tempfile.NamedTemporaryFile(mode="wb", delete=True) as temp_file:
+        with tempfile.NamedTemporaryFile(mode='wb', delete=True) as temp_file:
             rows = self.get_rows()
             self.write_dict_rows_to_file(
                 rows=rows,
@@ -177,10 +175,10 @@ class BaseRowsToS3JsonOperator(BaseOperator):
         with gzip.open(filename, "wt") as f:
             for row in rows:
                 f.write(json.dumps(row))
-                f.write("\n")
+                f.write('\n')
 
     def BaseRowsToS3JsonOperator_execute(self):
-        with tempfile.NamedTemporaryFile(mode="wb", delete=True) as temp_file:
+        with tempfile.NamedTemporaryFile(mode='wb', delete=True) as temp_file:
             rows = self.get_rows()
             self.write_dict_rows_to_file(rows=rows, filename=temp_file.name)
             temp_file.flush()
@@ -190,9 +188,7 @@ class BaseRowsToS3JsonOperator(BaseOperator):
         self.BaseRowsToS3JsonOperator_execute()
 
 
-class BaseRowsToS3CsvWatermarkOperator(
-    BaseProcessWatermarkOperator, BaseRowsToS3CsvOperator
-):
+class BaseRowsToS3CsvWatermarkOperator(BaseProcessWatermarkOperator, BaseRowsToS3CsvOperator):
     """
     Subclass this operator and override :meth:`get_rows` to produce an operator that writes to csv
     and stores on s3, and override :meth: `get_high_watermark` to get current high_watermark value.
@@ -222,7 +218,7 @@ class BaseRowsToS3CsvWatermarkOperator(
         namespace,
         s3_conn_id=conn_ids.AWS.tfg_default,
         write_header=False,
-        initial_load_value: str = "1900-01-01T00:00:00+00:00",
+        initial_load_value: str = '1900-01-01T00:00:00+00:00',
         hook_conn_id=None,
         endpoint=None,
         **kwargs,
@@ -249,9 +245,7 @@ class BaseRowsToS3CsvWatermarkOperator(
         self.BaseRowsToS3CsvOperator_execute()
 
 
-class BaseRowsToS3JsonWatermarkOperator(
-    BaseProcessWatermarkOperator, BaseRowsToS3JsonOperator
-):
+class BaseRowsToS3JsonWatermarkOperator(BaseProcessWatermarkOperator, BaseRowsToS3JsonOperator):
     """
     Subclass this operator and override :meth:`get_rows` to produce an operator that writes to
     ndjson file and stores on s3, and override :meth: `get_high_watermark` to get current
@@ -279,7 +273,7 @@ class BaseRowsToS3JsonWatermarkOperator(
         process_name,
         namespace,
         s3_conn_id=conn_ids.AWS.tfg_default,
-        initial_load_value="1900-01-01T00:00:00+00:00",
+        initial_load_value='1900-01-01T00:00:00+00:00',
         hook_conn_id=None,
         endpoint=None,
         **kwargs,

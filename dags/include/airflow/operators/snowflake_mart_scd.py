@@ -1,15 +1,13 @@
 from typing import List
 
-from include.airflow.operators.snowflake_mart_base import (
-    BaseSnowflakeMartOperator,
-    Column,
-)
+from include.airflow.operators.snowflake_mart_base import BaseSnowflakeMartOperator, Column
 from include.utils.string import unindent_auto
 
 
 class SnowflakeMartSCDOperator(BaseSnowflakeMartOperator):
-    META_EVENT_DATETIME_COLUMN = "meta_event_datetime"
-    META_EVENT_DATETIME_TYPE = "TIMESTAMP_LTZ"
+
+    META_EVENT_DATETIME_COLUMN = 'meta_event_datetime'
+    META_EVENT_DATETIME_TYPE = 'TIMESTAMP_LTZ'
     INITIAL_FROM_TIMESTAMP = "to_timestamp_ltz('1900-01-01')"
     INITIAL_TO_TIMESTAMP = "to_timestamp_ltz('9999-12-31')"
     STR_INDENT = "\t" * 9
@@ -33,8 +31,8 @@ class SnowflakeMartSCDOperator(BaseSnowflakeMartOperator):
 
         _unique_col_names.append(self.META_EVENT_DATETIME_COLUMN)
 
-        _unique_cols_str = ", ".join(_unique_col_names)
-        _uniqueness_join = "\n    AND ".join(
+        _unique_cols_str = ', '.join(_unique_col_names)
+        _uniqueness_join = '\n    AND '.join(
             [f"equal_null(t.{x}, s.{x})" for x in _unique_col_names]
         )
         cmd = f"""
@@ -115,9 +113,7 @@ class SnowflakeMartSCDOperator(BaseSnowflakeMartOperator):
 
     @property
     def type_1_upd_col_names(self) -> list:
-        type_1_upd_col_names = [
-            f"{x.name}" for x in self.column_list if not x.stg_only if x.type_1
-        ]
+        type_1_upd_col_names = [f"{x.name}" for x in self.column_list if not x.stg_only if x.type_1]
         return type_1_upd_col_names
 
     @property
@@ -134,68 +130,55 @@ class SnowflakeMartSCDOperator(BaseSnowflakeMartOperator):
             Column(
                 f"{self.META_EVENT_DATETIME_COLUMN}",
                 f"{self.META_EVENT_DATETIME_TYPE}",
-                default_value="current_timestamp",
+                default_value='current_timestamp',
             ),
-            Column("meta_data_quality", "VARCHAR(10)"),
-            Column(
-                "meta_create_datetime",
-                "TIMESTAMP_LTZ",
-                default_value="current_timestamp",
-            ),
-            Column(
-                "meta_update_datetime",
-                "TIMESTAMP_LTZ",
-                default_value="current_timestamp",
-            ),
+            Column('meta_data_quality', 'VARCHAR(10)'),
+            Column('meta_create_datetime', 'TIMESTAMP_LTZ', default_value='current_timestamp'),
+            Column('meta_update_datetime', 'TIMESTAMP_LTZ', default_value='current_timestamp'),
         ]
         return stg_table_meta_cols
 
     @property
     def base_table_meta_cols(self) -> List[Column]:
         base_table_meta_cols = [
-            Column("effective_start_datetime", f"{self.META_EVENT_DATETIME_TYPE}"),
-            Column("effective_end_datetime", f"{self.META_EVENT_DATETIME_TYPE}"),
-            Column("is_current", "BOOLEAN"),
-            Column(
-                f"{self.META_EVENT_DATETIME_COLUMN}", f"{self.META_EVENT_DATETIME_TYPE}"
-            ),
-            Column("meta_type_1_hash", "INT"),
-            Column("meta_type_2_hash", "INT"),
-            Column("meta_create_datetime", "TIMESTAMP_LTZ"),
-            Column("meta_update_datetime", "TIMESTAMP_LTZ"),
+            Column('effective_start_datetime', f"{self.META_EVENT_DATETIME_TYPE}"),
+            Column('effective_end_datetime', f"{self.META_EVENT_DATETIME_TYPE}"),
+            Column('is_current', 'BOOLEAN'),
+            Column(f"{self.META_EVENT_DATETIME_COLUMN}", f"{self.META_EVENT_DATETIME_TYPE}"),
+            Column('meta_type_1_hash', 'INT'),
+            Column('meta_type_2_hash', 'INT'),
+            Column('meta_create_datetime', 'TIMESTAMP_LTZ'),
+            Column('meta_update_datetime', 'TIMESTAMP_LTZ'),
         ]
         return base_table_meta_cols
 
     @property
     def delta_table_meta_cols(self) -> List[Column]:
         delta_table_meta_cols = [
-            Column("effective_start_datetime", f"{self.META_EVENT_DATETIME_TYPE}"),
-            Column(
-                f"{self.META_EVENT_DATETIME_COLUMN}", f"{self.META_EVENT_DATETIME_TYPE}"
-            ),
-            Column("meta_type_1_hash", "INT"),
-            Column("meta_type_2_hash", "INT"),
-            Column("meta_create_datetime", "TIMESTAMP_LTZ"),
-            Column("meta_update_datetime", "TIMESTAMP_LTZ"),
-            Column("lag_meta_type_1_hash", "INT"),
-            Column("lag_meta_type_2_hash", "INT"),
-            Column("lag_effective_start_datetime", f"{self.META_EVENT_DATETIME_TYPE}"),
-            Column("is_new_data", "BOOLEAN"),
-            Column("first_record_rn", "INT"),
-            Column("meta_record_status", "VARCHAR"),
+            Column('effective_start_datetime', f"{self.META_EVENT_DATETIME_TYPE}"),
+            Column(f"{self.META_EVENT_DATETIME_COLUMN}", f"{self.META_EVENT_DATETIME_TYPE}"),
+            Column('meta_type_1_hash', 'INT'),
+            Column('meta_type_2_hash', 'INT'),
+            Column('meta_create_datetime', 'TIMESTAMP_LTZ'),
+            Column('meta_update_datetime', 'TIMESTAMP_LTZ'),
+            Column('lag_meta_type_1_hash', 'INT'),
+            Column('lag_meta_type_2_hash', 'INT'),
+            Column('lag_effective_start_datetime', f"{self.META_EVENT_DATETIME_TYPE}"),
+            Column('is_new_data', 'BOOLEAN'),
+            Column('first_record_rn', 'INT'),
+            Column('meta_record_status', 'VARCHAR'),
         ]
         return delta_table_meta_cols
 
     @property
     def uniqueness_join(self) -> str:
-        return "\n    AND ".join(
+        return '\n    AND '.join(
             [f"equal_null(t.{x}, s.{x})" for x in self.column_list.unique_col_names]
         )
 
     def load_base_delta_table(self):
-        unique_cols_str = ", ".join(
-            [f"s.{x}" for x in self.column_list.unique_col_names]
-        )
+
+        unique_cols_str = ', '.join([f"s.{x}" for x in self.column_list.unique_col_names])
         cmd = f"""
                 INSERT INTO {self.delta_table_name}
                 SELECT s.*,
@@ -252,7 +235,7 @@ class SnowflakeMartSCDOperator(BaseSnowflakeMartOperator):
         return unindent_auto(cmd)
 
     def load_type_1_delta_table(self):
-        type_1_cols_names = ",\n\t".join(
+        type_1_cols_names = ',\n\t'.join(
             [x.name for x in self.column_list if not x.stg_only and x.type_1]
         )
         cmd = f"""
@@ -285,6 +268,7 @@ class SnowflakeMartSCDOperator(BaseSnowflakeMartOperator):
         return unindent_auto(cmd)
 
     def get_type_2_update_command(self):
+
         cmd = f"""
             -- close off type 2
             UPDATE {self.target_full_table_name} t
@@ -300,11 +284,9 @@ class SnowflakeMartSCDOperator(BaseSnowflakeMartOperator):
         return unindent_auto(cmd)
 
     def get_insert_command(self):
-        cnt = ",\n\t"
-        full_col_list = self.insert_names_list + [
-            x.name for x in self.base_table_meta_cols
-        ]
-        full_col_select_list = ",\n\t".join(full_col_list)
+        cnt = ',\n\t'
+        full_col_list = self.insert_names_list + [x.name for x in self.base_table_meta_cols]
+        full_col_select_list = ',\n\t'.join(full_col_list)
         cmd = f"""
             -- insert new records
             INSERT INTO {self.target_full_table_name}
@@ -340,12 +322,13 @@ class SnowflakeMartSCDOperator(BaseSnowflakeMartOperator):
         return unindent_auto(cmd)
 
     def create_type_1_delta_table(self) -> str:
+
         type_1_cols = [x for x in self.column_list if not x.stg_only and x.type_1]
         uniqueness_cols = [x for x in self.column_list if x.uniqueness]
         type_1_meta_cols = [
-            Column("meta_update_datetime", "TIMESTAMP_LTZ"),
-            Column("meta_type_1_hash", "INT"),
-            Column("event_seq_num", "INT"),
+            Column('meta_update_datetime', 'TIMESTAMP_LTZ'),
+            Column('meta_type_1_hash', 'INT'),
+            Column('event_seq_num', 'INT'),
         ]
         cmd = f"""
         CREATE OR REPLACE TEMPORARY TABLE _type_1_delta (
@@ -368,6 +351,7 @@ class SnowflakeMartSCDOperator(BaseSnowflakeMartOperator):
         return unindent_auto(cmd)
 
     def post_stg_table_load(self, dryrun):
+
         cmd = self.create_temp_excp_table()
         self.execute_cmd(cmd=cmd, dryrun=dryrun)
 
@@ -382,6 +366,7 @@ class SnowflakeMartSCDOperator(BaseSnowflakeMartOperator):
         self.execute_cmd(cmd=cmd, dryrun=dryrun)
 
     def load_base_table(self, dryrun):
+
         cmd = self.load_base_delta_table()
         self.execute_cmd(cmd=cmd, dryrun=dryrun)
 

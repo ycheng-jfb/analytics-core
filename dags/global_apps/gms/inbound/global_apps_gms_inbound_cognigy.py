@@ -26,9 +26,9 @@ class Config:
 
 configs = [
     Config(
-        endpoint="Analytics",
-        table_name="analytics",
-        date_column="timestamp",
+        endpoint='Analytics',
+        table_name='analytics',
+        date_column='timestamp',
         column_list=[
             Column("odata_id", "VARCHAR", source_name="@odata.id"),
             Column("id", "VARCHAR", source_name="_id", uniqueness=True),
@@ -78,9 +78,9 @@ configs = [
         ],
     ),
     Config(
-        endpoint="Sessions",
-        table_name="sessions",
-        date_column="startedAt",
+        endpoint='Sessions',
+        table_name='sessions',
+        date_column='startedAt',
         column_list=[
             Column("odata_id", "VARCHAR", source_name="@odata.id"),
             Column("id", "VARCHAR", source_name="_id", uniqueness=True),
@@ -95,9 +95,7 @@ configs = [
             Column("session_id", "VARCHAR", source_name="sessionId"),
             Column("locale_reference_id", "VARCHAR", source_name="localeReferenceId"),
             Column("locale_name", "VARCHAR", source_name="localeName"),
-            Column(
-                "endpoint_reference_id", "VARCHAR", source_name="endpointReferenceId"
-            ),
+            Column("endpoint_reference_id", "VARCHAR", source_name="endpointReferenceId"),
             Column("endpoint_name", "VARCHAR", source_name="endpointName"),
             Column("project_name", "VARCHAR", source_name="projectName"),
             Column("snapshot_id", "VARCHAR", source_name="snapshotId"),
@@ -108,9 +106,9 @@ configs = [
         ],
     ),
     Config(
-        endpoint="Conversations",
-        table_name="conversations",
-        date_column="timestamp",
+        endpoint='Conversations',
+        table_name='conversations',
+        date_column='timestamp',
         column_list=[
             Column("odata_id", "VARCHAR", source_name="@odata.id"),
             Column("id", "VARCHAR", source_name="_id", uniqueness=True),
@@ -130,11 +128,7 @@ configs = [
             Column("flow_parent_id", "VARCHAR", source_name="flowParentId"),
             Column("channel", "VARCHAR", source_name="channel"),
             Column("in_handover_request", "BOOLEAN", source_name="inHandoverRequest"),
-            Column(
-                "in_handover_conversation",
-                "BOOLEAN",
-                source_name="inHandoverConversation",
-            ),
+            Column("in_handover_conversation", "BOOLEAN", source_name="inHandoverConversation"),
             Column("output_id", "VARCHAR", source_name="outputId"),
             Column("locale_reference_id", "VARCHAR", source_name="localeReferenceId"),
             Column("locale_name", "VARCHAR", source_name="localeName"),
@@ -148,8 +142,8 @@ configs = [
         ],
     ),
     Config(
-        endpoint="Steps",
-        table_name="steps",
+        endpoint='Steps',
+        table_name='steps',
         date_column=None,
         column_list=[
             Column("odata_id", "VARCHAR", source_name="@odata.id"),
@@ -166,9 +160,9 @@ configs = [
         ],
     ),
     Config(
-        endpoint="ExecutedSteps",
-        table_name="executed_steps",
-        date_column="timestamp",
+        endpoint='ExecutedSteps',
+        table_name='executed_steps',
+        date_column='timestamp',
         column_list=[
             Column("odata_id", "VARCHAR", source_name="@odata.id"),
             Column("id", "VARCHAR", source_name="_id", uniqueness=True),
@@ -228,16 +222,16 @@ configs = [
     # ),
 ]
 
-Project = namedtuple("Project", ["name", "id"])
+Project = namedtuple('Project', ['name', 'id'])
 projects = [
-    Project("web", "667048bc82226d430fab54c4"),
-    Project("voice", "6601ae4c3d686631b813765d"),
+    Project('web', '667048bc82226d430fab54c4'),
+    Project('voice', '6601ae4c3d686631b813765d'),
 ]
 
 default_args = {
     "start_date": pendulum.datetime(2024, 4, 1, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.gms_analytics,
+    'owner': owners.gms_analytics,
     "email": email_lists.data_integration_support + email_lists.gms_support,
     "on_failure_callback": slack_failure_edm,
     "execution_timeout": timedelta(hours=3),
@@ -245,10 +239,10 @@ default_args = {
 
 
 def from_ds(data_interval_start):
-    look_back_time = data_interval_start.in_timezone("America/Los_Angeles")
+    look_back_time = data_interval_start.in_timezone('America/Los_Angeles')
     if look_back_time.hour == 2:
         look_back_time = look_back_time + timedelta(days=-3)
-    return look_back_time.strftime("%Y-%m-%dT%H:%M:%S%z")[0:-5]
+    return look_back_time.strftime('%Y-%m-%dT%H:%M:%S%z')[0:-5]
 
 
 dag = DAG(
@@ -266,14 +260,12 @@ with dag:
 
     date_param = "{{ data_interval_start.strftime('%Y%m%dT%H%M%S%z')[0:-5] }}"
     start_time = "{{ (prev_data_interval_end_success or data_interval_start).strftime('%Y-%m-%dT%H:%M:%S%z')[0:-5]}}"
-    start_time_sessions = (
-        "{{ from_ds(prev_data_interval_end_success or data_interval_start) }}"
-    )
+    start_time_sessions = "{{ from_ds(prev_data_interval_end_success or data_interval_start) }}"
     end_time = "{{ data_interval_end.strftime('%Y-%m-%dT%H:%M:%S%z')[0:-5] }}"
 
     flatten_conversations = SnowflakeProcedureOperator(
-        database="reporting_prod",
-        procedure="gms.cognigy_conversations.sql",
+        database='reporting_prod',
+        procedure='gms.cognigy_conversations.sql',
         watermark_tables=["lake.cognigy.conversations"],
     )
     for config in configs:
@@ -285,7 +277,7 @@ with dag:
             table=config.table_name,
             column_list=config.column_list,
             files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}",
-            copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=3),
+            copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=3),
         )
         for project in projects:
             get_data = CognigyToS3Operator(
@@ -298,9 +290,7 @@ with dag:
                     "endpoint": config.endpoint,
                     "date_column": config.date_column,
                     "start_time": (
-                        start_time_sessions
-                        if config.table_name == "sessions"
-                        else start_time
+                        start_time_sessions if config.table_name == 'sessions' else start_time
                     ),
                     "end_time": end_time,
                     "project_id": project.id,
@@ -310,6 +300,6 @@ with dag:
 
             (
                 get_data >> to_snowflake >> flatten_conversations
-                if config.table_name == "conversations"
+                if config.table_name == 'conversations'
                 else get_data >> to_snowflake
             )

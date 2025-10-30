@@ -20,11 +20,11 @@ class BlueYonderExportFeed(SnowflakeSqlOperator):
         file_name,
         column_list,
         generate_empty_file,
-        remote_filepath="/",
+        remote_filepath='/',
         append=True,
         snowflake_conn_id=conn_ids.Snowflake.default,
-        database="reporting_prod",
-        schema="blue_yonder",
+        database='reporting_prod',
+        schema='blue_yonder',
         run_procedure=True,
         *args,
         **kwargs,
@@ -55,44 +55,42 @@ class BlueYonderExportFeed(SnowflakeSqlOperator):
 
     def write_to_local(self, temp_dir):
         select_list = (
-            ", ".join([f"{x.name}" for x in self.column_list])
-            if self.column_list
-            else "*"
+            ', '.join([f"{x.name}" for x in self.column_list]) if self.column_list else '*'
         )
-        select_query = f"select {select_list} from {self.database}.{self.schema}.{self.table_name}_stg"
+        select_query = (
+            f"select {select_list} from {self.database}.{self.schema}.{self.table_name}_stg"
+        )
         self.file_name = f"{self.file_name}_{datetime.datetime.now(tz=pytz.utc).astimezone(timezone('US/Pacific')).strftime('%Y%m%d_%H%M%S')}"
         part_no = 0
         sftp_hook = SFTPHook(ftp_conn_id=self.sftp_conn_id)
         with sftp_hook.get_conn() as sftp_client:
             with ConnClosing(self.snowflake_hook.get_conn()) as conn:
-                query_tag = (
-                    f"ALTER SESSION SET QUERY_TAG='{self.dag_id},{self.task_id}';"
-                )
+                query_tag = f"ALTER SESSION SET QUERY_TAG='{self.dag_id},{self.task_id}';"
                 cur = conn.cursor()
                 cur.execute(query_tag)
                 for df_batch in pd.read_sql_query(
                     sql=select_query, con=conn, chunksize=self.chunk_size
                 ):
                     print("part no", part_no)
-                    local_path = f"{Path(temp_dir)}/{self.file_name}-{part_no:03}.csv"
-                    df_batch.to_csv(local_path, header=True, sep="|", index=False)
-                    print(f"{self.remote_filepath}/{self.file_name}-{part_no:03}.csv")
+                    local_path = f'{Path(temp_dir)}/{self.file_name}-{part_no:03}.csv'
+                    df_batch.to_csv(local_path, header=True, sep='|', index=False)
+                    print(f'{self.remote_filepath}/{self.file_name}-{part_no:03}.csv')
                     sftp_client.put(
                         localpath=local_path,
-                        remotepath=f"{self.remote_filepath}/{self.file_name}-{part_no:03}.csv",
+                        remotepath=f'{self.remote_filepath}/{self.file_name}-{part_no:03}.csv',
                     )
                     os.remove(local_path)
                     part_no += 1
                 if part_no == 1:
                     sftp_client.rename(
-                        oldpath=f"{self.remote_filepath}/{self.file_name}-000.csv",
-                        newpath=f"{self.remote_filepath}/{self.file_name}.csv",
+                        oldpath=f'{self.remote_filepath}/{self.file_name}-000.csv',
+                        newpath=f'{self.remote_filepath}/{self.file_name}.csv',
                     )
 
     def split_file(self, temp_dir):
         if self.no_of_files > 1:
             part_no = 0
-            df = pd.read_csv(f"{temp_dir}/{self.file_name}.csv", sep="|")
+            df = pd.read_csv(f'{temp_dir}/{self.file_name}.csv', sep='|')
             row_count = len(df)
             rows_per_file = row_count // self.no_of_files + 1
             for i in range(self.no_of_files):
@@ -100,21 +98,20 @@ class BlueYonderExportFeed(SnowflakeSqlOperator):
                 if max_row > row_count:
                     max_row = row_count
                 df_batch = df.iloc[i * rows_per_file : max_row]
-                local_path = f"{Path(temp_dir)}/{self.file_name}-{part_no:03}.csv"
-                df_batch.to_csv(local_path, header=True, sep="|", index=False)
+                local_path = f'{Path(temp_dir)}/{self.file_name}-{part_no:03}.csv'
+                df_batch.to_csv(local_path, header=True, sep='|', index=False)
                 self.file_name_list.append(local_path)
                 part_no += 1
-            os.remove(f"{temp_dir}/{self.file_name}.csv")
+            os.remove(f'{temp_dir}/{self.file_name}.csv')
         else:
-            self.file_name_list.append(f"{temp_dir}/{self.file_name}.csv")
+            self.file_name_list.append(f'{temp_dir}/{self.file_name}.csv')
 
     def upload_to_sftp(self):
         sftp_hook = SFTPHook(ftp_conn_id=self.sftp_conn_id)
         with sftp_hook.get_conn() as sftp_client:
             for file_name in self.file_name_list:
                 sftp_client.put(
-                    localpath=file_name,
-                    remotepath=f"{self.remote_filepath}/{Path(file_name).name}",
+                    localpath=file_name, remotepath=f'{self.remote_filepath}/{Path(file_name).name}'
                 )
 
     def file_size_exceed_limit(self, td):
@@ -145,19 +142,13 @@ class BlueYonderExportFeed(SnowflakeSqlOperator):
 
     def data_completeness_qa_check(self):
         # compare the no of records in total record count to record count after file split
-        df = pd.concat(
-            map(lambda x: pd.read_csv(x, delimiter="|"), self.file_name_list)
-        )
+        df = pd.concat(map(lambda x: pd.read_csv(x, delimiter='|'), self.file_name_list))
         if self.record_count != len(df):
-            raise Exception(
-                "Number of records fetched and after splitting doesnt match."
-            )
+            raise Exception("Number of records fetched and after splitting doesnt match.")
 
     def create_snapshot(self, dry_run=False):
         select_list = (
-            ", ".join([f"{x.name}" for x in self.column_list])
-            if self.column_list
-            else "*"
+            ', '.join([f"{x.name}" for x in self.column_list]) if self.column_list else '*'
         )
         insert_query = f"""INSERT INTO {self.database}.{self.schema}.{self.table_name}  ({select_list},date_added)
         select {select_list},date_added from {self.database}.{self.schema}.{self.table_name}_stg """
@@ -167,9 +158,7 @@ class BlueYonderExportFeed(SnowflakeSqlOperator):
         print(delete_sql)
         if not dry_run:
             with ConnClosing(self.snowflake_hook.get_conn()) as sf_cnx:
-                query_tag = (
-                    f"ALTER SESSION SET QUERY_TAG='{self.dag_id},{self.task_id}';"
-                )
+                query_tag = f"ALTER SESSION SET QUERY_TAG='{self.dag_id},{self.task_id}';"
                 sf_cursor = sf_cnx.cursor()
                 sf_cursor.execute(query_tag)
                 sf_cursor.execute(insert_query)

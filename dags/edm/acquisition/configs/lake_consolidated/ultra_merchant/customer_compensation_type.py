@@ -6,18 +6,18 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table="customer_compensation_type",
+    table='customer_compensation_type',
     column_list=[
-        Column("customer_compensation_type_id", "INT", uniqueness=True),
-        Column("label", "VARCHAR(50)"),
+        Column('customer_compensation_type_id', 'INT', uniqueness=True),
+        Column('label', 'VARCHAR(50)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

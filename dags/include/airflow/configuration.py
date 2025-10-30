@@ -19,13 +19,13 @@ def expand_env_var(env_var):
 
 
 def get_airflow_home():
-    return expand_env_var(os.environ.get("AIRFLOW_HOME", "~/airflow"))
+    return expand_env_var(os.environ.get('AIRFLOW_HOME', '~/airflow'))
 
 
 def get_airflow_config(airflow_home):
-    if "AIRFLOW_CONFIG" not in os.environ:
-        return os.path.join(airflow_home, "airflow.cfg")
-    return expand_env_var(os.environ["AIRFLOW_CONFIG"])
+    if 'AIRFLOW_CONFIG' not in os.environ:
+        return os.path.join(airflow_home, 'airflow.cfg')
+    return expand_env_var(os.environ['AIRFLOW_CONFIG'])
 
 
 AIRFLOW_HOME = get_airflow_home()

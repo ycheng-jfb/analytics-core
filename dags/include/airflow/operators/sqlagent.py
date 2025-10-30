@@ -30,7 +30,7 @@ class RunSqlAgent(BaseOperator):
         self,
         mssql_job_name,
         mssql_conn_id=conn_ids.MsSql.default,
-        wrapper_proc="pr_start_job_wrapper",
+        wrapper_proc='pr_start_job_wrapper',
         *args,
         **kwargs,
     ):

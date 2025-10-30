@@ -4,10 +4,7 @@ from airflow.utils.email import send_email
 from snowflake.connector import DictCursor
 
 from include.airflow.hooks.slack import SlackHook
-from include.airflow.operators.snowflake import (
-    BaseSnowflakeOperator,
-    SnowflakeSqlOperator,
-)
+from include.airflow.operators.snowflake import BaseSnowflakeOperator, SnowflakeSqlOperator
 from include.utils.snowflake import (
     Column,
     CopyConfigCsv,
@@ -22,10 +19,10 @@ from include.utils.snowflake import (
 from include.utils.string import unindent_auto
 
 DEFAULT_COPY_CONFIG = CopyConfigCsv(
-    field_delimiter=",",
+    field_delimiter=',',
     force_copy=False,
     header_rows=0,
-    record_delimiter="\n",
+    record_delimiter='\n',
     skip_pct=1,
     timestamp_format=None,
 )
@@ -71,15 +68,15 @@ class BaseSnowflakeLoadOperator(BaseSnowflakeOperator):
         view_database=None,
         cluster_by: str = None,
         initial_load: bool = False,
-        stg_column_naming: str = "target",
+        stg_column_naming: str = 'target',
         custom_select: str = None,
         **kwargs,
     ):
-        for param in ("base_table", "target_database"):
+        for param in ('base_table', 'target_database'):
             if param in kwargs:
                 raise ValueError(
-                    f"{param} is no longer a valid param.  you must specify database,"
-                    f"schema, and table"
+                    f'{param} is no longer a valid param.  you must specify database,'
+                    f'schema, and table'
                 )
         super().__init__(
             database=database,
@@ -164,7 +161,7 @@ class SnowflakeIncrementalLoadOperator(BaseSnowflakeLoadOperator):
     def __init__(
         self,
         pre_merge_command=None,
-        warehouse: str = "DA_WH_ETL_LIGHT",
+        warehouse: str = 'DA_WH_ETL_LIGHT',
         **kwargs,
     ):
         self.warehouse = warehouse
@@ -182,6 +179,7 @@ class SnowflakeIncrementalLoadOperator(BaseSnowflakeLoadOperator):
 
 
 class SnowflakeBrandIncrementalLoadOperator(BaseSnowflakeLoadOperator):
+
     template_fields = (
         "files_path",
         "pattern",
@@ -194,7 +192,7 @@ class SnowflakeBrandIncrementalLoadOperator(BaseSnowflakeLoadOperator):
         self,
         brand: str,
         pre_merge_command: Optional[str] = None,
-        warehouse: Optional[str] = "DA_WH_ETL",
+        warehouse: Optional[str] = 'DA_WH_ETL',
         **kwargs,
     ):
         self.warehouse = warehouse
@@ -230,9 +228,7 @@ class SnowflakeTruncateAndLoadOperator(SnowflakeIncrementalLoadOperator):
     template_fields = ("files_path", "pattern", "snowflake_conn_id")  # type: ignore
 
     def get_job(self, cnx):
-        return LoadJobTruncate(
-            cnx=cnx, **self.job_kwargs, task_id=self.task_id, dag_id=self.dag_id
-        )
+        return LoadJobTruncate(cnx=cnx, **self.job_kwargs, task_id=self.task_id, dag_id=self.dag_id)
 
 
 class SnowflakeInsertUpdateDeleteOperator(SnowflakeIncrementalLoadOperator):
@@ -262,9 +258,7 @@ class SnowflakeScdOperator(BaseSnowflakeLoadOperator):
     """
 
     def get_job(self, cnx):
-        return LoadJobScd(
-            cnx=cnx, **self.job_kwargs, task_id=self.task_id, dag_id=self.dag_id
-        )
+        return LoadJobScd(cnx=cnx, **self.job_kwargs, task_id=self.task_id, dag_id=self.dag_id)
 
 
 class CopyUnsuccessfulError(Exception):
@@ -290,8 +284,8 @@ class SnowflakeCopyOperator(SnowflakeSqlOperator):
 
     def __init__(
         self,
-        warehouse="DA_WH_ETL_LIGHT",
-        default_timezone="UTC",
+        warehouse='DA_WH_ETL_LIGHT',
+        default_timezone='UTC',
         email_to_when_no_file=None,
         slack_id_when_no_file=None,
         **kwargs,
@@ -317,20 +311,18 @@ class SnowflakeCopyOperator(SnowflakeSqlOperator):
         error_message = []
         no_file_flag = True
         for row in load_result:
-            if row["status"] == "Copy executed with 0 files processed.":
+            if row['status'] == 'Copy executed with 0 files processed.':
                 break
             no_file_flag = False
             total_rows_parsed += row["rows_parsed"]
-            if "LOADED" in row["status"]:
+            if 'LOADED' in row["status"]:
                 total_rows_loaded += row["rows_loaded"]
                 self.log.info(f"Load successful: {row}")
             else:
                 error_file_count += 1
                 error_message.append(row)
                 self.log.error(f"Load unsuccessful: {row}")
-        self.log.info(
-            f"Loaded total {total_rows_loaded} of {total_rows_parsed} records"
-        )
+        self.log.info(f"Loaded total {total_rows_loaded} of {total_rows_parsed} records")
         if error_file_count > 0:
             raise CopyUnsuccessfulError(
                 f"Load process was unsuccessful. Please check log below: \n {error_message}"
@@ -339,15 +331,15 @@ class SnowflakeCopyOperator(SnowflakeSqlOperator):
             if self.email_to_when_no_file:
                 send_email(
                     to=self.email_to_when_no_file,
-                    subject=f"WARNING - No new files processed for {self.dag_id}.{self.task_id}",
-                    html_content=f"Snowflake-Copy-Operator did not process any new files for "
-                    f"the task <b>{self.dag_id}.{self.task_id}</b>",
+                    subject=f'WARNING - No new files processed for {self.dag_id}.{self.task_id}',
+                    html_content=f'Snowflake-Copy-Operator did not process any new files for '
+                    f'the task <b>{self.dag_id}.{self.task_id}</b>',
                 )
             if self.slack_id_when_no_file:
                 hook = SlackHook(slack_conn_id=self.slack_id_when_no_file)
                 hook.send_message(
-                    message=f"*WARNING* - No new files processed for *{self.dag_id}"
-                    f".{self.task_id}*"
+                    message=f'*WARNING* - No new files processed for *{self.dag_id}'
+                    f'.{self.task_id}*'
                 )
 
     def execute(self, context=None):
@@ -386,7 +378,7 @@ class SnowflakeCopyTableOperator(SnowflakeCopyOperator):
         cluster_by=None,
         **kwargs,
     ):
-        super().__init__(warehouse=warehouse, sql_or_path="", **kwargs)
+        super().__init__(warehouse=warehouse, sql_or_path='', **kwargs)
         self.colunm_list = column_list
         self.table = table
         self.copy_config = copy_config
@@ -397,15 +389,13 @@ class SnowflakeCopyTableOperator(SnowflakeCopyOperator):
     @property
     def full_table_name(self):
         name_parts = [x for x in (self.database, self.schema, self.table) if x]
-        return ".".join(name_parts)
+        return '.'.join(name_parts)
 
     @property
     def ddl_base_table(self):
-        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ""
+        cluster_by = f"\nCLUSTER BY ({self.cluster_by})\n" if self.cluster_by else ''
         colunm_list = self.colunm_list
-        column_ddls = ",\n            ".join(
-            [f"{x.name} {x.type}" for x in colunm_list]
-        )
+        column_ddls = ',\n            '.join([f"{x.name} {x.type}" for x in colunm_list])
         cmd = f"""
         CREATE TABLE IF NOT EXISTS {self.full_table_name} (
             {column_ddls},
@@ -428,9 +418,7 @@ class SnowflakeCopyTableOperator(SnowflakeCopyOperator):
         with self.snowflake_hook.get_conn() as cnx:
             self.cnx = cnx  # for self.on_kill()
             with cnx.cursor(cursor_class=DictCursor) as cur:
-                query_tag_sql = generate_query_tag_cmd(
-                    dag_id=self.dag_id, task_id=self.task_id
-                )
+                query_tag_sql = generate_query_tag_cmd(dag_id=self.dag_id, task_id=self.task_id)
                 cur.execute(query_tag_sql)
                 cur.execute(self.dml_copy_into_table)
                 load_result = cur.fetchall()

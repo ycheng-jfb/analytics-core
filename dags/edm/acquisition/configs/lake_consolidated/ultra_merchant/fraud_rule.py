@@ -6,19 +6,19 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table="fraud_rule",
+    table='fraud_rule',
     column_list=[
-        Column("fraud_rule_id", "INT", uniqueness=True),
-        Column("fraud_rule_code", "VARCHAR(255)"),
-        Column("label", "VARCHAR(255)"),
+        Column('fraud_rule_id', 'INT', uniqueness=True),
+        Column('fraud_rule_code', 'VARCHAR(255)'),
+        Column('label', 'VARCHAR(255)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

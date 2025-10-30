@@ -15,15 +15,15 @@ from include.config import owners
 from include.config.email_lists import engineering_support
 
 default_args = {
-    "start_date": pendulum.datetime(2023, 1, 1, tz="America/Los_Angeles"),
-    "retries": 0,
-    "owner": owners.data_integrations,
-    "email": engineering_support,
+    'start_date': pendulum.datetime(2023, 1, 1, tz='America/Los_Angeles'),
+    'retries': 0,
+    'owner': owners.data_integrations,
+    'email': engineering_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
-    dag_id="edm_lake_consolidated_intra_day",
+    dag_id='edm_lake_consolidated_intra_day',
     default_args=default_args,
     schedule="0 */4 * * *",
     catchup=False,
@@ -31,13 +31,14 @@ dag = DAG(
 )
 
 with dag:
-    warehouse = "DA_WH_ETL_LIGHT"
-    acquisition_complete = EmptyOperator(task_id="consolidation_completion")
+
+    warehouse = 'DA_WH_ETL_LIGHT'
+    acquisition_complete = EmptyOperator(task_id='consolidation_completion')
 
     for table_name in table_list:
         if table_name.lower() not in map(str.lower, exclusion_list):
             if table_name == 'lake_consolidated.ultra_merchant."ORDER"':
-                table_name = "lake_consolidated.ultra_merchant.order"
+                table_name = 'lake_consolidated.ultra_merchant.order'
             cfg = get_lake_consolidated_table_config(table_name)
             to_lake_consolidated = cfg.to_lake_consolidated_operator
             to_lake_consolidated.warehouse = warehouse
@@ -46,7 +47,7 @@ with dag:
     for table_name in history_table_list:
         if table_name.lower() not in map(str.lower, exclusion_list):
             if table_name == 'lake_consolidated.ultra_merchant."ORDER"':
-                table_name = "lake_consolidated.ultra_merchant.order"
+                table_name = 'lake_consolidated.ultra_merchant.order'
             cfg = get_lake_consolidated_table_config(table_name)
             to_lake_consolidated_history = cfg.to_lake_consolidated_history_operator
             to_lake_consolidated_history.warehouse = warehouse

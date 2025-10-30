@@ -6,11 +6,11 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table="statuscode_category",
+    table='statuscode_category',
     column_list=[
-        Column("statuscode_category_id", "INT", uniqueness=True),
-        Column("label", "VARCHAR(50)"),
-        Column("range_start", "INT"),
-        Column("range_end", "INT"),
+        Column('statuscode_category_id', 'INT', uniqueness=True),
+        Column('label', 'VARCHAR(50)'),
+        Column('range_start', 'INT'),
+        Column('range_end', 'INT'),
     ],
 )

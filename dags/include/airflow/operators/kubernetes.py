@@ -9,13 +9,11 @@ from airflow.providers.cncf.kubernetes.backcompat.backwards_compat_converters im
     convert_env_vars,
 )
 
-IS_PRODUCTION = "production" in os.environ.get("ENVIRONMENT_STAGE", "").lower()
+IS_PRODUCTION = 'production' in os.environ.get('ENVIRONMENT_STAGE', '').lower()
 
 
 class KubernetesPythonOperator(KubernetesPodOperator):
-    def __init__(
-        self, python_script, conn_id_list=None, env_variables: dict = None, **kwargs
-    ):
+    def __init__(self, python_script, conn_id_list=None, env_variables: dict = None, **kwargs):
         self.conn_id_list = conn_id_list
         self.env_variables = env_variables
 
@@ -23,14 +21,14 @@ class KubernetesPythonOperator(KubernetesPodOperator):
             namespace = "duploservices-da-int"
             node_selector = {"tenantname": "duploservices-da-int"}
             image = "157194816704.dkr.ecr.us-west-2.amazonaws.com/airflow-constructor:latest"
-            config_file = "/usr/local/airflow/dags/kube/kube_config_prod.yaml"
-            name = "mwaa-pod-prod"
+            config_file = '/usr/local/airflow/dags/kube/kube_config_prod.yaml'
+            name = 'mwaa-pod-prod'
         else:
             namespace = "duploservices-da-int-dev"
             node_selector = {"tenantname": "duploservices-da-int-dev"}
             image = "294468937448.dkr.ecr.us-west-2.amazonaws.com/airflow-constructor:latest"
-            config_file = "/usr/local/airflow/dags/kube/kube_config_test.yaml"
-            name = "mwaa-pod-test"
+            config_file = '/usr/local/airflow/dags/kube/kube_config_test.yaml'
+            name = 'mwaa-pod-test'
 
         super().__init__(
             **kwargs,

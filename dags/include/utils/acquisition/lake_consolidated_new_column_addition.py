@@ -12,7 +12,7 @@ if len(column_list) == 0:
 
 table_dict = {}
 for table_name in column_list:
-    schema, table, column_name = table_name.split(".")
+    schema, table, column_name = table_name.split('.')
     if f"LAKE_CONSOLIDATED.{schema}.{table}" not in table_dict:
         table_dict[f"LAKE_CONSOLIDATED.{schema}.{table}"] = [column_name]
     else:
@@ -29,42 +29,35 @@ with snowflake_hook.get_conn() as conn:
     with open(output_file, "w") as file:
         file.write("-- Auto Generated ALTER TABLE ADD COLUMN scripts\n\n")
         for table_name in table_dict.keys():
-            database, schema, table = table_name.split(".")
+            database, schema, table = table_name.split('.')
             query = f"select get_ddl('table', '{lake_brand_db}.{schema}.{table}');"
 
             cur.execute(query)
             result = cur.fetchone()[0]
-            alter_query = (
-                f"ALTER TABLE lake_consolidated.{schema}.{table} \n\tADD COLUMN"
-            )
+            alter_query = f"ALTER TABLE lake_consolidated.{schema}.{table} \n\tADD COLUMN"
             table_config = ""
             for column_name in table_dict[table_name]:
                 # generate alter table scripts
                 column_name_start_loc = result.find(column_name)
                 column_name_end_loc = result.find("\n\t", column_name_start_loc)
-                column = result[
-                    column_name_start_loc : column_name_end_loc - 1
-                ].replace("\n", "")
+                column = result[column_name_start_loc : column_name_end_loc - 1].replace('\n', '')
                 column_name = column[: column.find(" ")]
                 column_type = column[column.find(" ") + 1 :]
-                table_config += (
-                    f"Column('{column_name.lower()}', '{column_type}'),\n\t\t"
-                )
+                table_config += f"Column('{column_name.lower()}', '{column_type}'),\n\t\t"
                 alter_query += f" {column},"
             alter_query = alter_query[:-1] + ";"
             file.write(alter_query + "\n\n")
 
             # modify the lake_consolidated_table_config
             with open(
-                f"../../../edm/acquisition/configs/lake_consolidated/{schema}/{table}.py"
+                f'../../../edm/acquisition/configs/lake_consolidated/{schema}/{table}.py'
             ) as fp:
                 content = fp.read()
             insert_loc = content.find("],", content.find("column_list=["))
             content = content[:insert_loc] + table_config + content[insert_loc:]
 
             with open(
-                f"../../../edm/acquisition/configs/lake_consolidated/{schema}/{table}.py",
-                "w",
+                f'../../../edm/acquisition/configs/lake_consolidated/{schema}/{table}.py', 'w'
             ) as fp:
                 fp.write(content)
 
@@ -73,7 +66,7 @@ with snowflake_hook.get_conn() as conn:
     with open(output_file, "w") as file:
         file.write("-- Auto Generated lake_consolidated_view scripts\n\n")
         for table in table_dict.keys():
-            database, schema, table_name = table.split(".")
+            database, schema, table_name = table.split('.')
             query = f"select get_ddl('view', 'LAKE_CONSOLIDATED_VIEW.{schema}.{table_name}');"
             try:
                 cur.execute(query)
@@ -94,13 +87,9 @@ with snowflake_hook.get_conn() as conn:
 
             script_sql = script_sql + columns[hvr_is_deleted_start_loc:] + ") AS"
 
-            hvr_is_deleted_select_loc = result.find(
-                "HVR_IS_DELETED", result.find("\nSELECT")
-            )
+            hvr_is_deleted_select_loc = result.find("HVR_IS_DELETED", result.find("\nSELECT"))
             if hvr_is_deleted_select_loc == -1:
-                hvr_is_deleted_select_loc = result.find(
-                    "hvr_is_deleted", result.find("\nSELECT")
-                )
+                hvr_is_deleted_select_loc = result.find("hvr_is_deleted", result.find("\nSELECT"))
 
             select_columns = result[
                 result.find("\nSELECT") + len("\nSELECT") : hvr_is_deleted_select_loc
@@ -121,10 +110,8 @@ output_file = "lake_consolidated_backfill_scripts.sql"
 final_script = "---- Auto Generated Backfill scripts------\n\n"
 table_config = None
 for table in table_dict.keys():
-    database, schema, table_name = table.split(".")
-    with open(
-        f"../../../edm/acquisition/configs/{database}/{schema}/{table_name}.py", "r"
-    ) as file:
+    database, schema, table_name = table.split('.')
+    with open(f"../../../edm/acquisition/configs/{database}/{schema}/{table_name}.py", 'r') as file:
         code = file.read()
         exec(code)
     id_column = []
@@ -135,9 +122,7 @@ for table in table_dict.keys():
         if col.key:
             key_columns.append(col.name)
 
-    columns = table_dict[
-        f"lake_consolidated.ultra_merchant.{table_config.table}".upper()
-    ]
+    columns = table_dict[f"lake_consolidated.ultra_merchant.{table_config.table}".upper()]
     set_string = ""
     where_string = ""
     col_list = ""
@@ -149,7 +134,7 @@ for table in table_dict.keys():
     where_string = where_string.removesuffix(" or ")
     col_list = col_list.removesuffix(", ").lower()
     update_based_on_key = ""
-    if schema == "ultra_merchant_history":
+    if schema == 'ultra_merchant_history':
         for col in key_columns:
             update_based_on_key += f"s.{col} = t.{col} and "
         update_based_on_key = update_based_on_key[:-4]

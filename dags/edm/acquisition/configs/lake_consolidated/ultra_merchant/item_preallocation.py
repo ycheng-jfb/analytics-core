@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="item_preallocation",
+    table='item_preallocation',
     company_join_sql="""
         SELECT DISTINCT
             L.ITEM_ID,
@@ -75,8 +75,8 @@ table_config = TableConfig(
         ON l.item_id = ds.item_id
     """,
     column_list=[
-        Column("item_id", "INT", uniqueness=True, key=True),
-        Column("warehouse_id", "INT", uniqueness=True),
-        Column("quantity", "INT"),
+        Column('item_id', 'INT', uniqueness=True, key=True),
+        Column('warehouse_id', 'INT', uniqueness=True),
+        Column('quantity', 'INT'),
     ],
 )

@@ -51,29 +51,25 @@ class FivetranUserMapOperator(FivetranOperator):
         super().__init__(*args, **kwargs)
 
     def execute(self, context=None):
-        user_response = self.hook.make_request(path="users")
-        users = user_response.json()["data"]["items"]
-        team_response = self.hook.make_request(path="teams")
-        teams = team_response.json()["data"]["items"]
+        user_response = self.hook.make_request(path='users')
+        users = user_response.json()['data']['items']
+        team_response = self.hook.make_request(path='teams')
+        teams = team_response.json()['data']['items']
         for team in teams:
             print(f"checking users for team {team['name']}")
-            team_details = self.hook.make_request(path="teams/" + team["id"] + "/users")
-            team_members = team_details.json()["data"]["items"]
-            team_member_ids = [member["user_id"] for member in team_members]
+            team_details = self.hook.make_request(path='teams/' + team['id'] + '/users')
+            team_members = team_details.json()['data']['items']
+            team_member_ids = [member['user_id'] for member in team_members]
             user_ids = [
-                user["id"]
+                user['id']
                 for user in users
-                if team["name"]
-                and user["role"]
-                and team["name"].lower() in user["role"].lower()
+                if team['name'] and user['role'] and team['name'].lower() in user['role'].lower()
             ]
-            missing_user_ids = [
-                user_id for user_id in user_ids if user_id not in team_member_ids
-            ]
+            missing_user_ids = [user_id for user_id in user_ids if user_id not in team_member_ids]
             print(f"users missing from team: {missing_user_ids}")
             for id in missing_user_ids:
                 data = json.dumps({"user_id": id, "role": "Team Member"})
                 res = self.hook.make_request(
-                    method="POST", path=f"teams/{team['id']}/users", data=data
+                    method='POST', path=f"teams/{team['id']}/users", data=data
                 )
                 print(res.json())

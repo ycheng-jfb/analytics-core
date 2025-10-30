@@ -5,10 +5,7 @@ from functools import cached_property
 
 class ImpactRadiusHook(BaseHook):
     def __init__(
-        self,
-        impactradius_conn_id="impactradius_conversions",
-        api_key=None,
-        username=None,
+        self, impactradius_conn_id="impactradius_conversions", api_key=None, username=None
     ):
         conn = self.get_connection(impactradius_conn_id)
         self.password = api_key or conn.password
@@ -20,7 +17,7 @@ class ImpactRadiusHook(BaseHook):
         session = requests.Session()
         session.headers = {
             "Content-type": "application/json",
-            "Authorization": f"Basic {self.password}",
+            'Authorization': f'Basic {self.password}',
         }
         return session
 
@@ -34,7 +31,7 @@ class ImpactRadiusHook(BaseHook):
     ):
         response = self.session.request(
             method=method,
-            url="https://" + self.url + "/Advertisers/" + self.username + path,
+            url='https://' + self.url + '/Advertisers/' + self.username + path,
             params=params,
             data=data,
             files=files,

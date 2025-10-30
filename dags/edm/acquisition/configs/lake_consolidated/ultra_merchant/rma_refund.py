@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="rma_refund",
+    table='rma_refund',
     company_join_sql="""
         SELECT DISTINCT
             L.RMA_ID,
@@ -19,17 +19,17 @@ table_config = TableConfig(
             ON L.REFUND_ID = R.REFUND_ID """,
     column_list=[
         Column(
-            "rma_id",
-            "INT",
+            'rma_id',
+            'INT',
             uniqueness=True,
             key=True,
         ),
         Column(
-            "refund_id",
-            "INT",
+            'refund_id',
+            'INT',
             uniqueness=True,
             key=True,
         ),
     ],
-    watermark_column="rma_id",
+    watermark_column='rma_id',
 )

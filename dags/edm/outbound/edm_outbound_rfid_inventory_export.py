@@ -12,15 +12,15 @@ default_args = {
     "depends_on_past": False,
     "start_date": pendulum.datetime(2024, 1, 1, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.data_integrations,
+    'owner': owners.data_integrations,
     "email": data_integration_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
-    dag_id="edm_outbound_rfid_inventory_export",
+    dag_id='edm_outbound_rfid_inventory_export',
     default_args=default_args,
-    schedule_interval="0 * * * *",
+    schedule_interval='0 * * * *',
     catchup=False,
     max_active_tasks=4,
     max_active_runs=1,
@@ -29,13 +29,13 @@ dag = DAG(
 
 with dag:
     rfid_mssql = MsSqlOperator(
-        sql="[analytic].[dbo].[usp_rfid_inventory_export]",
-        task_id="usp_rfid_inventory_export",
+        sql='[analytic].[dbo].[usp_rfid_inventory_export]',
+        task_id='usp_rfid_inventory_export',
         mssql_conn_id=conn_ids.MsSql.fabletics_app_airflow,
         sla=timedelta(minutes=25),
     )
     rfid_sftp = MssqlToSFTPOperator(
-        task_id="rfid_sftp",
+        task_id='rfid_sftp',
         sql_or_path="""select SITE_CODE,
             PRODUCT_ID,
             QTY,

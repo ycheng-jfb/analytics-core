@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="product_tag_delete_log",
+    table='product_tag_delete_log',
     company_join_sql="""
     SELECT DISTINCT
         L.product_tag_delete_log_id,
@@ -15,14 +15,14 @@ table_config = TableConfig(
     INNER JOIN {database}.{source_schema}.product_tag_delete_log AS L
         ON L.PRODUCT_ID = P.PRODUCT_ID """,
     column_list=[
-        Column("product_tag_delete_log_id", "INT", uniqueness=True, key=True),
-        Column("product_tag_id", "INT", key=True),
-        Column("product_id", "INT", key=True),
-        Column("tag_id", "INT", key=True),
+        Column('product_tag_delete_log_id', 'INT', uniqueness=True, key=True),
+        Column('product_tag_id', 'INT', key=True),
+        Column('product_id', 'INT', key=True),
+        Column('tag_id', 'INT', key=True),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_added",
+    watermark_column='datetime_added',
 )

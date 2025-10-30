@@ -22,45 +22,45 @@ from include.config import owners
 from include.config.email_lists import engineering_support
 
 default_args = {
-    "start_date": pendulum.datetime(2023, 1, 1, tz="America/Los_Angeles"),
-    "retries": 3,
-    "owner": owners.data_integrations,
-    "email": engineering_support,
+    'start_date': pendulum.datetime(2023, 1, 1, tz='America/Los_Angeles'),
+    'retries': 3,
+    'owner': owners.data_integrations,
+    'email': engineering_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
-    dag_id="edm_lake_consolidated_edw_sources",
+    dag_id='edm_lake_consolidated_edw_sources',
     default_args=default_args,
-    schedule="0 13 * * *",
+    schedule='0 13 * * *',
     catchup=False,
     max_active_tasks=25,
     max_active_runs=1,
 )
 
 history_list = {
-    "lake_consolidated.ultra_merchant.dm_gateway",
-    "lake_consolidated.ultra_merchant.dm_gateway_test_site",
-    "lake_consolidated.ultra_merchant.membership_token",
-    "lake_consolidated.ultra_merchant.store_credit",
+    'lake_consolidated.ultra_merchant.dm_gateway',
+    'lake_consolidated.ultra_merchant.dm_gateway_test_site',
+    'lake_consolidated.ultra_merchant.membership_token',
+    'lake_consolidated.ultra_merchant.store_credit',
 }
 
 with dag:
-    warehouse = "DA_WH_ETL_LIGHT"
+    warehouse = 'DA_WH_ETL_LIGHT'
 
     hvr_sensor_ultra_merchant = hvr_sensor(
-        task_id="hvr_sensor_ultra_merchant",
-        schema="ULTRA_MERCHANT",
+        task_id='hvr_sensor_ultra_merchant',
+        schema='ULTRA_MERCHANT',
         lookback_minutes=90,
     )
 
     hvr_sensor_ultra_merchant_history = hvr_sensor(
-        task_id="hvr_sensor_ultra_merchant_history",
-        schema="ULTRA_MERCHANT_HISTORY",
+        task_id='hvr_sensor_ultra_merchant_history',
+        schema='ULTRA_MERCHANT_HISTORY',
         lookback_minutes=90,
     )
 
-    hvr_acquisition = EmptyOperator(task_id="hvr_acquisition")
+    hvr_acquisition = EmptyOperator(task_id='hvr_acquisition')
 
     hvr_sensor_ultra_merchant >> hvr_acquisition
     hvr_sensor_ultra_merchant_history >> hvr_acquisition
@@ -70,7 +70,7 @@ with dag:
             str.lower, high_freq_table_list
         ) and table_name.lower() not in map(str.lower, exclusion_list):
             if table_name == 'lake_consolidated.ultra_merchant."ORDER"':
-                table_name = "lake_consolidated.ultra_merchant.order"
+                table_name = 'lake_consolidated.ultra_merchant.order'
             cfg = get_lake_consolidated_table_config(table_name)
             to_lake_consolidated = cfg.to_lake_consolidated_operator
             to_lake_consolidated.warehouse = warehouse
@@ -83,23 +83,15 @@ with dag:
 
     task_fl = SnowflakeProcedureOperator(
         procedure=Path(SQL_DIR, "lake_consolidated", "ultra_merchant.media_code.sql"),
-        database="lake_fl",
-        parameters={
-            "lake_placeholder": "lake_fl",
-            "company_id": 20,
-            "data_source_id": 20,
-        },
+        database='lake_fl',
+        parameters={"lake_placeholder": "lake_fl", "company_id": 20, "data_source_id": 20},
         warehouse=warehouse,
     )
 
     task_sxf = SnowflakeProcedureOperator(
         procedure=Path(SQL_DIR, "lake_consolidated", "ultra_merchant.media_code.sql"),
-        database="lake_sxf",
-        parameters={
-            "lake_placeholder": "lake_sxf",
-            "company_id": 30,
-            "data_source_id": 30,
-        },
+        database='lake_sxf',
+        parameters={"lake_placeholder": "lake_sxf", "company_id": 30, "data_source_id": 30},
         warehouse=warehouse,
     )
 

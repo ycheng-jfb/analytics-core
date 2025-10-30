@@ -60,7 +60,7 @@ class HermesTrackingEvents(BaseRowsToS3JsonWatermarkOperator):
         cur.execute(query_tag)
         cur.execute(sql)
         data = cur.fetchall()
-        df = pd.DataFrame(data, columns=["TRACKING_NUMBER"])
+        df = pd.DataFrame(data, columns=['TRACKING_NUMBER'])
         return df.TRACKING_NUMBER
 
     def get_rows(self):
@@ -72,33 +72,29 @@ class HermesTrackingEvents(BaseRowsToS3JsonWatermarkOperator):
         tracking_ids = self.get_tracking_ids(data_shipped_cutoff)
         for track_id in tracking_ids:
             try:
-                endpoint = f"events?barcode={track_id}&descriptionType=CLIENT"
-                r = self.hermes_hook.make_request("GET", endpoint)
+                endpoint = f'events?barcode={track_id}&descriptionType=CLIENT'
+                r = self.hermes_hook.make_request('GET', endpoint)
             except requests.exceptions.HTTPError:
                 continue
             for event in r.json():
                 event_formatted = {
-                    "tracking_id": track_id,
-                    "date_time": event.get("dateTime"),
-                    "location_latitude": (
-                        event["location"].get("latitude")
-                        if event.get("location")
+                    'tracking_id': track_id,
+                    'date_time': event.get('dateTime'),
+                    'location_latitude': (
+                        event['location'].get('latitude') if event.get('location') else None
+                    ),
+                    'location_longitude': (
+                        event['location']['longitude'] if event.get('location') else None
+                    ),
+                    'links': event.get('links'),
+                    'tracking_point_description': (
+                        event['trackingPoint'].get('description')
+                        if event.get('trackingPoint')
                         else None
                     ),
-                    "location_longitude": (
-                        event["location"]["longitude"]
-                        if event.get("location")
-                        else None
-                    ),
-                    "links": event.get("links"),
-                    "tracking_point_description": (
-                        event["trackingPoint"].get("description")
-                        if event.get("trackingPoint")
-                        else None
-                    ),
-                    "tracking_point_tracking_point_id": (
-                        event["trackingPoint"].get("trackingPointId")
-                        if event.get("trackingPoint")
+                    'tracking_point_tracking_point_id': (
+                        event['trackingPoint'].get('trackingPointId')
+                        if event.get('trackingPoint')
                         else None
                     ),
                 }

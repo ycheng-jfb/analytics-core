@@ -60,13 +60,9 @@ def generate_pinterest_oauth_code_url(consumer_id, redirect_uri="https://localho
 def generate_pinterest_token(client_id: str, redirect_uri: str, code: str, secret: str):
     url = "https://api.pinterest.com/v3/oauth/access_token/"
     grant_type = "authorization_code"
-    basic_auth = b64encode(f"{client_id}:{secret}".encode("utf-8")).decode("utf-8")
+    basic_auth = b64encode(f"{client_id}:{secret}".encode('utf-8')).decode('utf-8')
     headers = {"Authorization": f"Basic {basic_auth}"}
-    payload = [
-        ("code", code),
-        ("grant_type", grant_type),
-        ("redirect_uri", redirect_uri),
-    ]
+    payload = [("code", code), ("grant_type", grant_type), ("redirect_uri", redirect_uri)]
 
     req = requests.put(url, params=payload, headers=headers)
     try:

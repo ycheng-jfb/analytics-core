@@ -30,14 +30,14 @@ class HistView:
         self.archive_database = self.table_config.to_snowflake_operator.archive_database
         self.schema = self.table_config.target_schema
         self.table = self.table_config.target_table
-        self.table_hist = self.table_config.table.strip("[").strip("]")
+        self.table_hist = self.table_config.table.strip('[').strip(']')
 
         if not self.archive_database:
             raise Exception(f"table name {table_name} not found in archive database")
 
     @property
     def ddl_hist_view(self):
-        unique_col_list = ", ".join(self.uniqueness_cols_str)
+        unique_col_list = ', '.join(self.uniqueness_cols_str)
         create_view = f"""
             CREATE VIEW {self.archive_database}.{self.schema}.{self.table_hist}__hist
             AS

@@ -46,7 +46,7 @@ class AmazonToS3BaseOperator(BaseOperator):
         self, method, url, endpoint, params=None, json=None, data=None, recursion_size=5
     ):
         endpoint = endpoint[1:] if endpoint[0] == "/" else endpoint
-        res = ""
+        res = ''
         try:
             res = self.hook.session.request(
                 method=method,
@@ -70,7 +70,7 @@ class AmazonToS3BaseOperator(BaseOperator):
             elif e.response.status_code in (429, 403):
                 print(e.response.content.decode("utf-8"))
                 if e.response.status_code == 429:
-                    wait_seconds = 60 * 5 if "reports" in endpoint else 5
+                    wait_seconds = 60 * 5 if 'reports' in endpoint else 5
                     print(f"Waiting for {wait_seconds} seconds")
                     time.sleep(wait_seconds)
                 else:
@@ -98,6 +98,7 @@ class AmazonToS3BaseOperator(BaseOperator):
 
 
 class AmazonToS3Operator(AmazonToS3BaseOperator):
+
     template_fields = ["start_time"]
 
     def __init__(
@@ -108,7 +109,7 @@ class AmazonToS3Operator(AmazonToS3BaseOperator):
         market_place_ids: list,
         is_request: bool,
         start_time: str,
-        file_extension: str = "gz",
+        file_extension: str = 'gz',
         amazon_conn_id: str = conn_ids.AWS.amazon_default,
         s3_conn_id: str = conn_ids.AWS.default,
         version: str = "2021-06-30",
@@ -129,27 +130,23 @@ class AmazonToS3Operator(AmazonToS3BaseOperator):
 
     def upload_document_to_s3(self, report):
         self.log.info(f"processing the report: {report['reportId']}")
-        date_start = datetime.strptime(
-            report["dataStartTime"], "%Y-%m-%dT%H:%M:%S%z"
-        ).strftime("%Y%m%dT%H%M%S")
-        date_end = datetime.strptime(
-            report["dataEndTime"], "%Y-%m-%dT%H:%M:%S%z"
-        ).strftime("%Y%m%dT%H%M%S")
+        date_start = datetime.strptime(report['dataStartTime'], '%Y-%m-%dT%H:%M:%S%z').strftime(
+            '%Y%m%dT%H%M%S'
+        )
+        date_end = datetime.strptime(report['dataEndTime'], '%Y-%m-%dT%H:%M:%S%z').strftime(
+            '%Y%m%dT%H%M%S'
+        )
         file_name = (
             f"amazon.sp_{self.report_type.lower()}_{date_start}_to_{date_end}.{self.file_extension}"
-            if self.report_type != "GET_MERCHANT_LISTINGS_ALL_DATA"
+            if self.report_type != 'GET_MERCHANT_LISTINGS_ALL_DATA'
             else f"amazon.sp_{self.report_type.lower()}_{self.market_place_ids[0]}_{date_start}_to_{date_end}.{self.file_extension}"
         )
-        self.log.info(
-            f"pulling the file url for the document: {report['reportDocumentId']}"
-        )
+        self.log.info(f"pulling the file url for the document: {report['reportDocumentId']}")
         req_report_url = self.make_request(
-            method="GET",
-            url=self.base_url,
-            endpoint=f"documents/{report['reportDocumentId']}",
+            method="GET", url=self.base_url, endpoint=f"documents/{report['reportDocumentId']}"
         )
         response = req_report_url.json()
-        report_url = response["url"]
+        report_url = response['url']
         dest_s3 = S3Hook(self.s3_conn_id)
         with tempfile.TemporaryDirectory() as td:
             local_file_path = Path(td, file_name)
@@ -170,12 +167,12 @@ class AmazonToS3Operator(AmazonToS3BaseOperator):
                 "dateStartTime": f"{datetime.strptime(self.start_time, '%Y-%m-%dT%H:%M:%S%z')+timedelta(days=-30)}",
             }
             report_request = self.make_request(
-                method="POST", url=self.base_url, endpoint="reports", json=report_body
+                method='POST', url=self.base_url, endpoint='reports', json=report_body
             )
 
             if report_request.status_code in (200, 202):
                 res = report_request.json()
-                report_id = res["reportId"]
+                report_id = res['reportId']
 
                 self.log.info(f"Generated the report: {report_id}")
                 waiter = Waiter(
@@ -184,52 +181,44 @@ class AmazonToS3Operator(AmazonToS3BaseOperator):
                     max_wait_time_seconds=60 * 60,
                 )
                 while True:
-                    self.log.info("pulling report status")
+                    self.log.info('pulling report status')
                     status = self.make_request(
                         method="GET", url=self.base_url, endpoint=f"reports/{report_id}"
                     )
                     if status.status_code in (200, 202):
                         status_dt = status.json()
-                        self.log.info(f"report status {status_dt}")
-                        if status_dt["processingStatus"] in ("IN_QUEUE", "IN_PROGRESS"):
+                        self.log.info(f'report status {status_dt}')
+                        if status_dt['processingStatus'] in ('IN_QUEUE', 'IN_PROGRESS'):
                             wait_seconds = waiter.next()
                             self.log.info(
                                 f"report {report_id} has status '{status_dt['processingStatus']}'; "
                                 f"waiting {wait_seconds} seconds"
                             )
                             time.sleep(wait_seconds)
-                        elif status_dt["processingStatus"] == "DONE":
-                            self.log.info(
-                                f"report {report_id} has completed successfully"
-                            )
+                        elif status_dt['processingStatus'] == 'DONE':
+                            self.log.info(f"report {report_id} has completed successfully")
                             self.upload_document_to_s3(status_dt)
                             break
                         else:
-                            raise Exception(
-                                f"report request failed with response {status_dt}"
-                            )
+                            raise Exception(f"report request failed with response {status_dt}")
         else:
             report_params = {
                 "reportTypes": self.report_type,
             }
-            self.log.info("pulling the available settlement reports")
+            self.log.info('pulling the available settlement reports')
             report_request = self.make_request(
-                method="GET",
-                url=self.base_url,
-                endpoint="reports",
-                params=report_params,
+                method='GET', url=self.base_url, endpoint='reports', params=report_params
             )
             res = report_request.json()
-            for report in res["reports"]:
+            for report in res['reports']:
                 if datetime.strptime(
-                    report["createdTime"], "%Y-%m-%dT%H:%M:%S%z"
-                ) > datetime.strptime(self.start_time, "%Y-%m-%dT%H:%M:%S%z"):
+                    report['createdTime'], '%Y-%m-%dT%H:%M:%S%z'
+                ) > datetime.strptime(self.start_time, '%Y-%m-%dT%H:%M:%S%z'):
                     self.upload_document_to_s3(report)
 
 
-class AmazonRefundEventListToS3Operator(
-    AmazonToS3BaseOperator, BaseRowsToS3CsvWatermarkOperator
-):
+class AmazonRefundEventListToS3Operator(AmazonToS3BaseOperator, BaseRowsToS3CsvWatermarkOperator):
+
     def __init__(
         self,
         amazon_conn_id: str = conn_ids.AWS.amazon_default,
@@ -241,9 +230,7 @@ class AmazonRefundEventListToS3Operator(
         super().__init__(*args, **kwargs)
         self.amazon_conn_id = amazon_conn_id
         self.s3_conn_id = s3_conn_id
-        self.base_url = (
-            f"https://sellingpartnerapi-na.amazon.com/finances/{version}/orders"
-        )
+        self.base_url = f"https://sellingpartnerapi-na.amazon.com/finances/{version}/orders"
 
     def get_high_watermark(self) -> str:
         cur = self.snowflake_hook.get_cursor()
@@ -262,9 +249,7 @@ class AmazonRefundEventListToS3Operator(
         row = {
             **{
                 key: value
-                for key, value in data["payload"]["FinancialEvents"]["RefundEventList"][
-                    0
-                ].items()
+                for key, value in data["payload"]["FinancialEvents"]["RefundEventList"][0].items()
                 if key in self.column_list
             },
             "updated_at": updated_at,
@@ -288,7 +273,7 @@ class AmazonRefundEventListToS3Operator(
             time.sleep(1)
             print(f"Processing for Order: {val[0]}")
             res = self.make_request(
-                method="GET", url=self.base_url, endpoint=f"{val[0]}/financialEvents"
+                method='GET', url=self.base_url, endpoint=f"{val[0]}/financialEvents"
             )
             if res.status_code == 200:
                 data = res.json()
@@ -297,6 +282,7 @@ class AmazonRefundEventListToS3Operator(
 
 
 class AmazonCatalogToS3Operator(AmazonToS3BaseOperator, BaseRowsToS3CsvOperator):
+
     def __init__(
         self,
         market_place_ids: list,
@@ -310,17 +296,15 @@ class AmazonCatalogToS3Operator(AmazonToS3BaseOperator, BaseRowsToS3CsvOperator)
         self.market_place_ids = market_place_ids
         self.amazon_conn_id = amazon_conn_id
         self.s3_conn_id = s3_conn_id
-        self.base_url = (
-            f"https://sellingpartnerapi-na.amazon.com/catalog/{version}/items"
-        )
+        self.base_url = f"https://sellingpartnerapi-na.amazon.com/catalog/{version}/items"
         self.parent_asins = set()
 
     def yield_rows_from_data(self, data):
-        if data["relationships"][0]["relationships"] and data["relationships"][0][
-            "relationships"
-        ][0].get("parentAsins"):
+        if data['relationships'][0]['relationships'] and data['relationships'][0]['relationships'][
+            0
+        ].get('parentAsins'):
             self.parent_asins.add(
-                tuple(data["relationships"][0]["relationships"][0].get("parentAsins"))
+                tuple(data['relationships'][0]['relationships'][0].get('parentAsins'))
             )
         updated_at = pendulum.DateTime.utcnow().isoformat()
         row = {
@@ -333,9 +317,7 @@ class AmazonCatalogToS3Operator(AmazonToS3BaseOperator, BaseRowsToS3CsvOperator)
         cur = self.snowflake_hook.get_cursor()
         query_tag = generate_query_tag_cmd(self.dag_id, self.task_id)
         cur.execute(query_tag)
-        cur.execute(
-            "SELECT DISTINCT asin FROM lake.amazon.selling_partner_inventory_data;"
-        )
+        cur.execute("SELECT DISTINCT asin FROM lake.amazon.selling_partner_inventory_data;")
         response = cur.fetchall()
         for asins in [response, self.parent_asins]:
             for val in asins:
@@ -343,15 +325,12 @@ class AmazonCatalogToS3Operator(AmazonToS3BaseOperator, BaseRowsToS3CsvOperator)
                 self.log.info(f"Pulling data for ASIN: {val[0]}")
                 for market_place_id in self.market_place_ids:
                     req_params = {
-                        "marketplaceIds": market_place_id,
-                        "includedData": "attributes,dimensions,identifiers,images,productTypes,relationships,salesRanks,summaries",
+                        'marketplaceIds': market_place_id,
+                        'includedData': 'attributes,dimensions,identifiers,images,productTypes,relationships,salesRanks,summaries',
                     }
                     print(f"Trying with marketplaceId: {market_place_id}")
                     res = self.make_request(
-                        method="GET",
-                        url=self.base_url,
-                        endpoint=val[0],
-                        params=req_params,
+                        method='GET', url=self.base_url, endpoint=val[0], params=req_params
                     )
                     if res.status_code == 200:
                         yield self.yield_rows_from_data(res.json())

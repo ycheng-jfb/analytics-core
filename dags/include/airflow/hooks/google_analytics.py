@@ -57,9 +57,7 @@ class GoogleAnalyticsHook(GoogleBaseHook, DbApiHook, LoggingMixin):
         """
         Uploads a file into Google analytics using Data Import APIs.
         """
-        media = MediaFileUpload(
-            file, mimetype="application/octet-stream", resumable=False
-        )
+        media = MediaFileUpload(file, mimetype='application/octet-stream', resumable=False)
         self.service.management().uploads().uploadData(
             accountId=account_id,
             webPropertyId=property_id,

@@ -36,7 +36,7 @@ class Backfill:
 
     """
 
-    temp_table_name = "_tmp"
+    temp_table_name = '_tmp'
 
     def __init__(self, table_name, lower_bound, upper_bound, column, timestamp=None):
         self.table_config = table_config = get_table_config(table_name=table_name)
@@ -46,15 +46,11 @@ class Backfill:
         ub_minus_one = pendulum.parse(upper_bound).add(days=-1).to_date_string()
         self.column = column
         self.load_job = self.table_config.to_snowflake_operator.get_job(None)
-        self.date_range_str = (
-            f"{lower_bound.replace('-', '')}_{ub_minus_one.replace('-', '')}"
-        )
+        self.date_range_str = f"{lower_bound.replace('-', '')}_{ub_minus_one.replace('-', '')}"
         filename = f"{self.date_range_str}.csv.gz"
-        prod_files_path = self.load_job.files_path.rstrip("/")
+        prod_files_path = self.load_job.files_path.rstrip('/')
         self.timestamp = timestamp or utcnow_nodash(0)
-        backfill_prefix = (
-            f"lake/tmp-backfill/{self.full_target_table_name}/{self.timestamp}"
-        )
+        backfill_prefix = f"lake/tmp-backfill/{self.full_target_table_name}/{self.timestamp}"
         self.backfill_key = f"{backfill_prefix}/{filename}"
         self.backfill_files_path = f"{stages.tsos_da_int_inbound}/{self.backfill_key}"
         self.merge_files_path = f"{prod_files_path}/backfill_{self.timestamp}/"
@@ -93,7 +89,7 @@ class Backfill:
             files_path=self.backfill_files_path,
             column_names=[x.name for x in self.table_config.column_list],
         )
-        where_clause = "\n    AND ".join(
+        where_clause = '\n    AND '.join(
             [f"equal_null(t.{x}, s.{x})" for x in self.load_job.pk_col_names]
         )
         delta_column = self.table_config.column_list.delta_column_list[0].name
@@ -116,7 +112,7 @@ class Backfill:
                 MAX_FILE_SIZE=500000000;
         """
         copyout_cmd = unindent_auto(copyout_cmd)
-        sql = "\n".join([create_temp_table, copy_to_temp_table, copyout_cmd])
+        sql = '\n'.join([create_temp_table, copy_to_temp_table, copyout_cmd])
         if dry_run:
             print(sql)
         else:

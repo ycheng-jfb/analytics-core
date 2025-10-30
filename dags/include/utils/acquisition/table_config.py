@@ -42,31 +42,31 @@ class_mapping = {
 Use to retrieve class object given class name.
 """
 
-cdc_databases = {"um_replicated"}
+cdc_databases = {'um_replicated'}
 """List of databases that are cdc sources"""
 
 conn_database_mapping = {
     conn_ids.MsSql.evolve01_app_airflow: [
-        "jf_portal",
-        "ultrawarehouse",
-        "merlin",
-        "ssrs_reports",
-        "eplmv14prod",
-        "ngc_plm_prodcomp01",
-        "countwise",
-        "ultraidentity",
+        'jf_portal',
+        'ultrawarehouse',
+        'merlin',
+        'ssrs_reports',
+        'eplmv14prod',
+        'ngc_plm_prodcomp01',
+        'countwise',
+        'ultraidentity',
     ],
     conn_ids.MsSql.bento_prod_reader_app_airflow: [
-        "gdpr",
-        "ultracms",
-        "ultramerchant",
-        "ultrarollup",
-        "ultracart",
+        'gdpr',
+        'ultracms',
+        'ultramerchant',
+        'ultrarollup',
+        'ultracart',
     ],
-    conn_ids.MsSql.jfgcdb01_app_airflow: ["jfgc"],
-    conn_ids.MsSql.giftco_app_airflow: ["jfgc"],  # added for 2019
-    conn_ids.MsSql.dbp61_app_airflow: ["um_replicated"],
-    conn_ids.MsSql.dbd05_app_airflow: ["datafbpr"],
+    conn_ids.MsSql.jfgcdb01_app_airflow: ['jfgc'],
+    conn_ids.MsSql.giftco_app_airflow: ['jfgc'],  # added for 2019
+    conn_ids.MsSql.dbp61_app_airflow: ['um_replicated'],
+    conn_ids.MsSql.dbd05_app_airflow: ['datafbpr'],
 }
 """
 List of databases available for each connection.  Used only to create a reverse lookup in
@@ -143,14 +143,14 @@ Mapping between database name and connection id to use when pulling from that da
 """
 
 database_schema_mapping = {
-    "ultracms": "ultra_cms",
-    "ultramerchant": "ultra_merchant",
-    "ultrawarehouse": "ultra_warehouse",
-    "ultrarollup": "ultra_rollup",
-    "ssrs_reports": "evolve01_ssrs_reports",
-    "ultracart": "ultra_cart",
-    "ultraidentity": "ultra_identity",
-    "datafbpr": "bluecherry",
+    'ultracms': 'ultra_cms',
+    'ultramerchant': 'ultra_merchant',
+    'ultrawarehouse': 'ultra_warehouse',
+    'ultrarollup': 'ultra_rollup',
+    'ssrs_reports': 'evolve01_ssrs_reports',
+    'ultracart': 'ultra_cart',
+    'ultraidentity': 'ultra_identity',
+    'datafbpr': 'bluecherry',
 }
 """
 Map source database --> target schema when there is custom mapping.
@@ -168,8 +168,7 @@ class ColumnList(list):
     @property
     def delta_column_list(self):
         return sorted(
-            [x for x in self if x.delta_column is not False],
-            key=lambda x: x.delta_column,
+            [x for x in self if x.delta_column is not False], key=lambda x: x.delta_column
         )
 
     @property
@@ -189,7 +188,7 @@ class ColumnList(list):
 
     @property
     def select_list(self):
-        return "    " + ",\n    ".join(self.column_name_list)
+        return '    ' + ',\n    '.join(self.column_name_list)
 
     @property
     def uniqueness_cols_str(self) -> List[str]:
@@ -197,12 +196,12 @@ class ColumnList(list):
 
 
 def remove_all_quoting(table_name):
-    return table_name.replace('"', "").replace("[", "").replace("]", "").lower()
+    return table_name.replace('"', '').replace('[', '').replace(']', '').lower()
 
 
-CDC_ALL = "all"
-CDC_DEL = "del"
-CDC_LAST = "last"
+CDC_ALL = 'all'
+CDC_DEL = 'del'
+CDC_LAST = 'last'
 
 
 class TableConfig:
@@ -236,7 +235,7 @@ class TableConfig:
         server: (Optional) linked server name
     """
 
-    UTCNOW_TEMPLATE = "{{ macros.tfgdt.utcnow_nodash() }}"
+    UTCNOW_TEMPLATE = '{{ macros.tfgdt.utcnow_nodash() }}'
 
     def __init__(
         self,
@@ -246,15 +245,15 @@ class TableConfig:
         column_list: List[Column],
         server: str = None,
         linked_server: Optional[str] = None,
-        warehouse: str = "DA_WH_ETL_LIGHT",
+        warehouse: str = 'DA_WH_ETL_LIGHT',
         table_hints: List[str] = None,
         watermark_column: Optional[str] = None,
-        initial_load_value: Optional[str] = "1900-01-01",
+        initial_load_value: Optional[str] = '1900-01-01',
         high_watermark_cls: Type[BaseHighWatermarkQuery] = HighWatermarkMaxVarcharSS,
         strict_inequality=True,
         fetch_batch_size: int = 100000,
-        schema_version_prefix: str = "v1",
-        to_s3_operator_class_name: str = "MsSqlTableToS3CsvOperator",
+        schema_version_prefix: str = 'v1',
+        to_s3_operator_class_name: str = 'MsSqlTableToS3CsvOperator',
         skip_param_validation=False,
         cluster_by: str = None,
         partition_cols: List[str] = None,
@@ -270,23 +269,21 @@ class TableConfig:
         self.column_list = ColumnList(column_list)
         self.is_cdc_db = database in cdc_databases
         self.cdc_type = (
-            self.is_cdc_db
-            and self.get_cdc_parts(table_name=self.table).cdc_type
-            or None
+            self.is_cdc_db and self.get_cdc_parts(table_name=self.table).cdc_type or None
         )
         self.table_hints = table_hints
         if self.cdc_type in (CDC_ALL, CDC_DEL):
-            self.target_database = "lake_archive"
+            self.target_database = 'lake_archive'
             self.staging_database = None
             self.view_database = None
         elif self.server is not None:
-            self.target_database = "lake_" + self.server
-            self.staging_database = "lake_stg"
-            self.view_database = "lake_" + self.server + "_view"
+            self.target_database = 'lake_' + self.server
+            self.staging_database = 'lake_stg'
+            self.view_database = 'lake_' + self.server + '_view'
         else:
-            self.target_database = "lake"
-            self.staging_database = "lake_stg"
-            self.view_database = "lake_view"
+            self.target_database = 'lake'
+            self.staging_database = 'lake_stg'
+            self.view_database = 'lake_view'
         self.watermark_column = watermark_column
         self.initial_load_value = initial_load_value
         self.high_watermark_cls = high_watermark_cls
@@ -295,9 +292,7 @@ class TableConfig:
         self.strict_inequality = strict_inequality
         self.fetch_batch_size = fetch_batch_size
         self.schema_version_prefix = schema_version_prefix
-        self.full_view_name = (
-            f"{self.view_database}.{self.target_schema}.{self.target_table}"
-        )
+        self.full_view_name = f'{self.view_database}.{self.target_schema}.{self.target_table}'
         self.to_s3_operator_class_name = to_s3_operator_class_name
         self.skip_param_validation = skip_param_validation
         self.cluster_by = cluster_by
@@ -322,20 +317,20 @@ class TableConfig:
             return (
                 self.watermark_column
                 and self.watermark_column.lower()
-                not in ("datetime_added", "date_create", "created_on")
-                and "delete_log" not in self.full_table_name.lower()
+                not in ('datetime_added', 'date_create', 'created_on')
+                and 'delete_log' not in self.full_table_name.lower()
             )
 
     @staticmethod
     def get_cdc_parts(table_name):
-        return namedtuple(
-            "CDCTable", ["source_database", "source_table_name", "cdc_type"]
-        )(*table_name.split("__"))
+        return namedtuple('CDCTable', ['source_database', 'source_table_name', 'cdc_type'])(
+            *table_name.split('__')
+        )
 
     @property
     def archive_database(self):
         return (
-            "lake_archive"
+            'lake_archive'
             if self.append_to_archive_table and self.cdc_type not in (CDC_ALL, CDC_DEL)
             else None
         )
@@ -358,8 +353,8 @@ class TableConfig:
 
     @property
     def target_table(self):
-        table = camel_to_snake(self.table.strip("[").strip("]"))
-        if table in {"order"}:
+        table = camel_to_snake(self.table.strip('[').strip(']'))
+        if table in {'order'}:
             return '"' + table.upper() + '"'
         if self.cdc_type in (CDC_ALL, CDC_DEL):
             table = f"{self.cdc_table_name}__{self.cdc_table_type}"
@@ -403,11 +398,11 @@ class TableConfig:
         table = remove_all_quoting(self.target_table)
         table_path = f"{table}/{self.schema_version_prefix}"
         if self.server is not None:
-            base_path = f"{self.target_database}/{self.target_database}_{self.server}.{self.target_schema}"
-        else:
             base_path = (
-                f"{self.target_database}/{self.target_database}.{self.target_schema}"
+                f"{self.target_database}/{self.target_database}_{self.server}.{self.target_schema}"
             )
+        else:
+            base_path = f"{self.target_database}/{self.target_database}.{self.target_schema}"
         return f"{base_path}.{table_path}".lower()
 
     @property
@@ -423,7 +418,7 @@ class TableConfig:
 
     @property
     def base_task_id(self):
-        return self.full_target_table_name.replace('"', "").lower()
+        return self.full_target_table_name.replace('"', '').lower()
 
     @property
     def to_snowflake_task_id(self):
@@ -460,20 +455,16 @@ class TableConfig:
     def validate_column_list(self):
         if self.watermark_column:
             if not self.column_list.has_uniqueness:
-                raise Exception(
-                    "Column list must have uniqueness cols if using watermark column"
-                )
+                raise Exception("Column list must have uniqueness cols if using watermark column")
             if not self.column_list.has_delta_column:
-                raise Exception(
-                    "Column list must have delta col if using watermark column"
-                )
+                raise Exception("Column list must have delta col if using watermark column")
 
     @property
     def watermark_namespace(self):
         if self.is_cdc_db:
-            return "acquisition_cdc"
+            return 'acquisition_cdc'
         else:
-            return "acquisition_ecom"
+            return 'acquisition_ecom'
 
     @property
     def watermark_process_name(self):
@@ -537,7 +528,7 @@ class TableConfig:
                 header_rows=0,
                 skip_pct=0,
             ),
-            default_timezone="America/Los_Angeles",
+            default_timezone='America/Los_Angeles',
             cluster_by=self.cluster_by,
             execution_timeout=timedelta(hours=1),
             pool=Pool.snowflake_lake_load,
@@ -550,14 +541,12 @@ class TableConfig:
             )
         if self.server is not None:
             params.update(
-                database=self.target_database + "_" + self.server,
+                database=self.target_database + '_' + self.server,
                 schema=self.target_schema,
                 staging_database=self.staging_database,
-                staging_schema=self.target_schema + "_" + self.server,
+                staging_schema=self.target_schema + '_' + self.server,
                 archive_database=self.archive_database,
-                view_database=self.view_database.replace(
-                    "_view", "_" + self.server + "_view"
-                ),
+                view_database=self.view_database.replace('_view', '_' + self.server + '_view'),
             )
         return self.load_operator(**params)
 
@@ -578,7 +567,7 @@ class TableConfig:
 
     @property
     def primary_key_def(self):
-        pk_cols = ", ".join([x.name for x in self.column_list if x.uniqueness is True])
+        pk_cols = ', '.join([x.name for x in self.column_list if x.uniqueness is True])
         return f"ALTER TABLE {self.full_target_table_name} ADD PRIMARY KEY ({pk_cols});"
 
     def __repr__(self):
@@ -588,10 +577,10 @@ class TableConfig:
 
         param_names = [k for k, v in signature.parameters.items()]
         sort_map = {name: idx for idx, name in enumerate(signature.parameters)}
-        sort_map["column_list"] = 10000
+        sort_map['column_list'] = 10000
 
         for p in sorted(param_names, key=lambda x: sort_map.get(x)):
-            if p == "kwargs":
+            if p == 'kwargs':
                 continue
             actual_attr = getattr(self, p)
             if p not in default_args or actual_attr != default_args[p]:
@@ -631,7 +620,7 @@ class TableConfig:
                 )
             )
         if not column_list:
-            raise Exception(f"table {table} not found.  check spelling.")
+            raise Exception(f'table {table} not found.  check spelling.')
         cl = ColumnList(column_list)
         kwargs.update(
             database=database,
@@ -644,41 +633,39 @@ class TableConfig:
             kwargs.update(watermark_column=delta_column_list[0].source_name)
         if is_cdc_db:
             kwargs.update(high_watermark_cls=HighWatermarkMaxRowVersion)
-            kwargs.update(watermark_column="repl_timestamp")
-            kwargs.update(initial_load_value="0x0")
-            update_col("repl_timestamp", dict(uniqueness=True))
+            kwargs.update(watermark_column='repl_timestamp')
+            kwargs.update(initial_load_value='0x0')
+            update_col('repl_timestamp', dict(uniqueness=True))
             if not delta_column_list:
-                update_col("repl_timestamp", dict(delta_column=True))
+                update_col('repl_timestamp', dict(delta_column=True))
 
         log.setLevel(logging.INFO)
         return cls(**kwargs)  # type: ignore
 
     def write_out_config(self):
-        config_text = ""
+        config_text = ''
         if self.high_watermark_cls != HighWatermarkMaxVarcharSS:
             config_text += (
-                f"from include.airflow.operators.mssql_acquisition import "
-                f"{self.high_watermark_cls.__name__}\n"
+                f'from include.airflow.operators.mssql_acquisition import '
+                f'{self.high_watermark_cls.__name__}\n'
             )
-        config_text += (
-            "from include.utils.acquisition.table_config import TableConfig\n"
-        )
-        config_text += "from include.utils.snowflake import Column\n\ntable_config = "
+        config_text += 'from include.utils.acquisition.table_config import TableConfig\n'
+        config_text += 'from include.utils.snowflake import Column\n\ntable_config = '
         config_text += self.__repr__()
-        config_text += "\n"
+        config_text += '\n'
         table_path = Path(
             Path(
                 DAGS_DIR,
-                "edm",
-                "acquisition",
-                "configs",
-                "lake",
+                'edm',
+                'acquisition',
+                'configs',
+                'lake',
                 self.target_schema,
-                self.target_table.replace('"', "").lower(),
+                self.target_table.replace('"', '').lower(),
             )
-        ).with_suffix(".py")
+        ).with_suffix('.py')
         ensure_dir(table_path.parent)
-        with open(table_path, "wt") as f:
+        with open(table_path, 'wt') as f:
             f.write(config_text)
         from subprocess import PIPE, Popen
 
@@ -686,9 +673,7 @@ class TableConfig:
             pass
 
     @classmethod
-    def generate_configs_from_list(
-        cls, table_name_list: List[str], create_objects: bool = False
-    ):
+    def generate_configs_from_list(cls, table_name_list: List[str], create_objects: bool = False):
         """
         Takes list of table names, generates acquisition configs.
 
@@ -711,9 +696,7 @@ class TableConfig:
 
         """
         for table_name in table_name_list:
-            database, schema, table = (
-                table_name.replace("[", "").replace("]", "").split(".")
-            )
+            database, schema, table = table_name.replace('[', '').replace(']', '').split('.')
 
             table_config = cls.generate_config(
                 database=database,
@@ -725,15 +708,15 @@ class TableConfig:
                 table_config.to_snowflake_operator.create_all_objects()
 
     def dedupe_lake_archive(self):
-        if self.cdc_type in ("all", "del"):
-            raise Exception("Not applicable to cdc ingestions")
+        if self.cdc_type in ('all', 'del'):
+            raise Exception('Not applicable to cdc ingestions')
         """
         Helper function to print out command to dedupe a lake_archive table
 
         """
-        uniqueness_list = ", ".join(self.column_list.uniqueness_cols_str)
+        uniqueness_list = ', '.join(self.column_list.uniqueness_cols_str)
         watermark_column = self.watermark_column
-        column_list = ", ".join(self.column_list.column_name_list)
+        column_list = ', '.join(self.column_list.column_name_list)
         lake_archive_table = f"lake_archive.{self.target_schema}.{self.target_table}"
         cmd = f"""
         CREATE TABLE {lake_archive_table}__new__ AS
@@ -754,16 +737,16 @@ class TableConfig:
 
     def merge_into_lake_archive(self):
         if self.cdc_type in (CDC_ALL, CDC_DEL):
-            raise Exception("Not applicable to cdc ingestions")
+            raise Exception('Not applicable to cdc ingestions')
         """
         Helper function to print out command to merge lake records into lake_archive
 
         """
-        uniqueness_list = ", ".join(self.column_list.uniqueness_cols_str)
+        uniqueness_list = ', '.join(self.column_list.uniqueness_cols_str)
         watermark_column = self.watermark_column
-        column_list = ", ".join(self.column_list.column_name_list)
+        column_list = ', '.join(self.column_list.column_name_list)
         lake_archive_table = f"lake_archive.{self.target_schema}.{self.target_table}"
-        merge_cond = "\n    AND ".join(
+        merge_cond = '\n    AND '.join(
             [
                 f"equal_null(s.{x}, t.{x})"
                 for x in [*self.column_list.uniqueness_cols_str, watermark_column]
@@ -812,13 +795,11 @@ class KafkaTableConfig(TableConfig):
             table=self.table,
             warehouse=self.warehouse,
             staging_database="lake_stg",
-            view_database="lake_view",
+            view_database='lake_view',
             files_path=None,
             column_list=self.column_list,
             copy_config=CopyConfigJson(
-                custom_select=self.custom_select_sql,
-                skip_pct=0,
-                match_by_column_name=False,
+                custom_select=self.custom_select_sql, skip_pct=0, match_by_column_name=False
             ),
             pool=Pool.snowflake_lake_load,
         )

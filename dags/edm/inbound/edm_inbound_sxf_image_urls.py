@@ -58,13 +58,13 @@ set_sku_sql = """
 default_args = {
     "start_date": pendulum.datetime(2021, 11, 25, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.data_integrations,
+    'owner': owners.data_integrations,
     "email": data_integration_support,
     "on_failure_callback": slack_failure_edm,
 }
 
 dag = DAG(
-    dag_id="edm_inbound_sxf_image_urls",
+    dag_id='edm_inbound_sxf_image_urls',
     default_args=default_args,
     schedule="0 6 * * *",
     catchup=False,
@@ -74,14 +74,14 @@ dag = DAG(
 
 with dag:
     product_urls = SavageXImageUrlOperator(
-        task_id="edw_prod.reference.product_image_url_sxf_load",
-        output_table="edw_prod.reference.product_image_url_sxf",
+        task_id='edw_prod.reference.product_image_url_sxf_load',
+        output_table='edw_prod.reference.product_image_url_sxf',
         sku_query_or_path=product_sku_sql,
     )
 
     set_urls = SavageXImageUrlOperator(
-        task_id="edw_prod.reference.set_image_url_sxf_load",
-        output_table="edw_prod.reference.set_image_url_sxf",
-        sku_type="Set",
+        task_id='edw_prod.reference.set_image_url_sxf_load',
+        output_table='edw_prod.reference.set_image_url_sxf',
+        sku_type='Set',
         sku_query_or_path=set_sku_sql,
     )

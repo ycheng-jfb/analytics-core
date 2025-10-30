@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="cart_dressing_room_product",
+    table='cart_dressing_room_product',
     company_join_sql="""
       SELECT DISTINCT
           L.CART_DRESSING_ROOM_PRODUCT_ID,
@@ -19,18 +19,18 @@ table_config = TableConfig(
       INNER JOIN {database}.{source_schema}.cart_dressing_room_product AS L
       ON L.CART_DRESSING_ROOM_ID=CDR.CART_DRESSING_ROOM_ID """,
     column_list=[
-        Column("cart_dressing_room_product_id", "INT", uniqueness=True, key=True),
-        Column("cart_dressing_room_id", "INT", key=True),
-        Column("product_id", "INT", key=True),
-        Column("lpn_code", "VARCHAR(35)"),
+        Column('cart_dressing_room_product_id', 'INT', uniqueness=True, key=True),
+        Column('cart_dressing_room_id', 'INT', key=True),
+        Column('product_id', 'INT', key=True),
+        Column('lpn_code', 'VARCHAR(35)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

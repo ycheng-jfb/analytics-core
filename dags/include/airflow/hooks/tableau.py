@@ -107,8 +107,7 @@ class TableauHook(BaseHook):
         while True:
             page_number += 1
             r = self.make_request(
-                method="GET",
-                endpoint=f"groups/{group_id}/users?pageNumber={page_number}",
+                method="GET", endpoint=f"groups/{group_id}/users?pageNumber={page_number}"
             )
             data = r.json()
             yield from data["users"]["user"] if data["users"].get("user") else []
@@ -124,9 +123,7 @@ class TableauHook(BaseHook):
         page_number = 0
         while True:
             page_number += 1
-            r = self.make_request(
-                method="GET", endpoint=f"{api_path}?pageNumber={page_number}"
-            )
+            r = self.make_request(method="GET", endpoint=f"{api_path}?pageNumber={page_number}")
             data = r.json()
             if is_list:
                 yield from (

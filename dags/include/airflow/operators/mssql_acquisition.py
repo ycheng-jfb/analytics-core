@@ -135,7 +135,7 @@ class BaseTableAcquisitionOperator(BaseProcessWatermarkOperator):
         linked_server: Optional[str] = None,
         watermark_column=None,
         mssql_conn_id=conn_ids.MsSql.default,
-        initial_load_value="1900-01-01 00:00:00+00:00",
+        initial_load_value='1900-01-01 00:00:00+00:00',
         strict_inequality=False,
         high_watermark_cls: Type[BaseHighWatermarkQuery] = HighWatermarkMax,
         lookback_func: Optional[BaseSourceLookback] = None,
@@ -189,31 +189,23 @@ class BaseTableAcquisitionOperator(BaseProcessWatermarkOperator):
             cur.execute(cmd)
             k = cur.fetchone()
             val = k[0]
-            if hasattr(val, "isoformat"):
+            if hasattr(val, 'isoformat'):
                 return val.isoformat()
             else:
                 return val
 
     @property
     def table_hints(self):
-        default_hints = ["nolock"]
-        extra_hints = [
-            x for x in self._table_hints or [] if x.lower() not in default_hints
-        ]
-        return ", ".join(default_hints + extra_hints)
+        default_hints = ['nolock']
+        extra_hints = [x for x in self._table_hints or [] if x.lower() not in default_hints]
+        return ', '.join(default_hints + extra_hints)
 
     def build_query(
-        self,
-        lower_bound,
-        upper_bound=None,
-        strict_inequality=False,
-        column_override=None,
+        self, lower_bound, upper_bound=None, strict_inequality=False, column_override=None
     ):
-        inequality = ">" if strict_inequality else ">="
-        select_list = (
-            ", ".join([f"{x}" for x in self.column_list]) if self.column_list else "*"
-        )
-        where_clause = ""
+        inequality = '>' if strict_inequality else '>='
+        select_list = ', '.join([f"{x}" for x in self.column_list]) if self.column_list else '*'
+        where_clause = ''
         watermark_column = column_override or self.watermark_column
         if watermark_column:
             if self.lookback_func and lower_bound != self.initial_load_value:
@@ -223,17 +215,17 @@ class BaseTableAcquisitionOperator(BaseProcessWatermarkOperator):
 
             where_clause = f"WHERE s.{watermark_column} {inequality} {eff_lower_bound}"
             if upper_bound:
-                where_clause += f"\n            AND s.{watermark_column} < {quote_if_not_hex(upper_bound)}"
+                where_clause += (
+                    f"\n            AND s.{watermark_column} < {quote_if_not_hex(upper_bound)}"
+                )
         full_table_name = (
             f"{self.linked_server}.{self.src_database}.{self.src_schema}.{self.src_table}"
             if self.linked_server
             else f"{self.src_database}.{self.src_schema}.{self.src_table}"
         )
         if self.partition_cols:
-            par_col_select_list = ", ".join(
-                [f"{x} AS __t_{x}" for x in self.partition_cols]
-            )
-            par_col_join = "\n                AND ".join(
+            par_col_select_list = ', '.join([f"{x} AS __t_{x}" for x in self.partition_cols])
+            par_col_join = '\n                AND '.join(
                 [f"s.{x} = i.__t_{x}" for x in self.partition_cols]
             )
             query = f"""
@@ -263,7 +255,7 @@ class BaseTableAcquisitionOperator(BaseProcessWatermarkOperator):
 
 
 class MsSqlTableToS3CsvOperator(BaseTableAcquisitionOperator, MsSqlToS3Operator):
-    template_fields = ["key"]
+    template_fields = ['key']
 
     def __init__(
         self,
@@ -278,7 +270,7 @@ class MsSqlTableToS3CsvOperator(BaseTableAcquisitionOperator, MsSqlToS3Operator)
     ):
         self._mssql_hook = None
         super().__init__(
-            sql="",
+            sql='',
             bucket=bucket,
             key=key,
             s3_conn_id=s3_conn_id,
@@ -289,9 +281,7 @@ class MsSqlTableToS3CsvOperator(BaseTableAcquisitionOperator, MsSqlToS3Operator)
             **kwargs,
         )
 
-    def set_sql(
-        self, lower_bound_override=None, upper_bound_override=None, column_override=None
-    ):
+    def set_sql(self, lower_bound_override=None, upper_bound_override=None, column_override=None):
         self.sql = self.build_query(
             lower_bound=lower_bound_override or self.low_watermark,
             upper_bound=upper_bound_override,
@@ -361,7 +351,7 @@ class DatetimeChunker(BaseChunker):
     def initialize(self, initial_value, high_watermark):
         self.value = parse(initial_value)
         self.high_watermark = high_watermark
-        print(f"chunker initialized with value {self.value}")
+        print(f'chunker initialized with value {self.value}')
 
     @property
     def curr_lower_bound(self) -> str:
@@ -380,14 +370,14 @@ class DatetimeChunker(BaseChunker):
 
     def dt_to_str_sql(self, val) -> str:
         out_val = val.isoformat()  # type: str
-        if out_val[-3:] == "000":
+        if out_val[-3:] == '000':
             return out_val[0:-3]
         else:
             return out_val
 
     def dt_to_str_id(self, val):
         out_val = self.dt_to_str_sql(val)
-        return out_val.replace("-", "").replace(":", "")
+        return out_val.replace('-', '').replace(':', '')
 
 
 class IntegerChunker(BaseChunker):
@@ -422,7 +412,7 @@ class IntegerChunker(BaseChunker):
 
 
 class MsSqlTableToS3CsvChunkOperator(BaseTableAcquisitionOperator, MsSqlToS3Operator):
-    template_fields = ["key"]
+    template_fields = ['key']
 
     def __init__(
         self,
@@ -431,18 +421,16 @@ class MsSqlTableToS3CsvChunkOperator(BaseTableAcquisitionOperator, MsSqlToS3Oper
         s3_conn_id=conn_ids.AWS.tfg_default,
         s3_replace=True,
         batch_size=100000,
-        initial_load_value: Union[str, int] = "1900-01-01 00:00:00.000",
+        initial_load_value: Union[str, int] = '1900-01-01 00:00:00.000',
         chunker: BaseChunker = DatetimeChunker(),
         **kwargs,
     ):
         self._mssql_hook = None
         self.chunker = chunker
-        if "*" not in key:
-            raise Exception(
-                "key must have '*' character, which will be replaced with batch id"
-            )
+        if '*' not in key:
+            raise Exception("key must have '*' character, which will be replaced with batch id")
         super().__init__(
-            sql="",
+            sql='',
             bucket=bucket,
             key=key,
             s3_conn_id=s3_conn_id,
@@ -459,7 +447,7 @@ class MsSqlTableToS3CsvChunkOperator(BaseTableAcquisitionOperator, MsSqlToS3Oper
         )
         while not self.chunker.is_complete:
             print(self.chunker.curr_lower_bound)
-            self.key = key_mask.replace("*", self.chunker.batch_id)
+            self.key = key_mask.replace('*', self.chunker.batch_id)
             self.sql = self.build_query(
                 lower_bound=self.chunker.curr_lower_bound,
                 upper_bound=self.chunker.curr_upper_bound,
@@ -474,14 +462,14 @@ class MsSqlTableToS3CsvChunkOperator(BaseTableAcquisitionOperator, MsSqlToS3Oper
 
 
 class MsSqlBcpTableToS3Operator(BaseTableAcquisitionOperator):
-    PASSWORD_ENV_VAR = "BCP_PASS"
+    PASSWORD_ENV_VAR = 'BCP_PASS'
 
     def __init__(
         self,
         bucket,
         key,
-        record_delimiter="0x02",
-        field_delimiter="0x01",
+        record_delimiter='0x02',
+        field_delimiter='0x01',
         chunker: Union[BaseChunker, IntegerChunker] = None,
         *args,
         **kwargs,
@@ -494,10 +482,8 @@ class MsSqlBcpTableToS3Operator(BaseTableAcquisitionOperator):
         self.field_delimiter = field_delimiter
         self.chunker = chunker
         super().__init__(*args, **kwargs)
-        if self.chunker and "*" not in key:
-            raise Exception(
-                "key must have '*' character, which will be replaced with batch id"
-            )
+        if self.chunker and '*' not in key:
+            raise Exception("key must have '*' character, which will be replaced with batch id")
 
     def get_bash_command(self, sql):
         bash_command = build_bcp_to_s3_bash_command(
@@ -541,7 +527,7 @@ class MsSqlBcpTableToS3Operator(BaseTableAcquisitionOperator):
         )
         while not self.chunker.is_complete:
             print(self.chunker.curr_lower_bound)
-            self.key = key_mask.replace("*", self.chunker.batch_id)
+            self.key = key_mask.replace('*', self.chunker.batch_id)
             sql = self.build_query(
                 lower_bound=self.chunker.curr_lower_bound,
                 upper_bound=self.chunker.curr_upper_bound,

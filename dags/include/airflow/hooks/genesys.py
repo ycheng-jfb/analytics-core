@@ -33,9 +33,7 @@ class GenesysPureCloudHook(BaseHook):
         )
         if response.status_code != 200:
             print("Failed with Status Code:")
-            raise Exception(
-                f"Failed to get token: {str(response.status_code)} - {response.reason}"
-            )
+            raise Exception(f"Failed to get token: {str(response.status_code)} - {response.reason}")
         print("Got token")
         token_response = response.json()
         token_header = {

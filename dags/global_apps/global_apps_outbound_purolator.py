@@ -15,9 +15,9 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id="global_apps_outbound_purolator",
+    dag_id='global_apps_outbound_purolator',
     default_args=default_args,
-    schedule="0 21 * * *",
+    schedule='0 21 * * *',
     catchup=False,
     max_active_tasks=1,
     max_active_runs=1,
@@ -30,7 +30,7 @@ file_name_template = "Purolator_Returns_Report_{{ ds.split('-')[0] }}_{{ ds.spli
 smb_path_template = f"Outbound/gfc.purolator_returns_report/{file_name_template}"
 
 # Target directory
-sftp_target_dir = "/incoming"
+sftp_target_dir = '/incoming'
 
 with dag:
     smb_to_sftp = SMBToSFTPOperator(
@@ -38,7 +38,7 @@ with dag:
         remote_path=smb_path_template,  # Template for SMB path
         target_dir=sftp_target_dir,
         filename=file_name_template,  # Template for filename
-        share_name="BI",
+        share_name='BI',
         smb_conn_id=conn_ids.SMB.nas01,
-        sftp_conn_id="sftp_purolator",
+        sftp_conn_id='sftp_purolator',
     )

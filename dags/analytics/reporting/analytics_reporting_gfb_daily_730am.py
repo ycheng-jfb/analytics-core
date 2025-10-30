@@ -8,11 +8,11 @@ from include.config import owners
 from include.config.email_lists import analytics_support
 
 default_args = {
-    "depends_on_past": False,
-    "start_date": pendulum.datetime(2019, 1, 1, 7, tz="America/Los_Angeles"),
-    "retries": 1,
-    "owner": owners.jfb_analytics,
-    "email": analytics_support,
+    'depends_on_past': False,
+    'start_date': pendulum.datetime(2019, 1, 1, 7, tz='America/Los_Angeles'),
+    'retries': 1,
+    'owner': owners.jfb_analytics,
+    'email': analytics_support,
 }
 
 
@@ -26,19 +26,19 @@ dag = DAG(
 
 with dag:
     dos_112_gfb_lead_performance = SnowflakeProcedureOperator(
-        procedure="gfb.dos_112_gfb_lead_performance.sql",
-        database="reporting_prod",
+        procedure='gfb.dos_112_gfb_lead_performance.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb013_wide_fit_purchase = chain_tasks(
         SnowflakeProcedureOperator(
-            procedure="gfb.gfb013_wide_fit_purchase.sql",
-            database="reporting_prod",
+            procedure='gfb.gfb013_wide_fit_purchase.sql',
+            database='reporting_prod',
             autocommit=False,
         ),
         TableauRefreshOperator(
-            task_id="tableau_refresh_gfb013_wide_fit_purchase",
-            data_source_name="GFB013_WIDE_FIT_PURCHASE",
+            task_id='tableau_refresh_gfb013_wide_fit_purchase',
+            data_source_name='GFB013_WIDE_FIT_PURCHASE',
         ),
     )

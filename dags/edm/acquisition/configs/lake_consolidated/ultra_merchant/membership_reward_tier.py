@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="membership_reward_tier",
+    table='membership_reward_tier',
     company_join_sql="""
         SELECT DISTINCT
             L.MEMBERSHIP_REWARD_TIER_ID,
@@ -17,14 +17,14 @@ table_config = TableConfig(
         INNER JOIN {database}.{source_schema}.membership_reward_tier AS L
         ON L.MEMBERSHIP_REWARD_PLAN_ID = MRP.MEMBERSHIP_REWARD_PLAN_ID """,
     column_list=[
-        Column("membership_reward_tier_id", "INT", uniqueness=True, key=True),
-        Column("membership_reward_plan_id", "INT", key=True),
-        Column("membership_level_group_id", "INT"),
-        Column("label", "VARCHAR(50)"),
-        Column("required_points_earned", "INT"),
-        Column("required_months", "INT"),
-        Column("purchase_point_multiplier", "INT"),
-        Column("tier_hidden", "BOOLEAN"),
-        Column("minimum_lifetime_spend", "NUMBER(19,4)"),
+        Column('membership_reward_tier_id', 'INT', uniqueness=True, key=True),
+        Column('membership_reward_plan_id', 'INT', key=True),
+        Column('membership_level_group_id', 'INT'),
+        Column('label', 'VARCHAR(50)'),
+        Column('required_points_earned', 'INT'),
+        Column('required_months', 'INT'),
+        Column('purchase_point_multiplier', 'INT'),
+        Column('tier_hidden', 'BOOLEAN'),
+        Column('minimum_lifetime_spend', 'NUMBER(19,4)'),
     ],
 )

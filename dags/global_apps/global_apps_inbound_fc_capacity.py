@@ -6,29 +6,24 @@ from airflow import DAG
 
 from include.airflow.callbacks.slack import slack_failure_gsc
 from include.airflow.operators.excel_smb import ExcelSMBToS3BatchOperator, SheetConfig
-from include.airflow.operators.snowflake_load import (
-    CopyConfigCsv,
-    SnowflakeTruncateAndLoadOperator,
-)
-from include.airflow.operators.snowflake_to_mssql import (
-    SnowflakeSqlToMSSqlOperatorTruncateAndLoad,
-)
+from include.airflow.operators.snowflake_load import CopyConfigCsv, SnowflakeTruncateAndLoadOperator
+from include.airflow.operators.snowflake_to_mssql import SnowflakeSqlToMSSqlOperatorTruncateAndLoad
 from include.config import conn_ids, email_lists, owners, s3_buckets, stages
 from include.utils.snowflake import Column
 from include.utils.string import unindent_auto
 
 default_args = {
     "start_date": pendulum.datetime(2022, 6, 15, tz="America/Los_Angeles"),
-    "owner": owners.data_integrations,
-    "email": email_lists.global_applications,
-    "on_failure_callback": slack_failure_gsc,
-    "retries": 0,
+    'owner': owners.data_integrations,
+    'email': email_lists.global_applications,
+    'on_failure_callback': slack_failure_gsc,
+    'retries': 0,
 }
 
 dag = DAG(
-    dag_id="global_apps_inbound_fc_capacity",
+    dag_id='global_apps_inbound_fc_capacity',
     default_args=default_args,
-    schedule="50 1,7,13,19 * * *",
+    schedule='50 1,7,13,19 * * *',
     catchup=False,
 )
 
@@ -52,8 +47,8 @@ class ExcelConfig:
     @property
     def file_path(self) -> str:
         return (
-            f"{stages.tsos_da_int_inbound}/lake/{self.sheet_config.schema}"
-            f".{self.sheet_config.table}/{self.sheet_config.default_schema_version}"
+            f'{stages.tsos_da_int_inbound}/lake/{self.sheet_config.schema}'
+            f'.{self.sheet_config.table}/{self.sheet_config.default_schema_version}'
         )
 
     @property
@@ -81,7 +76,7 @@ class ExcelConfig:
             table=self.sheet_config.table,
             column_list=self.sheet_config.column_list,
             files_path=self.file_path,
-            copy_config=CopyConfigCsv(header_rows=1, field_delimiter="|"),
+            copy_config=CopyConfigCsv(header_rows=1, field_delimiter='|'),
         )
 
     @property
@@ -108,7 +103,7 @@ class ExcelConfig:
             tgt_database=self.mssql_database,
             tgt_schema=self.mssql_schema,
             mssql_conn_id=self.mssql_conn_id,
-            if_exists="append",
+            if_exists='append',
         )
 
 
@@ -122,36 +117,30 @@ excel_configs = [
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
         bucket=s3_buckets.tsos_da_int_inbound,
         sheet_config=SheetConfig(
-            sheet_name="Sheet1",
-            schema="excel",
-            table="fc_capacity",
+            sheet_name='Sheet1',
+            schema='excel',
+            table='fc_capacity',
             s3_replace=False,
             header_rows=1,
             column_list=[
-                Column("bu", "VARCHAR", source_name="BU", uniqueness=True),
-                Column("building", "VARCHAR", source_name="Building", uniqueness=True),
-                Column("year", "NUMBER", source_name="Year", uniqueness=True),
-                Column("month", "NUMBER", source_name="Month", uniqueness=True),
-                Column("budget", "NUMBER", source_name="Budget"),
-                Column("budget_update", "NUMBER", source_name="Update"),
-                Column("act_on_hand", "NUMBER", source_name="Act On Hand"),
+                Column('bu', 'VARCHAR', source_name='BU', uniqueness=True),
+                Column('building', 'VARCHAR', source_name='Building', uniqueness=True),
+                Column('year', 'NUMBER', source_name='Year', uniqueness=True),
+                Column('month', 'NUMBER', source_name='Month', uniqueness=True),
+                Column('budget', 'NUMBER', source_name='Budget'),
+                Column('budget_update', 'NUMBER', source_name='Update'),
+                Column('act_on_hand', 'NUMBER', source_name='Act On Hand'),
+                Column('lpn_rack_by_building', 'NUMBER', source_name='LPN Rack by Building'),
+                Column('case_rack_by_building', 'NUMBER', source_name='Case Rack by Building'),
                 Column(
-                    "lpn_rack_by_building", "NUMBER", source_name="LPN Rack by Building"
+                    'lpn_rack_by_building_capacity',
+                    'VARCHAR',
+                    source_name='Capacity - LPN Rack by Building',
                 ),
                 Column(
-                    "case_rack_by_building",
-                    "NUMBER",
-                    source_name="Case Rack by Building",
-                ),
-                Column(
-                    "lpn_rack_by_building_capacity",
-                    "VARCHAR",
-                    source_name="Capacity - LPN Rack by Building",
-                ),
-                Column(
-                    "case_rack_by_building_capacity",
-                    "VARCHAR",
-                    source_name="Capacity - Case Rack by Building",
+                    'case_rack_by_building_capacity',
+                    'VARCHAR',
+                    source_name='Capacity - Case Rack by Building',
                 ),
             ],
         ),

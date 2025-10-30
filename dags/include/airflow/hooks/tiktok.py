@@ -12,7 +12,7 @@ class TiktokHook(BaseHook):
 
     @cached_property
     def session(self):
-        headers = {"Access-Token": self.api_key, "Content-Type": "application/json"}
+        headers = {"Access-Token": self.api_key, 'Content-Type': 'application/json'}
         session = requests.session()
         session.headers = headers
         return session
@@ -25,14 +25,10 @@ class TiktokHook(BaseHook):
         data: dict = None,
         files: dict = None,
     ):
-        if path == "open_api/v1.2/dmp/custom_audience/file/upload/":
-            self.session.headers.pop("Content-Type", "not_found")
+        if path == 'open_api/v1.2/dmp/custom_audience/file/upload/':
+            self.session.headers.pop('Content-Type', 'not_found')
         response = self.session.request(
-            method=method,
-            url=self.url + "/" + path,
-            params=params,
-            data=data,
-            files=files,
+            method=method, url=self.url + '/' + path, params=params, data=data, files=files
         )
         response.raise_for_status()
         return response

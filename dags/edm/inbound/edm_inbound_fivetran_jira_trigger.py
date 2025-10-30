@@ -17,7 +17,7 @@ from include.config.email_lists import airflow_media_support
 default_args = {
     "start_date": pendulum.datetime(2024, 1, 1, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.data_integrations,
+    'owner': owners.data_integrations,
     "email": airflow_media_support,
     "on_failure_callback": slack_failure_media,
     "sla": timedelta(hours=1),
@@ -44,10 +44,10 @@ class Connectors:
 
 connectors = [
     Connectors(
-        connector_name="central_jira_cloud_v1",
-        connector_id="interminable_wearily",
+        connector_name='central_jira_cloud_v1',
+        connector_id='interminable_wearily',
         request_params={"force": False},
-        method="POST",
+        method='POST',
     )
 ]
 
@@ -63,10 +63,10 @@ dag = DAG(
 
 with dag:
     jira_capex_tableau_refresh = TableauRefreshOperator(
-        task_id="jira_capex_tableau_refresh",
-        data_source_id="0ba9d19a-a847-4a91-add8-30c060430f47",
+        task_id='jira_capex_tableau_refresh',
+        data_source_id='0ba9d19a-a847-4a91-add8-30c060430f47',
     )
-    wait_for_sync = PythonOperator(task_id="wait_for_sync", python_callable=wait)
+    wait_for_sync = PythonOperator(task_id='wait_for_sync', python_callable=wait)
     for connector in connectors:
         sync_data = FivetranOperator(
             task_id=f"{connector.connector_name}_sync",

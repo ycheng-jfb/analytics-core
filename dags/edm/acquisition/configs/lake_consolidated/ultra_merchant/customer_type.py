@@ -6,20 +6,20 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table="customer_type",
+    table='customer_type',
     column_list=[
-        Column("customer_type_id", "INT", uniqueness=True),
-        Column("label", "VARCHAR(50)"),
-        Column("default_discount_id", "INT"),
-        Column("is_tax_exempt", "INT"),
+        Column('customer_type_id', 'INT', uniqueness=True),
+        Column('label', 'VARCHAR(50)'),
+        Column('default_discount_id', 'INT'),
+        Column('is_tax_exempt', 'INT'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

@@ -11,8 +11,8 @@ from include.config import conn_ids
 class ZendeskHook(BaseHook):
     def __init__(
         self,
-        base_url="https://techstyletap.zendesk.com/api",
-        version="v2",
+        base_url='https://techstyletap.zendesk.com/api',
+        version='v2',
         zendesk_conn_id=conn_ids.Zendesk.default,
     ):
         self.base_url = base_url
@@ -46,7 +46,7 @@ class ZendeskHook(BaseHook):
         response = self.session.get(url, params=params)
         self.raise_for_status(response)
         if response.status_code == 429:
-            retry_after = response.headers["Retry-After"]
+            retry_after = response.headers['Retry-After']
             print(
                 f"No. of hits exceeded for the endpoint: {url}. "
                 f"Wait for {retry_after} seconds..."
@@ -57,7 +57,7 @@ class ZendeskHook(BaseHook):
 
     def get_response_all_pages(self, endpoint, params=None):
         endpoint = endpoint[1:] if endpoint[0] == "/" else endpoint
-        url = f"{self.base_url}/{self.version}/{endpoint}.json"
+        url = f'{self.base_url}/{self.version}/{endpoint}.json'
         while url:
             wait_time = 1
             max_attempts = 5
@@ -67,9 +67,7 @@ class ZendeskHook(BaseHook):
                     break
                 except requests.exceptions.HTTPError as e:
                     if e.response.status_code == 503:  # Database timeout error
-                        print(
-                            f"Database timeout error, retrying in {wait_time} seconds..."
-                        )
+                        print(f"Database timeout error, retrying in {wait_time} seconds...")
                         time.sleep(wait_time)
                         wait_time *= 2  # Double the wait time for the next attempt
                     else:
@@ -77,8 +75,8 @@ class ZendeskHook(BaseHook):
             data = response.json()
             for dict in data[endpoint]:
                 yield dict
-            if data["meta"]["has_more"]:
-                url = data["links"]["next"]
+            if data['meta']['has_more']:
+                url = data['links']['next']
                 params = {}
             else:
-                url = ""
+                url = ''

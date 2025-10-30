@@ -18,11 +18,11 @@ s3_prefix = f"lake/{schema}.{table}/daily_v1"
 
 column_list = [
     Column(
-        "name",
+        'name',
         "VARCHAR",
     ),
     Column(
-        "description",
+        'description',
         "VARCHAR",
     ),
     Column("updated_at", "TIMESTAMP_LTZ", delta_column=True),
@@ -32,7 +32,7 @@ column_list = [
 default_args = {
     "start_date": pendulum.datetime(2021, 8, 23, 7, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.data_integrations,
+    'owner': owners.data_integrations,
     "email": email_lists.data_integration_support,
     "on_failure_callback": slack_failure_edm,
     "execution_timeout": timedelta(hours=1),
@@ -58,7 +58,7 @@ with dag:
         table=table,
         column_list=column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}",
-        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=3),
+        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=3),
     )
     get_data = StoreforceToS3Operator(
         task_id=f"storeforce_export_kpis_to_s3",
@@ -66,6 +66,6 @@ with dag:
         key=f"{s3_prefix}/storeforce_export_kpis_{date_param}.tsv.gz",
         column_list=[x.source_name for x in column_list],
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
-        endpoint="GetExportKPIs",
+        endpoint='GetExportKPIs',
     )
     get_data >> to_snowflake

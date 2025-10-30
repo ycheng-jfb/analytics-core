@@ -25,31 +25,30 @@ dag = DAG(
 
 
 with dag:
+
     dim_credit = SnowflakeProcedureOperator(
         procedure="shared.dim_credit.sql",
         database="reporting_base_prod",
-        warehouse="DA_WH_EDW",
+        warehouse='DA_WH_EDW',
     )
     fact_credit_event = SnowflakeProcedureOperator(
         procedure="shared.fact_credit_event.sql",
         database="reporting_base_prod",
-        warehouse="DA_WH_EDW",
+        warehouse='DA_WH_EDW',
     )
     fact_order_credit = SnowflakeProcedureOperator(
         procedure="shared.fact_order_credit.sql",
         database="reporting_base_prod",
     )
     cohort_waterfall = SnowflakeProcedureOperator(
-        procedure="shared.credit_activity_waterfalls_original_cohort.sql",
-        database="reporting_prod",
+        procedure='shared.credit_activity_waterfalls_original_cohort.sql', database='reporting_prod'
     )
     cohort_waterfall_tableau_refresh = TableauRefreshOperator(
-        task_id="trigger_cohort_waterfall_tableau_refresh",
-        data_source_id="318f36ee-3e18-4009-9fa5-eaaddaa61972",
+        task_id='trigger_cohort_waterfall_tableau_refresh',
+        data_source_id='318f36ee-3e18-4009-9fa5-eaaddaa61972',
     )
     endowment_reporting = SnowflakeProcedureOperator(
-        procedure="shared.bounceback_endowment_detail.sql",
-        database="reporting_base_prod",
+        procedure='shared.bounceback_endowment_detail.sql', database='reporting_base_prod'
     )
 
     (

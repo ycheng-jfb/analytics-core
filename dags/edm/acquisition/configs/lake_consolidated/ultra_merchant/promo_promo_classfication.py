@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="promo_promo_classfication",
+    table='promo_promo_classfication',
     company_join_sql="""
         SELECT DISTINCT
             L.PROMO_PROMO_CLASSFICATION_ID,
@@ -16,13 +16,13 @@ table_config = TableConfig(
             ON L.PROMO_ID=P.PROMO_ID """,
     column_list=[
         Column(
-            "promo_promo_classfication_id",
-            "INT",
+            'promo_promo_classfication_id',
+            'INT',
             uniqueness=True,
             key=True,
         ),
-        Column("promo_id", "INT", key=True),
-        Column("promo_classification_id", "INT"),
+        Column('promo_id', 'INT', key=True),
+        Column('promo_classification_id', 'INT'),
     ],
-    watermark_column="promo_promo_classfication_id",
+    watermark_column='promo_promo_classfication_id',
 )

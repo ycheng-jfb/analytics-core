@@ -1,10 +1,7 @@
 import pendulum
 from airflow import DAG
 
-from include.airflow.operators.snowflake import (
-    SnowflakeProcedureOperator,
-    SnowflakeAlertOperator,
-)
+from include.airflow.operators.snowflake import SnowflakeProcedureOperator, SnowflakeAlertOperator
 from include.airflow.operators.sharepoint import SharepointToS3Operator
 from include.airflow.operators.tableau import TableauRefreshOperator
 from include.airflow.operators.snowflake_load import SnowflakeIncrementalLoadOperator
@@ -70,9 +67,7 @@ finance_forecast_column_list = [
     Column("membership_credits_redeemed", "NUMERIC(19,7)"),
     Column("membership_credits_refunded_plus_chargebacks", "NUMERIC(19,7)"),
     Column("net_unredeemed_credit_billings", "NUMERIC(19,7)"),
-    Column(
-        "net_unredeemed_credit_billings_as_percent_of_net_cash_revenue", "NUMERIC(19,7)"
-    ),
+    Column("net_unredeemed_credit_billings_as_percent_of_net_cash_revenue", "NUMERIC(19,7)"),
     Column("refunded_as_credit", "NUMERIC(19,7)"),
     Column("refund_credit_redeemed", "NUMERIC(19,7)"),
     Column("net_unredeemed_refund_credit", "NUMERIC(19,7)"),
@@ -172,7 +167,7 @@ finance_store_mapping_column_list = [
 
 default_args = {
     "owner": owners.analytics_engineering,
-    "start_date": pendulum.datetime(2021, 3, 29, tz="America/Los_Angeles"),
+    "start_date": pendulum.datetime(2021, 3, 29, tz='America/Los_Angeles'),
 }
 
 dag = DAG(
@@ -183,24 +178,20 @@ dag = DAG(
     max_active_tasks=2,
 )
 
-finance_forecast_s3_prefix = (
-    "lake/finance_ingestions/lake.fpa.monthly_budget_forecast_actual"
-)
-finance_store_mapping_s3_prefix = (
-    "inbound/svc_oracle_ebs/lake.oracle_ebs.retail_store_mapping"
-)
+finance_forecast_s3_prefix = "lake/finance_ingestions/lake.fpa.monthly_budget_forecast_actual"
+finance_store_mapping_s3_prefix = "inbound/svc_oracle_ebs/lake.oracle_ebs.retail_store_mapping"
 
 
 with dag:
     to_s3 = SharepointToS3Operator(
-        task_id="monthly_budget_forecast_actual_to_s3",
+        task_id='monthly_budget_forecast_actual_to_s3',
         sharepoint_conn_id=conn_ids.Sharepoint.nordstrom,
-        source_folder_name="WADS/finance_ingestion",
-        file_path="monthly_budget_forecast_actual",
-        site_id="ea66f082-8dc3-4715-986f-b74d2b2aa773",
-        drive_id="b!gvBm6sONFUeYb7dNKyqncwIMGuc7xGpLoECxQMjza2MrgUK4IVA7SbZLrIkJk3qM",
+        source_folder_name='WADS/finance_ingestion',
+        file_path='monthly_budget_forecast_actual',
+        site_id='ea66f082-8dc3-4715-986f-b74d2b2aa773',
+        drive_id='b!gvBm6sONFUeYb7dNKyqncwIMGuc7xGpLoECxQMjza2MrgUK4IVA7SbZLrIkJk3qM',
         is_archive_file=True,
-        archive_folder="WADS/finance_ingestion/monthly_budget_forecast_actual/archive",
+        archive_folder='WADS/finance_ingestion/monthly_budget_forecast_actual/archive',
         bucket=s3_buckets.tsos_da_int_inbound,
         s3_key_prefix=finance_forecast_s3_prefix,
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,

@@ -18,7 +18,7 @@ class NorthbeamHook(BaseHook):
         headers = {
             "Authorization": f"Basic {self.api_key}",
             "Data-Client-ID": self.client_id,
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
         }
         session = requests.session()
         session.headers = headers
@@ -26,8 +26,7 @@ class NorthbeamHook(BaseHook):
 
     def make_request(self, endpoint: str, payload: list = None):
         response = self.session.post(
-            url=f"https://{self.base_url}/{DEFAULT_API_VERSION}/{endpoint}",
-            json=payload,
+            url=f'https://{self.base_url}/{DEFAULT_API_VERSION}/{endpoint}', json=payload
         )
         response.raise_for_status()
         return response.text

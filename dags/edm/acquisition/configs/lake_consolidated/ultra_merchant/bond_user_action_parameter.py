@@ -5,7 +5,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="bond_user_action_parameter",
+    table='bond_user_action_parameter',
     company_join_sql="""
     SELECT DISTINCT
          L.bond_user_action_parameter_id,
@@ -20,12 +20,12 @@ table_config = TableConfig(
     """,
     table_type=TableType.NAME_VALUE_COLUMN,
     column_list=[
-        Column("bond_user_action_parameter_id", "INT", uniqueness=True),
-        Column("bond_user_action_id", "INT", key=True),
-        Column("parameter_name", "VARCHAR(255)"),
-        Column("parameter_value", "VARCHAR"),
-        Column("datetime_added", "TIMESTAMP_NTZ(3)"),
-        Column("datetime_modified", "TIMESTAMP_NTZ(3)"),
+        Column('bond_user_action_parameter_id', 'INT', uniqueness=True),
+        Column('bond_user_action_id', 'INT', key=True),
+        Column('parameter_name', 'VARCHAR(255)'),
+        Column('parameter_value', 'VARCHAR'),
+        Column('datetime_added', 'TIMESTAMP_NTZ(3)'),
+        Column('datetime_modified', 'TIMESTAMP_NTZ(3)'),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

@@ -12,7 +12,7 @@ default_args = {
     "start_date": pendulum.datetime(2020, 4, 1, tz="America/Los_Angeles"),
     "owner": owners.data_integrations,
     "email": email_lists.data_integration_support,
-    "on_failure_callback": slack_failure_edm,
+    'on_failure_callback': slack_failure_edm,
 }
 
 dag = DAG(
@@ -25,23 +25,23 @@ dag = DAG(
 yr_mth = "{{macros.datetime.now().strftime('%Y%m')}}"
 with dag:
     to_s3 = SFTPToS3BatchOperator(
-        task_id="to_s3",
-        remote_dir="fabletics-prd/outbound/prd/transactions",
-        file_pattern="FABLETICS_transactionsdetails_*",
+        task_id='to_s3',
+        remote_dir='fabletics-prd/outbound/prd/transactions',
+        file_pattern='FABLETICS_transactionsdetails_*',
         sftp_conn_id=conn_ids.SFTP.sftp_salesfloor,
         s3_bucket=s3_buckets.tsos_da_int_inbound,
-        s3_prefix=f"{cfg.s3_prefix}/{yr_mth}",
+        s3_prefix=f'{cfg.s3_prefix}/{yr_mth}',
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
         remove_remote_files=True,
     )
 
     to_snowflake = SnowflakeIncrementalLoadOperator(
-        task_id="to_snowflake",
+        task_id='to_snowflake',
         database=cfg.database,
         schema=cfg.schema,
         table=cfg.table,
-        staging_database="lake_stg",
-        view_database="lake_view",
+        staging_database='lake_stg',
+        view_database='lake_view',
         snowflake_conn_id=conn_ids.Snowflake.default,
         role=snowflake_roles.etl_service_account,
         column_list=cfg.column_list,

@@ -12,6 +12,7 @@ from include.utils.exponential_wait import Waiter
 
 
 class CallMinerBulkConversation(BaseProcessWatermarkOperator):
+
     template_fields = ("s3_key",)
 
     def __init__(
@@ -22,7 +23,7 @@ class CallMinerBulkConversation(BaseProcessWatermarkOperator):
         process_name,
         s3_conn_id,
         callminer_bulk_conn_id,
-        initial_load_value="1900-01-01 00:00:00+00:00",
+        initial_load_value='1900-01-01 00:00:00+00:00',
         *args,
         **kwargs,
     ):
@@ -47,9 +48,7 @@ class CallMinerBulkConversation(BaseProcessWatermarkOperator):
         )
 
     def get_high_watermark(self):
-        return (
-            self.new_high_watermark if self.new_high_watermark else self.low_watermark
-        )
+        return self.new_high_watermark if self.new_high_watermark else self.low_watermark
 
     def upload_to_s3(self, filename: str, bucket, key, s3_replace=True):
         s3_hook = S3Hook(self.s3_conn_id)
@@ -63,21 +62,17 @@ class CallMinerBulkConversation(BaseProcessWatermarkOperator):
 
     @staticmethod
     def check_job_status(conn_id):
-        callminer_hook = (
-            CallMinerBulkHook(conn_id=conn_id) if conn_id else CallMinerBulkHook()
-        )
-        params = {"id": callminer_hook.job_id}
-        return callminer_hook.make_request("GET", "export/history", params=params)
+        callminer_hook = CallMinerBulkHook(conn_id=conn_id) if conn_id else CallMinerBulkHook()
+        params = {'id': callminer_hook.job_id}
+        return callminer_hook.make_request('GET', 'export/history', params=params)
 
     def check_job(self):
-        params = {"id": self.callminer_hook.job_id}
-        return self.callminer_hook.make_request("GET", "export/history", params=params)
+        params = {'id': self.callminer_hook.job_id}
+        return self.callminer_hook.make_request('GET', 'export/history', params=params)
 
     def watermark_execute(self, context=None):
         data = self.check_job()
-        new_data = list(
-            filter(lambda x: x["JobCompletionTime"] > self.low_watermark, data.json())
-        )
+        new_data = list(filter(lambda x: x["JobCompletionTime"] > self.low_watermark, data.json()))
 
         if not new_data:
             print("No new bulk job available")
@@ -90,20 +85,16 @@ class CallMinerBulkConversation(BaseProcessWatermarkOperator):
         # update high watermark
         self.new_high_watermark = new_data[0]["JobCompletionTime"]
 
-        response = self.callminer_hook.make_request(
-            "GET", download_endpoint, stream=True
-        )
+        response = self.callminer_hook.make_request('GET', download_endpoint, stream=True)
 
         with (
-            NamedTemporaryFile(mode="wb", delete=True) as temp_zip_file,
+            NamedTemporaryFile(mode='wb', delete=True) as temp_zip_file,
             TemporaryDirectory() as zip_temp_dir,
         ):
             # Set the path for the temporary file
             temp_zip_path = temp_zip_file.name
-            total_size = int(response.headers.get("content-length", 0))
-            print(
-                f"Temporary file for downloading: {temp_zip_path} with size: {total_size}"
-            )
+            total_size = int(response.headers.get('content-length', 0))
+            print(f"Temporary file for downloading: {temp_zip_path} with size: {total_size}")
 
             for chunk in response.iter_content(chunk_size=1024 * 1024):
                 temp_zip_file.write(chunk)
@@ -112,7 +103,7 @@ class CallMinerBulkConversation(BaseProcessWatermarkOperator):
 
             try:
                 # Open and extract the .zip file into the temporary directory
-                with ZipFile(temp_zip_path, "r") as zip_ref:
+                with ZipFile(temp_zip_path, 'r') as zip_ref:
                     zip_ref.extractall(zip_temp_dir)
                     print(f"File uncompressed successfully into {zip_temp_dir}")
             except BadZipFile:
@@ -120,12 +111,11 @@ class CallMinerBulkConversation(BaseProcessWatermarkOperator):
 
             for file in Path(zip_temp_dir).iterdir():
                 if file.as_posix().endswith("_Transcripts.csv.gz"):
-                    self.upload_to_s3(
-                        file.as_posix(), bucket=self.s3_bucket, key=self.s3_key
-                    )
+                    self.upload_to_s3(file.as_posix(), bucket=self.s3_bucket, key=self.s3_key)
 
 
 class CallMinerBulkBackfillConversation(BaseOperator):
+
     template_fields = ("s3_key",)
 
     def __init__(
@@ -183,16 +173,17 @@ class CallMinerBulkBackfillConversation(BaseOperator):
             "IncludeUpdatedContacts": True,
         }
 
-        return self.callminer_hook.make_request("POST", "export/job", json=job_body)
+        return self.callminer_hook.make_request('POST', 'export/job', json=job_body)
 
     def remove_job(self, job_id):
-        return self.callminer_hook.make_request("DELETE", f"export/job/{job_id}")
+        return self.callminer_hook.make_request('DELETE', f"export/job/{job_id}")
 
     def check_job_status(self, job_id):
-        params = {"id": job_id}
-        return self.callminer_hook.make_request("GET", "export/history", params=params)
+        params = {'id': job_id}
+        return self.callminer_hook.make_request('GET', 'export/history', params=params)
 
     def execute(self, context=None):
+
         job_resp = self.create_job()
         job_id = job_resp.json()["Id"]
         print(f"export job created with job_id:{job_id}")
@@ -207,9 +198,7 @@ class CallMinerBulkBackfillConversation(BaseOperator):
             time.sleep(wait_time)
             exported_job = self.check_job_status(job_id)
 
-            if bool(exported_job.json()) & (
-                exported_job.json()[0]["Status"] != "Completed"
-            ):
+            if bool(exported_job.json()) & (exported_job.json()[0]["Status"] != "Completed"):
                 wait_time = waiter.next()
                 time.sleep(wait_time)
 
@@ -221,19 +210,15 @@ class CallMinerBulkBackfillConversation(BaseOperator):
         download_url = exported_job.json()[0]["DownloadEndpoint"]
         download_endpoint = "/".join(download_url.split("/")[-2:])
 
-        response = self.callminer_hook.make_request(
-            "GET", download_endpoint, stream=True
-        )
+        response = self.callminer_hook.make_request('GET', download_endpoint, stream=True)
 
         with (
-            NamedTemporaryFile(mode="wb", delete=True) as temp_zip_file,
+            NamedTemporaryFile(mode='wb', delete=True) as temp_zip_file,
             TemporaryDirectory() as zip_temp_dir,
         ):
             temp_zip_path = temp_zip_file.name
-            total_size = int(response.headers.get("content-length", 0))
-            print(
-                f"Temporary file for downloading: {temp_zip_path} with size: {total_size}"
-            )
+            total_size = int(response.headers.get('content-length', 0))
+            print(f"Temporary file for downloading: {temp_zip_path} with size: {total_size}")
 
             for chunk in response.iter_content(chunk_size=1024 * 1024):
                 temp_zip_file.write(chunk)
@@ -242,7 +227,7 @@ class CallMinerBulkBackfillConversation(BaseOperator):
 
             try:
                 # Open and extract the .zip file into the temporary directory
-                with ZipFile(temp_zip_path, "r") as zip_ref:
+                with ZipFile(temp_zip_path, 'r') as zip_ref:
                     zip_ref.extractall(zip_temp_dir)
                     print(f"File uncompressed successfully into {zip_temp_dir}")
             except BadZipFile:
@@ -250,9 +235,7 @@ class CallMinerBulkBackfillConversation(BaseOperator):
 
             for file in Path(zip_temp_dir).iterdir():
                 if file.as_posix().endswith("_Transcripts.csv.gz"):
-                    self.upload_to_s3(
-                        file.as_posix(), bucket=self.s3_bucket, key=self.s3_key
-                    )
+                    self.upload_to_s3(file.as_posix(), bucket=self.s3_bucket, key=self.s3_key)
 
         self.remove_job(job_id)
         print(f"export job {job_id} removed successfully")

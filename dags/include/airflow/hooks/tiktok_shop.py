@@ -30,16 +30,13 @@ class TiktokShopHook(BaseHook):
         }
         auth_url = f"https://{self.host}/api/v2/token/refresh"
         session = requests.session()
-        session.headers = {
-            "Accept": "application/json",
-            "Content-type": "application/json",
-        }
+        session.headers = {"Accept": "application/json", "Content-type": "application/json"}
         print("Generating an Access Token")
         response = session.get(url=auth_url, params=params)
         response.raise_for_status()
 
         rdict = response.json()
-        access_token = rdict["data"]["access_token"]
+        access_token = rdict['data']['access_token']
         session.headers.update({"x-tts-access-token": access_token})
         return session
 
@@ -77,8 +74,8 @@ class TiktokShopHook(BaseHook):
         files: dict = None,
     ):
         params = dict() if params is None else params
-        params["app_key"] = self.app_key
-        params["timestamp"] = int(time.time())
+        params['app_key'] = self.app_key
+        params['timestamp'] = int(time.time())
 
         sign = self._generate_signature(path, params, data)
         request_params = {"sign": sign, **params}
@@ -86,11 +83,7 @@ class TiktokShopHook(BaseHook):
         request_body = json.dumps(data) if data else None
 
         response = self.session.request(
-            method=method,
-            url=url + path,
-            params=request_params,
-            data=request_body,
-            files=files,
+            method=method, url=url + path, params=request_params, data=request_body, files=files
         )
         response.raise_for_status()
-        return response.json()["data"]
+        return response.json()['data']

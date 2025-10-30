@@ -13,7 +13,7 @@ class CognigyToS3Operator(BaseRowsToS3CsvOperator):
     def __init__(
         self,
         req_params,
-        cognigy_conn_id="cognigy_default",
+        cognigy_conn_id='cognigy_default',
         *args,
         **kwargs,
     ):
@@ -25,7 +25,7 @@ class CognigyToS3Operator(BaseRowsToS3CsvOperator):
         start_time = datetime.fromisoformat(start_time)
         end_time = datetime.fromisoformat(end_time)
         split_times = []
-        interval = timedelta(hours=self.req_params["interval"])
+        interval = timedelta(hours=self.req_params['interval'])
         current_time = start_time
         while current_time < end_time:
             split_times.append(current_time)
@@ -40,10 +40,12 @@ class CognigyToS3Operator(BaseRowsToS3CsvOperator):
 
     def get_rows(self) -> Iterator[dict]:
         conn = BaseHook.get_connection(self.cognigy_conn_id)
-        url = f"https://{conn.host}/{conn.extra_dejson.get('version')}/{self.req_params['endpoint']}/"
+        url = (
+            f"https://{conn.host}/{conn.extra_dejson.get('version')}/{self.req_params['endpoint']}/"
+        )
         self.log.info(f"Passed params are: {self.req_params}")
         split_times_full = self.split_dates(
-            self.req_params["start_time"], self.req_params["end_time"]
+            self.req_params['start_time'], self.req_params['end_time']
         )
         for i in range(len(split_times_full) - 1):
             self.log.info(
@@ -51,10 +53,10 @@ class CognigyToS3Operator(BaseRowsToS3CsvOperator):
             )
             par = {}
             if self.req_params["date_column"]:
-                par["$filter"] = (
+                par['$filter'] = (
                     f"{self.req_params['date_column']}%20gt%20{str(split_times_full[i]).replace(' ', 'T')}Z%20and%20{self.req_params['date_column']}%20lt%20{str(split_times_full[i+1]).replace(' ', 'T')}Z%20and%20projectId%20eq%20'{self.req_params['project_id']}'",
                 )
-            par["apikey"] = f"{conn.password}"
+            par['apikey'] = f'{conn.password}'
             response = requests.get(url=url, params=par)
             data = response.json()
             if response.status_code != 200:

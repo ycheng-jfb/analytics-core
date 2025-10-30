@@ -87,8 +87,8 @@ Enter:
 ## 6. Test S3 Access
 ```bash
 aws s3 ls                  # list all buckets
-aws s3 ls s3://my-bucket   # list contents of a bucket
-aws s3 ls s3://my-bucket --recursive --human-readable --summarize
+aws s3 ls s3://jfb.airflow.db   # list contents of a bucket
+aws s3 ls s3://jfb.airflow.db --recursive --human-readable --summarize
 ```
 
 ---
@@ -97,18 +97,3 @@ aws s3 ls s3://my-bucket --recursive --human-readable --summarize
 
 - If `aws` works in standalone Git Bash but not in PyCharm → ensure `-li` is set in terminal settings.  
 - If you see `bash: /c/Program: No such file or directory` → copy this to your .bashrc file `alias aws="\"/c/Program Files/Amazon/AWSCLIV2/aws.exe\""`.
-
----
-
-## 8. Pre-commit Setup (Ruff + sqlfluff)
-
-### Install pre-commit
-```bash
-pip install pre-commit
-```
-
-### Enable hooks in your repo
-Run this once:
-```bash
-pre-commit install
-```

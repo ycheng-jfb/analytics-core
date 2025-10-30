@@ -17,7 +17,9 @@ class Conn:
 
     @property
     def add_connection_cmd(self):
-        return f"airflow connections -a --conn_id {self.conn_id.lower()} --conn_uri '{self.conn_uri}'"
+        return (
+            f"airflow connections -a --conn_id {self.conn_id.lower()} --conn_uri '{self.conn_uri}'"
+        )
 
     @property
     def env_var(self):
@@ -112,9 +114,7 @@ class ParamManager:
             yield conn.env_var
 
     def print_connection_add_statements(self, path, exclusion_list=None):
-        for stmt in self.get_connection_add_statements(
-            path=path, exclusion_list=exclusion_list
-        ):
+        for stmt in self.get_connection_add_statements(path=path, exclusion_list=exclusion_list):
             print(stmt)
 
     def print_conn_env_vars(self, path, exclusion_list=None):
@@ -150,8 +150,6 @@ class ParamManager:
 
     def write_conns_to_file(self, local_path, ssm_path, exclusion_list=None):
         with open(local_path, "wt") as f:
-            for conn in self.get_conn_env_vars(
-                path=ssm_path, exclusion_list=exclusion_list
-            ):
+            for conn in self.get_conn_env_vars(path=ssm_path, exclusion_list=exclusion_list):
                 f.write(conn)
                 f.write("\n")

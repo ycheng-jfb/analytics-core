@@ -4,16 +4,16 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="administrator_warehouse",
+    table='administrator_warehouse',
     column_list=[
-        Column("administrator_id", "INT", uniqueness=True),
-        Column("warehouse_id", "INT", uniqueness=True),
-        Column("granter_administrator_id", "INT"),
-        Column("badge_id", "VARCHAR(50)"),
+        Column('administrator_id', 'INT', uniqueness=True),
+        Column('warehouse_id', 'INT', uniqueness=True),
+        Column('granter_administrator_id', 'INT'),
+        Column('badge_id', 'VARCHAR(50)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_added",
+    watermark_column='datetime_added',
 )

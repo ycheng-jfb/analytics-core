@@ -29,7 +29,7 @@ class BaseSnowflakeExportOperator(SnowflakeWatermarkSqlOperator):
         header=False,
         dialect="unix",
         lowercase_column_names=True,
-        warehouse="DA_WH_ETL_LIGHT",
+        warehouse='DA_WH_ETL_LIGHT',
         quoting=0,
         quotechar=None,
         *args,
@@ -67,7 +67,7 @@ class BaseSnowflakeExportOperator(SnowflakeWatermarkSqlOperator):
                         dialect=self.dialect,
                         delimiter=self.field_delimiter,
                         quoting=self.quoting,
-                        escapechar="\\",
+                        escapechar='\\',
                         quotechar=self.quotechar,
                     )
                 else:
@@ -76,7 +76,7 @@ class BaseSnowflakeExportOperator(SnowflakeWatermarkSqlOperator):
                         dialect=self.dialect,
                         delimiter=self.field_delimiter,
                         quoting=self.quoting,
-                        escapechar="\\",
+                        escapechar='\\',
                     )
                 rows = cur.fetchmany(self.batch_size)
                 if rows and self.header:
@@ -96,9 +96,7 @@ class BaseSnowflakeExportOperator(SnowflakeWatermarkSqlOperator):
 class SnowflakeToSFTPOperator(BaseSnowflakeExportOperator):
     template_fields = ["sql_or_path", "parameters", "filename", "sftp_dir"]
 
-    def __init__(
-        self, filename, sftp_dir, sftp_conn_id=conn_ids.SFTP.default, *args, **kwargs
-    ):
+    def __init__(self, filename, sftp_dir, sftp_conn_id=conn_ids.SFTP.default, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.sftp_conn_id = sftp_conn_id
         self.filename = filename
@@ -150,9 +148,7 @@ class SnowflakeToSFTPBatchOperator(BaseSnowflakeExportOperator):
 
     template_fields = ["sql_or_path", "parameters", "filename", "sftp_dir"]
 
-    def __init__(
-        self, filename, sftp_dir, sftp_conn_id=conn_ids.SFTP.default, *args, **kwargs
-    ):
+    def __init__(self, filename, sftp_dir, sftp_conn_id=conn_ids.SFTP.default, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.sftp_conn_id = sftp_conn_id
         self.filename = filename
@@ -194,17 +190,11 @@ class SnowflakeToSFTPBatchOperator(BaseSnowflakeExportOperator):
                 if not rows:
                     break
                 # Generate a file name based on the batch index
-                with tempfile.NamedTemporaryFile(
-                    delete=False, mode="w", newline=""
-                ) as temp_file:
+                with tempfile.NamedTemporaryFile(delete=False, mode='w', newline='') as temp_file:
                     csv_writer = csv.writer(temp_file)
                     csv_writer.writerows(rows)
-                    remote_path = Path(
-                        self.sftp_dir, self.filename.format(part=i)
-                    ).as_posix()
-                    self.upload_to_sftp(
-                        local_path=temp_file.name, remote_path=remote_path
-                    )
+                    remote_path = Path(self.sftp_dir, self.filename.format(part=i)).as_posix()
+                    self.upload_to_sftp(local_path=temp_file.name, remote_path=remote_path)
 
     def watermark_execute(self, context=None):
         sql = self.get_sql_cmd(self.sql_or_path)
@@ -222,10 +212,9 @@ class SnowflakeToWindowsShareOperator(BaseSnowflakeExportOperator):
         self.smb_conn_id = smb_conn_id
 
     def upload_to_share(self, remote_path, local_path):
+
         smb_hook = SMBHook(smb_conn_id=self.smb_conn_id)
-        smb_hook.upload(
-            share_name=self.share_name, local_path=local_path, remote_path=remote_path
-        )
+        smb_hook.upload(share_name=self.share_name, local_path=local_path, remote_path=remote_path)
 
     def watermark_execute(self, context=None):
         with tempfile.TemporaryDirectory() as td:
@@ -250,7 +239,7 @@ class SnowflakeToS3Operator(BaseSnowflakeExportOperator):
         bucket,
         key,
         s3_conn_id=conn_ids.AWS.tfg_default,
-        acl="bucket-owner-full-control",
+        acl='bucket-owner-full-control',
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -303,7 +292,7 @@ class SnowflakeToSMBOperator(BaseSnowflakeExportOperator):
         share_name,
         smb_conn_id=conn_ids.SMB.default,
         header=True,
-        file_format="xlsx",
+        file_format='xlsx',
         **kwargs,
     ):
         self.remote_path = remote_path
@@ -314,13 +303,12 @@ class SnowflakeToSMBOperator(BaseSnowflakeExportOperator):
         super().__init__(**kwargs)
 
     def write_to_file(self, query, local_path):
-        session_parameters = {"QUERY_TAG": f"{self.dag_id},{self.task_id}"}
+        session_parameters = {'QUERY_TAG': f'{self.dag_id},{self.task_id}'}
         hook = SnowflakeHook(
-            snowflake_conn_id=self.snowflake_conn_id,
-            session_parameters=session_parameters,
+            snowflake_conn_id=self.snowflake_conn_id, session_parameters=session_parameters
         )
         query_result = hook.get_pandas_df(sql=query)
-        if self.file_format == "xlsx":
+        if self.file_format == 'xlsx':
             query_result.to_excel(local_path, index=None, header=True)
         else:
             query_result.to_csv(local_path, index=None, header=True)
@@ -328,9 +316,7 @@ class SnowflakeToSMBOperator(BaseSnowflakeExportOperator):
     def upload_to_smb(self, local_path):
         smb_hook = SMBHook(smb_conn_id=self.smb_conn_id)
         smb_hook.upload(
-            share_name=self.share_name,
-            remote_path=self.remote_path,
-            local_path=local_path,
+            share_name=self.share_name, remote_path=self.remote_path, local_path=local_path
         )
 
     def watermark_execute(self, context=None):
@@ -360,7 +346,7 @@ class SnowflakeToSMBExcelOperator(BaseOperator):
         header: if you want the excel file to have header or just data
     """
 
-    template_fields = ["remote_path"]
+    template_fields = ['remote_path']
 
     def __init__(
         self,
@@ -368,7 +354,7 @@ class SnowflakeToSMBExcelOperator(BaseOperator):
         remote_path,
         share_name,
         snowflake_conn_id=conn_ids.Snowflake.default,
-        warehouse="DA_WH_ETL_LIGHT",
+        warehouse='DA_WH_ETL_LIGHT',
         smb_conn_id=conn_ids.SMB.default,
         header=True,
         **kwargs,
@@ -394,10 +380,9 @@ class SnowflakeToSMBExcelOperator(BaseOperator):
             query: snowflake query
             local_path: temporary path
         """
-        session_parameters = {"QUERY_TAG": f"{self.dag_id},{self.task_id}"}
+        session_parameters = {'QUERY_TAG': f'{self.dag_id},{self.task_id}'}
         hook = SnowflakeHook(
-            snowflake_conn_id=self.snowflake_conn_id,
-            session_parameters=session_parameters,
+            snowflake_conn_id=self.snowflake_conn_id, session_parameters=session_parameters
         )
         query_result = hook.get_pandas_df(sql=query)
 
@@ -418,9 +403,7 @@ class SnowflakeToSMBExcelOperator(BaseOperator):
         """
         smb_hook = SMBHook(smb_conn_id=self.smb_conn_id)
         smb_hook.upload(
-            share_name=self.share_name,
-            remote_path=self.remote_path,
-            local_path=local_path,
+            share_name=self.share_name, remote_path=self.remote_path, local_path=local_path
         )
 
     def execute(self, context):

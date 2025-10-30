@@ -28,8 +28,7 @@ def convert_tables_to_transient(cur, config):
                 sql_convert_to_transient += sql_formatted + "\n\n"
 
             write_to_file(
-                f"convert_to_transient_{db}_{schema[0]}.txt".lower(),
-                sql_convert_to_transient,
+                f"convert_to_transient_{db}_{schema[0]}.txt".lower(), sql_convert_to_transient
             )
             print(f"convert_to_transient_{db}_{schema[0]}.txt".lower())
         else:
@@ -37,16 +36,13 @@ def convert_tables_to_transient(cur, config):
                 sql_convert_to_transient = ""
                 tables = get_table_list(cur, db, sc)
                 for t in tables:
-                    if sc == "STG" and t[0][-4:].lower() != "_stg":
+                    if sc == "STG" and t[0][-4:].lower() != '_stg':
                         continue
                     fq_table_name = f"{db}.{sc}.{t[0]}".lower()
-                    sql_formatted = sql_template_transient.format(
-                        table_name=fq_table_name
-                    )
+                    sql_formatted = sql_template_transient.format(table_name=fq_table_name)
                     sql_convert_to_transient += sql_formatted + "\n\n"
                 write_to_file(
-                    f"convert_to_transient_{db}_{sc}.txt".lower(),
-                    sql_convert_to_transient,
+                    f"convert_to_transient_{db}_{sc}.txt".lower(), sql_convert_to_transient
                 )
                 print(f"convert_to_transient_{db}_{sc}.txt".lower())
 
@@ -65,16 +61,14 @@ def modify_retention_days(cur, config):
                 )
                 final_sql += sql_formatted + "\n"
 
-            write_to_file(
-                f"modify_retention_days_{db}_{schema[0]}.txt".lower(), final_sql
-            )
+            write_to_file(f"modify_retention_days_{db}_{schema[0]}.txt".lower(), final_sql)
             print(f"modify_retention_days_{db}_{schema[0]}.txt".lower())
         else:
             for sc in schema:
                 final_sql = ""
                 tables = get_table_list(cur, db, sc)
                 for t in tables:
-                    if sc == "STG" and t[0][-4:].lower() == "_stg":
+                    if sc == "STG" and t[0][-4:].lower() == '_stg':
                         continue
                     fq_table_name = f"{db}.{sc}.{t[0]}".lower()
                     sql_formatted = sql_template_retention.format(

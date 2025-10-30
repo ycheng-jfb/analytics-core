@@ -2,10 +2,7 @@ import pendulum
 from airflow.models import DAG
 from include.airflow.callbacks.slack import slack_failure_edm
 from include.airflow.operators.snowflake import SnowflakeProcedureOperator
-from include.airflow.operators.snowflake_load import (
-    CopyConfigCsv,
-    SnowflakeIncrementalLoadOperator,
-)
+from include.airflow.operators.snowflake_load import CopyConfigCsv, SnowflakeIncrementalLoadOperator
 from include.airflow.operators.tiktok_shop import (
     TiktokShopEndpointToS3Operator,
     TiktokShopInventoryToS3Operator,
@@ -22,7 +19,7 @@ from task_configs.dag_config.tiktok_shop_config import (
 default_args = {
     "start_date": pendulum.datetime(2024, 4, 1, tz="America/Los_Angeles"),
     "retries": 1,
-    "owner": owners.data_integrations,
+    'owner': owners.data_integrations,
     "email": email_lists.data_integration_support,
     "on_failure_callback": slack_failure_edm,
 }
@@ -53,21 +50,21 @@ with dag:
         inventory_to_s3_tasks.append(inventory_to_s3)
 
     inventory_to_snowflake = SnowflakeIncrementalLoadOperator(
-        task_id="tiktok_shop_inventory_to_snowflake",
+        task_id='tiktok_shop_inventory_to_snowflake',
         database="lake",
         staging_database="lake_stg",
         schema="tiktok_shop",
         table="inventory",
         column_list=inventory_column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{inventory_s3_prefix}/",
-        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=3),
+        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=3),
         initial_load=True,
     )
 
     transform_inventory = SnowflakeProcedureOperator(
-        database="lake",
-        procedure="tiktok_shop.inventory_report.sql",
-        watermark_tables=["lake.tiktok_shop.inventory"],
+        database='lake',
+        procedure='tiktok_shop.inventory_report.sql',
+        watermark_tables=['lake.tiktok_shop.inventory'],
     )
 
     inventory_to_s3_tasks >> inventory_to_snowflake >> transform_inventory
@@ -90,30 +87,32 @@ with dag:
         product_to_s3_tasks.append(product_to_s3)
 
     product_to_snowflake = SnowflakeIncrementalLoadOperator(
-        task_id="tiktok_shop_product_to_snowflake",
+        task_id='tiktok_shop_product_to_snowflake',
         database="lake",
         staging_database="lake_stg",
         schema="tiktok_shop",
         table="product",
         column_list=product_column_list,
         files_path=f"{stages.tsos_da_int_inbound}/{product_s3_prefix}/",
-        copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=3),
+        copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=3),
         initial_load=True,
     )
 
     transform_product = SnowflakeProcedureOperator(
-        database="lake",
-        procedure="tiktok_shop.product_report.sql",
-        watermark_tables=["lake.tiktok_shop.product"],
+        database='lake',
+        procedure='tiktok_shop.product_report.sql',
+        watermark_tables=['lake.tiktok_shop.product'],
     )
 
     product_to_s3_tasks >> product_to_snowflake >> transform_product
 
     for cfg in tiktok_shop_config_list:
+
         s3_prefix = f"lake/tiktok_shop/{cfg.table}"
         to_s3_tasks = []
 
         for shop in tiktok_shop_connection_list:
+
             to_s3 = TiktokShopEndpointToS3Operator(
                 task_id=f"{shop.name}_tiktok_shop_{cfg.table}_to_s3",
                 bucket=s3_buckets.tsos_da_int_inbound,
@@ -130,26 +129,26 @@ with dag:
             to_s3_tasks.append(to_s3)
 
         to_snowflake = SnowflakeIncrementalLoadOperator(
-            task_id=f"tiktok_shop_{cfg.table}_load_to_snowflake",
+            task_id=f'tiktok_shop_{cfg.table}_load_to_snowflake',
             database=cfg.database,
             staging_database=cfg.staging_database,
             schema=cfg.schema,
             table=cfg.table,
             column_list=cfg.column_list,
             files_path=f"{stages.tsos_da_int_inbound}/{s3_prefix}/",
-            copy_config=CopyConfigCsv(field_delimiter="\t", header_rows=0, skip_pct=3),
+            copy_config=CopyConfigCsv(field_delimiter='\t', header_rows=0, skip_pct=3),
             initial_load=True,
         )
 
         transform = SnowflakeProcedureOperator(
-            database="lake",
+            database='lake',
             procedure=cfg.transform_procedure,
             watermark_tables=[f"{cfg.database}.{cfg.schema}.{cfg.table}"],
         )
 
         if cfg.table == "orders":
             transform_order_line = SnowflakeProcedureOperator(
-                database="lake",
+                database='lake',
                 procedure="tiktok_shop.order_line.sql",
                 watermark_tables=[f"{cfg.database}.{cfg.schema}.{cfg.table}"],
             )

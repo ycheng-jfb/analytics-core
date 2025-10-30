@@ -6,10 +6,7 @@ from typing import Union
 import pandas as pd
 import requests
 from include.airflow.hooks.snowflake import SnowflakeHook
-from include.airflow.operators.snowflake import (
-    BaseSnowflakeOperator,
-    get_effective_database,
-)
+from include.airflow.operators.snowflake import BaseSnowflakeOperator, get_effective_database
 from include.config import conn_ids
 from include.utils import snowflake
 from include.utils.context_managers import ConnClosing
@@ -33,26 +30,22 @@ class SavageXImageUrlOperator(BaseSnowflakeOperator):
     def __init__(
         self,
         sku_query_or_path: Union[str, Path],
-        sku_type: str = "Product",
+        sku_type: str = 'Product',
         output_table: str = None,
-        base_product_url="https://cdn.savagex.com/media/images/products",
+        base_product_url='https://cdn.savagex.com/media/images/products',
         break_count=100000,
         task_id=None,
         **kwargs,
     ):
         self.base_product_url = base_product_url
-        if sku_type not in ["Product", "Set"]:
-            raise Exception(
-                "The only acceptable sku types are one of ['Product', 'Set']"
-            )
+        if sku_type not in ['Product', 'Set']:
+            raise Exception("The only acceptable sku types are one of ['Product', 'Set']")
         self.sku_query_or_path = sku_query_or_path
         self.sku_type = sku_type
         output_table = (
-            output_table
-            if output_table
-            else f"edw.reference.{sku_type.lower()}_image_url_sxf"
+            output_table if output_table else f"edw.reference.{sku_type.lower()}_image_url_sxf"
         )
-        database, self.schema, self.table = output_table.split(".")
+        database, self.schema, self.table = output_table.split('.')
         self.database = database
         self.break_count = break_count
         self.output_table = output_table
@@ -89,10 +82,10 @@ class SavageXImageUrlOperator(BaseSnowflakeOperator):
                 url,
                 stream=True,
                 headers={
-                    "User-Agent": "python-requests/2.31.0 tfg_bypass_bot",
-                    "Accept-Encoding": "gzip, deflate",
-                    "Accept": "*/*",
-                    "Connection": "keep-alive",
+                    'User-Agent': 'python-requests/2.31.0 tfg_bypass_bot',
+                    'Accept-Encoding': 'gzip, deflate',
+                    'Accept': '*/*',
+                    'Connection': 'keep-alive',
                 },
             )
             response.raise_for_status()
@@ -102,18 +95,18 @@ class SavageXImageUrlOperator(BaseSnowflakeOperator):
 
     def create_original_url(self, product_sku, product_name):
         clean_product_name = product_name.replace(
-            product_name.strip(), product_name.strip().replace(" ", "-")
+            product_name.strip(), product_name.strip().replace(' ', '-')
         )
         return (
-            f"{self.base_product_url}/{product_sku}/"
-            f"{clean_product_name}-{product_sku}-1-600x800.jpg"
+            f'{self.base_product_url}/{product_sku}/'
+            f'{clean_product_name}-{product_sku}-1-600x800.jpg'
         )
 
     def create_url(self, product_sku, permalink):
-        return f"{self.base_product_url}/{product_sku}/{permalink}-1-600x800.jpg"
+        return f'{self.base_product_url}/{product_sku}/{permalink}-1-600x800.jpg'
 
     def create_laydown(self, product_sku, permalink):
-        return f"{self.base_product_url}/{product_sku}/{permalink}-LAYDOWN-600x800.jpg"
+        return f'{self.base_product_url}/{product_sku}/{permalink}-LAYDOWN-600x800.jpg'
 
     def product_url_program(self, sku, product_type, df_skus):
         # First try to make the url with the self.create_original_url...
@@ -122,12 +115,12 @@ class SavageXImageUrlOperator(BaseSnowflakeOperator):
         name_list_sec = df_skus[df_skus.product_sku == sku].label.unique().tolist()
         found_working_url = False
         for name in name_list:
-            if product_type == "Product":
-                name = re.sub(r" \(.*\)", "", name)
-                name = re.sub(r"&", "and", name)
+            if product_type == 'Product':
+                name = re.sub(r' \(.*\)', '', name)
+                name = re.sub(r'&', 'and', name)
             else:
-                name = re.sub(r"&", "and", name)
-                name = re.sub(r"'", "", name)
+                name = re.sub(r'&', 'and', name)
+                name = re.sub(r"'", '', name)
             if self.check_url(self.create_original_url(sku, name)):
                 url = self.create_original_url(sku, name)
                 found_working_url = True
@@ -136,14 +129,14 @@ class SavageXImageUrlOperator(BaseSnowflakeOperator):
 
         # if labels in ultra_merchant.product does not work,
         # check with labels in ultra_merchant_history.product
-        if not found_working_url and product_type == "Product":
+        if not found_working_url and product_type == 'Product':
             for name in name_list_sec:
-                name = re.sub(r" \(.*\)", "", name)
-                name = re.sub(r"&", "and", name)
-                name = re.sub(r"NEW ", "", name)
-                name = re.sub(r"[\',.!?;]", "", name)
-                name = re.sub(r"/", "-", name)
-                name = re.sub(r"\+", "and", name)
+                name = re.sub(r' \(.*\)', '', name)
+                name = re.sub(r'&', 'and', name)
+                name = re.sub(r"NEW ", '', name)
+                name = re.sub(r'[\',.!?;]', '', name)
+                name = re.sub(r'/', '-', name)
+                name = re.sub(r'\+', 'and', name)
                 name = name.translate(translation_table)
                 if self.check_url(self.create_original_url(sku, name)):
                     url = self.create_original_url(sku, name)
@@ -157,29 +150,23 @@ class SavageXImageUrlOperator(BaseSnowflakeOperator):
                     break
 
         # Now make it with second call if it didn't work with first...
-        if not found_working_url and product_type == "Product":
-            mpid_list = (
-                df_skus[df_skus.product_sku == sku].master_product_id.unique().tolist()
-            )
-            name = df_skus[df_skus.product_sku == sku].product_name.reset_index(
-                drop=True
-            )[0]
+        if not found_working_url and product_type == 'Product':
+            mpid_list = df_skus[df_skus.product_sku == sku].master_product_id.unique().tolist()
+            name = df_skus[df_skus.product_sku == sku].product_name.reset_index(drop=True)[0]
             for i, mpid in enumerate(mpid_list):
-                redirect = self.check_url(f"https://www.savagex.com/products/{mpid}")
+                redirect = self.check_url(f'https://www.savagex.com/products/{mpid}')
                 print(f"SKU: {sku}. MPid {i + 1} of {len(mpid_list)}. MPid = {mpid}")
                 if redirect:
                     # Fix up the thingy and then send it to the other..
                     permalink = re.search(
-                        r"(?<=https://www.savagex.com/shop/).*(?=-\d*\Z)", redirect
+                        r'(?<=https://www.savagex.com/shop/).*(?=-\d*\Z)', redirect
                     )
                     if permalink:
                         permalink = permalink[0]
 
                     # Ignoring checking urls with permalink as None to avoid 404 errors.
                     if permalink is None:
-                        print(
-                            f"Permalink is None for SKU: {sku}, mpid: {mpid}. Skipping....."
-                        )
+                        print(f'Permalink is None for SKU: {sku}, mpid: {mpid}. Skipping.....')
                         continue
 
                     url = self.create_url(sku, permalink)
@@ -197,33 +184,28 @@ class SavageXImageUrlOperator(BaseSnowflakeOperator):
             link_exists = 1
         else:
             link_exists = 0
-            url = "https://i.imgur.com/lHE8O17.jpg"
+            url = 'https://i.imgur.com/lHE8O17.jpg'
             print(f"{sku} {name} will use default url {url}")
         return [sku, link_exists, product_type, url]
 
     def find_working_urls(self, df_skus, product_type, break_count):
         rows = []
         dead_link_count = 0
-        df_skus["product_sku"] = df_skus.groupby(
-            df_skus["product_sku"].str.lower().str.strip()
-        )["product_sku"].transform("first")
+        df_skus['product_sku'] = df_skus.groupby(df_skus['product_sku'].str.lower().str.strip())[
+            'product_sku'
+        ].transform('first')
         sku_list = list(df_skus.product_sku.unique())
         sku_list.reverse()
 
         with ThreadPoolExecutor() as executor:
             futures = [
                 executor.submit(
-                    self.product_url_program,
-                    sku=sku,
-                    product_type=product_type,
-                    df_skus=df_skus,
+                    self.product_url_program, sku=sku, product_type=product_type, df_skus=df_skus
                 )
                 for sku in sku_list
             ]
             for count, future in enumerate(as_completed(futures), 1):
-                print(
-                    f"SKU {count} completed with running percent of {dead_link_count / count}"
-                )
+                print(f'SKU {count} completed with running percent of {dead_link_count / count}')
                 result = future.result()
                 if not result[1]:
                     dead_link_count += 1
@@ -232,18 +214,12 @@ class SavageXImageUrlOperator(BaseSnowflakeOperator):
                     break
 
         df = pd.DataFrame(
-            rows,
-            columns=[
-                "product_sku",
-                "returns_product_image",
-                "product_type",
-                "image_url",
-            ],
+            rows, columns=['product_sku', 'returns_product_image', 'product_type', 'image_url']
         )
         total_links = df_skus.product_sku.unique().shape[0]
         print(
-            f"There were {dead_link_count} of {total_links} links not working i.e. "
-            f"{dead_link_count / total_links}"
+            f'There were {dead_link_count} of {total_links} links not working i.e. '
+            f'{dead_link_count / total_links}'
         )
         return df
 
@@ -251,9 +227,7 @@ class SavageXImageUrlOperator(BaseSnowflakeOperator):
         self.database = get_effective_database(self.database, self)
         self.output_table = f"{self.database}.{self.schema}.{self.table}"
         snowflake_hook = SnowflakeHook(
-            snowflake_conn_id=conn_ids.Snowflake.default,
-            database=self.database,
-            schema=self.schema,
+            snowflake_conn_id=conn_ids.Snowflake.default, database=self.database, schema=self.schema
         )
         query_tag = snowflake.generate_query_tag_cmd(self.dag_id, self.task_id)
         with ConnClosing(snowflake_hook.get_conn()) as conn, conn.cursor() as cursor:
@@ -261,7 +235,7 @@ class SavageXImageUrlOperator(BaseSnowflakeOperator):
             df = pd.read_sql(self.sku_query, con=conn)
             df_skus = df.rename(columns=str.lower)
             df_urls = self.find_working_urls(df_skus, self.sku_type, self.break_count)
-            sql_cmd = f"truncate table {self.database}.{self.schema}.{self.table}"
+            sql_cmd = f'truncate table {self.database}.{self.schema}.{self.table}'
             cursor.execute(sql_cmd)
             write_pandas(
                 conn=conn,

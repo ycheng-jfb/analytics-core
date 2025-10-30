@@ -12,16 +12,16 @@ from include.utils.context_managers import ConnClosing
 from include.utils.snowflake import generate_query_tag_cmd
 
 default_args = {
-    "depends_on_past": False,
-    "start_date": pendulum.datetime(2019, 1, 1, 7, tz="America/Los_Angeles"),
-    "retries": 1,
-    "owner": owners.jfb_analytics,
-    "email": analytics_support,
+    'depends_on_past': False,
+    'start_date': pendulum.datetime(2019, 1, 1, 7, tz='America/Los_Angeles'),
+    'retries': 1,
+    'owner': owners.jfb_analytics,
+    'email': analytics_support,
 }
 
 
 def check_the_time(next_execution_date: pendulum.datetime, **kwargs):
-    run_time = next_execution_date.in_timezone("America/Los_Angeles")
+    run_time = next_execution_date.in_timezone('America/Los_Angeles')
     if run_time.hour < 12:
         return [gfb059_finance_daily_sales.task_id]
     elif run_time.hour >= 12:
@@ -35,14 +35,12 @@ class check_total_cac_output(BaseSensorOperator):
         self,
         snowflake_conn_id=conn_ids.Snowflake.default,
         poke_interval=60 * 5,
-        mode="reschedule",
+        mode='reschedule',
         timeout=60 * 60,
         **kwargs,
     ):
         self.snowflake_conn_id = snowflake_conn_id
-        super().__init__(
-            **kwargs, poke_interval=poke_interval, mode=mode, timeout=timeout
-        )
+        super().__init__(**kwargs, poke_interval=poke_interval, mode=mode, timeout=timeout)
 
     def snowflake_hook(self):
         return SnowflakeHook(
@@ -68,7 +66,7 @@ class check_total_cac_output(BaseSensorOperator):
             result = cur.fetchone()
 
         if result is None or result[0] != 1:
-            print("Retrying")
+            print('Retrying')
             return False
 
         print("Job Executed")
@@ -80,14 +78,12 @@ class check_daily_cash_output(BaseSensorOperator):
         self,
         snowflake_conn_id=conn_ids.Snowflake.default,
         poke_interval=60 * 5,
-        mode="reschedule",
+        mode='reschedule',
         timeout=60 * 60,
         **kwargs,
     ):
         self.snowflake_conn_id = snowflake_conn_id
-        super().__init__(
-            **kwargs, poke_interval=poke_interval, mode=mode, timeout=timeout
-        )
+        super().__init__(**kwargs, poke_interval=poke_interval, mode=mode, timeout=timeout)
 
     def snowflake_hook(self):
         return SnowflakeHook(
@@ -113,7 +109,7 @@ class check_daily_cash_output(BaseSensorOperator):
             result = cur.fetchone()
 
         if result is None or result[0] != 1:
-            print("Retrying")
+            print('Retrying')
             return False
 
         print("Job Executed")
@@ -131,37 +127,37 @@ dag = DAG(
 
 with dag:
     gfb059_finance_daily_sales = SnowflakeProcedureOperator(
-        procedure="gfb.gfb059_finance_daily_sales.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb059_finance_daily_sales.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     tableau_refresh_gfb059_finance_daily_sales = TableauRefreshOperator(
-        task_id="tableau_refresh_gfb059_finance_daily_sales",
-        data_source_name="GFB059_FINANCE_DAILY_SALES",
+        task_id='tableau_refresh_gfb059_finance_daily_sales',
+        data_source_name='GFB059_FINANCE_DAILY_SALES',
     )
 
     gfb055_02_outlook_gsheet_hist = SnowflakeProcedureOperator(
-        procedure="gfb.gfb055_02_outlook_gsheet_hist.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb055_02_outlook_gsheet_hist.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb055_01_outlook_metrics = SnowflakeProcedureOperator(
-        procedure="gfb.gfb055_01_outlook_metrics.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb055_01_outlook_metrics.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     gfb055_month_end_kpi = SnowflakeProcedureOperator(
-        procedure="gfb.gfb055_month_end_kpi.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb055_month_end_kpi.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     tableau_refresh_gfb055_month_end_kpi = TableauRefreshOperator(
-        task_id="tableau_refresh_gfb055_month_end_kpi",
-        data_source_name="GFB055_MONTH_END_KPI",
+        task_id='tableau_refresh_gfb055_month_end_kpi',
+        data_source_name='GFB055_MONTH_END_KPI',
     )
 
     # check_the_time_task = BranchPythonOperator(
@@ -170,25 +166,25 @@ with dag:
     # )
 
     gfb055_01_01_outlook_supplement = SnowflakeProcedureOperator(
-        procedure="gfb.gfb055_01_01_outlook_supplement.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb055_01_01_outlook_supplement.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     tableau_refresh_gfb055_01_01_outlook_supplement = TableauRefreshOperator(
-        task_id="tableau_refresh_gfb055_01_01_outlook_supplement",
-        data_source_name="GFB055_01_01_OUTLOOK_SUPPLEMENT",
+        task_id='tableau_refresh_gfb055_01_01_outlook_supplement',
+        data_source_name='GFB055_01_01_OUTLOOK_SUPPLEMENT',
     )
 
     gfb076_daily_sales_refresh = SnowflakeProcedureOperator(
-        procedure="gfb.gfb076_daily_sales_refresh.sql",
-        database="reporting_prod",
+        procedure='gfb.gfb076_daily_sales_refresh.sql',
+        database='reporting_prod',
         autocommit=False,
     )
 
     tableau_refresh_gfb076_daily_sales_refresh = TableauRefreshOperator(
-        task_id="tableau_refresh_gfb076_daily_sales_refresh",
-        data_source_name="GFB076_DAILY_SALES_REFRESH",
+        task_id='tableau_refresh_gfb076_daily_sales_refresh',
+        data_source_name='GFB076_DAILY_SALES_REFRESH',
     )
 
     # layer 1 joins

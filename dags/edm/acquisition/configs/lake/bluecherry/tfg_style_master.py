@@ -2,12 +2,12 @@ from include.utils.acquisition.table_config import TableConfig
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    linked_server="bluecherry",
-    database="datafbpr",
-    schema="dbo",
-    table="tfg_style_master",
-    watermark_column="datetime_transaction",
-    schema_version_prefix="v4",
+    linked_server='bluecherry',
+    database='datafbpr',
+    schema='dbo',
+    table='tfg_style_master',
+    watermark_column='datetime_transaction',
+    schema_version_prefix='v4',
     column_list=[
         Column("style_key", "INT", source_name="styleKey", uniqueness=True),
         Column("style_color_key", "INT", source_name="styleColorKey", uniqueness=True),

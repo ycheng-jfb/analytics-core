@@ -16,8 +16,8 @@ from airflow import configuration as airflow_conf
 SQL_ALCHEMY_CONN_URI = None
 SQL_ALCHEMY_SCHEMA = None
 CLUSTER_BASE_URL = airflow_conf.get(
-    "webserver", "base_url", fallback="http://localhost:8080"
-).rstrip("/")
+    'webserver', 'base_url', fallback='http://localhost:8080'
+).rstrip('/')
 
 
 def initialize():
@@ -29,18 +29,18 @@ def initialize():
     global SQL_ALCHEMY_SCHEMA
 
     default_conn_uri = f"sqlite:///{AIRFLOW_HOME}/airflow.db"
-    conf_conn = tfg_conf.get("core", "sql_alchemy_conn", fallback=default_conn_uri)
+    conf_conn = tfg_conf.get('core', 'sql_alchemy_conn', fallback=default_conn_uri)
     conn = (
-        os.environ.get("AIRFLOW__TFGMETA__SQL_ALCHEMY_CONN")
-        or os.environ.get("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN")
+        os.environ.get('AIRFLOW__TFGMETA__SQL_ALCHEMY_CONN')
+        or os.environ.get('AIRFLOW__DATABASE__SQL_ALCHEMY_CONN')
         or conf_conn
     )
-    if urlparse(conn).scheme == "sqlite":
-        SQL_ALCHEMY_CONN_URI = conn.replace("airflow.db", "tfg_meta.db")
+    if urlparse(conn).scheme == 'sqlite':
+        SQL_ALCHEMY_CONN_URI = conn.replace('airflow.db', 'tfg_meta.db')
         SQL_ALCHEMY_SCHEMA = None
     else:
         SQL_ALCHEMY_CONN_URI = conn
-        SQL_ALCHEMY_SCHEMA = "tfg_meta"
+        SQL_ALCHEMY_SCHEMA = 'tfg_meta'
 
 
 @contextlib.contextmanager
@@ -51,9 +51,7 @@ def create_session():
     """
     engine = create_engine(SQL_ALCHEMY_CONN_URI)
 
-    Session = sessionmaker(
-        autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
-    )
+    Session = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
     """
     Contextmanager that will create and teardown a session.
     """
@@ -80,12 +78,10 @@ def provide_session(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        arg_session = "session"
+        arg_session = 'session'
 
         func_params = func.__code__.co_varnames
-        session_in_args = arg_session in func_params and func_params.index(
-            arg_session
-        ) < len(args)
+        session_in_args = arg_session in func_params and func_params.index(arg_session) < len(args)
         session_in_kwargs = arg_session in kwargs
 
         if session_in_kwargs or session_in_args:

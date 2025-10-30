@@ -15,7 +15,7 @@ class OmnishopInventoryS3ObjectToS3(BaseOperator):
         s3_conn_id: str,
         key: str,
         bucket: str,
-        omnishop_conn_id="omnishop_s3_conn",
+        omnishop_conn_id='omnishop_s3_conn',
         *args,
         **kwargs,
     ):

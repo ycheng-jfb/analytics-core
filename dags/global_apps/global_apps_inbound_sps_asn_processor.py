@@ -15,31 +15,24 @@ from include.airflow.operators.snowflake import (
     TableDependencyTzLtz,
 )
 from include.airflow.operators.snowflake_load import SnowflakeCopyOperator
-from include.config import (
-    conn_ids,
-    email_lists,
-    owners,
-    s3_buckets,
-    snowflake_roles,
-    stages,
-)
+from include.config import conn_ids, email_lists, owners, s3_buckets, snowflake_roles, stages
 from include.utils.context_managers import ConnClosing
 from include.utils.snowflake import generate_query_tag_cmd
 from include.utils.string import unindent
 
 default_args = {
-    "start_date": pendulum.datetime(2020, 1, 1, tz="America/Los_Angeles"),
-    "retries": 1,
-    "owner": owners.data_integrations,
-    "email": email_lists.data_integration_support,
-    "on_failure_callback": slack_failure_gsc,
+    'start_date': pendulum.datetime(2020, 1, 1, tz='America/Los_Angeles'),
+    'retries': 1,
+    'owner': owners.data_integrations,
+    'email': email_lists.data_integration_support,
+    'on_failure_callback': slack_failure_gsc,
 }
 
 
 dag = DAG(
-    dag_id="global_apps_inbound_sps_asn_processor",
+    dag_id='global_apps_inbound_sps_asn_processor',
     default_args=default_args,
-    schedule="*/60 * * * *",
+    schedule='*/60 * * * *',
     catchup=False,
     max_active_tasks=6,
     max_active_runs=1,
@@ -67,9 +60,7 @@ class SnowflakeToMsSql(SnowflakeWatermarkSqlOperator):
             return f.read()
 
     def watermark_execute(self, context=None):
-        ms_hook = MsSqlOdbcHook(
-            mssql_conn_id=self.mssql_conn_id, database=self.mssql_db_name
-        )
+        ms_hook = MsSqlOdbcHook(mssql_conn_id=self.mssql_conn_id, database=self.mssql_db_name)
         export_cmd = self.read_sql_from_file(self.sql_or_path)
         with ConnClosing(self.snowflake_hook.get_conn()) as conn, conn.cursor() as cur:
             query_tag = generate_query_tag_cmd(self.dag_id, self.task_id)
@@ -80,7 +71,7 @@ class SnowflakeToMsSql(SnowflakeWatermarkSqlOperator):
             df.to_sql(
                 name=self.mssql_table_name,
                 con=conn_mssql,
-                if_exists="append",
+                if_exists='append',
                 schema=self.mssql_schema_name,
                 index=False,
             )
@@ -95,22 +86,22 @@ class ExportConfig:
     export_sql: str
     target_table_name: str
     dependency_table: str
-    database = "export"
+    database = 'export'
 
     @property
     def to_mssql_operator(self):
         return SnowflakeToMsSql(
-            task_id=f"{self.database}_{self.export_sql}",
+            task_id=f'{self.database}_{self.export_sql}',
             mssql_conn_id=conn_ids.MsSql.dbp40_app_airflow_rw,
-            mssql_db_name="ultrawarehouse",
-            mssql_schema_name="dbo",
+            mssql_db_name='ultrawarehouse',
+            mssql_schema_name='dbo',
             mssql_table_name=self.target_table_name,
             sql_or_path=Path(SQL_DIR, self.database, "procedures", self.export_sql),
-            initial_load_value="1900-01-01",
+            initial_load_value='1900-01-01',
             watermark_tables=[
                 TableDependencyTzLtz(
                     table_name=self.dependency_table,
-                    column_name="meta_create_datetime",
+                    column_name='meta_create_datetime',
                 )
             ],
         )
@@ -130,7 +121,7 @@ class ProcessConfig:
     reporting_procedure: str
 
     def __post_init__(self):
-        self.s3_prefix = self.s3_location.split("/", 1)[1]
+        self.s3_prefix = self.s3_location.split('/', 1)[1]
         self.reporting_dependency_table = self.table_name
 
     @property
@@ -143,7 +134,7 @@ class ProcessConfig:
             email_on_retry=False,
             s3_conn_id=self.s3_conn_id,
             files_per_batch=100,
-            remote_dir="/out",
+            remote_dir='/out',
             file_pattern=self.remote_file_pattern,
             remove_remote_files=True,
         )
@@ -167,7 +158,7 @@ class ProcessConfig:
     @property
     def snowflake_copy_operator(self):
         return SnowflakeCopyOperator(
-            task_id=f"to_{self.table_name}",
+            task_id=f'to_{self.table_name}',
             snowflake_conn_id=conn_ids.Snowflake.default,
             role=snowflake_roles.etl_service_account,
             sql_or_path=self.generate_copy_command(
@@ -180,15 +171,15 @@ class ProcessConfig:
     @property
     def reporting_operator(self):
         return SnowflakeProcedureOperator(
-            database="reporting_prod",
+            database='reporting_prod',
             procedure=self.reporting_procedure,
             watermark_tables=[
                 TableDependencyTzLtz(
                     table_name=self.reporting_dependency_table,
-                    column_name="meta_create_datetime",
+                    column_name='meta_create_datetime',
                 )
             ],
-            warehouse="DA_WH_ETL_LIGHT",
+            warehouse='DA_WH_ETL_LIGHT',
         )
 
     @property
@@ -204,14 +195,14 @@ with dag:
     cfg_in_asn = ProcessConfig(
         s3_bucket=s3_buckets.tsos_da_int_inbound,
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
-        s3_location=f"{stages.tsos_da_int_inbound}/lake/sps.asn/v2/",
-        table_name="lake.sps.asn",
-        remote_file_pattern="SH_*.xml",
-        reporting_procedure="sps.asn.sql",
+        s3_location=f'{stages.tsos_da_int_inbound}/lake/sps.asn/v2/',
+        table_name='lake.sps.asn',
+        remote_file_pattern='SH_*.xml',
+        reporting_procedure='sps.asn.sql',
     )
-    cfg_out_asn = ExportConfig("sps.asn.sql", "asn_processor", "reporting_prod.sps.asn")
+    cfg_out_asn = ExportConfig('sps.asn.sql', 'asn_processor', 'reporting_prod.sps.asn')
     cfg_out_asn_milestone = ExportConfig(
-        "sps.asn_milestone.sql", "milestone_processor", "reporting_prod.sps.asn"
+        'sps.asn_milestone.sql', 'milestone_processor', 'reporting_prod.sps.asn'
     )
     chain_tasks(
         *cfg_in_asn.operators,
@@ -221,15 +212,15 @@ with dag:
     cfg_inbound_milestone = ProcessConfig(
         s3_bucket=s3_buckets.tsos_da_int_inbound,
         s3_conn_id=conn_ids.S3.tsos_da_int_prod,
-        s3_location=f"{stages.tsos_da_int_inbound}/lake/sps.milestone/v2/",
-        table_name="lake.sps.milestone",
-        remote_file_pattern="QO_*.xml",
-        reporting_procedure="sps.milestone_processor.sql",
+        s3_location=f'{stages.tsos_da_int_inbound}/lake/sps.milestone/v2/',
+        table_name='lake.sps.milestone',
+        remote_file_pattern='QO_*.xml',
+        reporting_procedure='sps.milestone_processor.sql',
     )
     cfg_out_milestone_processor = ExportConfig(
-        "sps.milestone_processor.sql",
-        "milestone_processor",
-        "reporting_prod.sps.milestone_processor",
+        'sps.milestone_processor.sql',
+        'milestone_processor',
+        'reporting_prod.sps.milestone_processor',
     )
     chain_tasks(
         *cfg_inbound_milestone.operators,

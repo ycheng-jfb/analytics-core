@@ -6,11 +6,11 @@ from include.utils.snowflake import Column
 
 table_config = TableConfig(
     table_type=TableType.NSYNC,
-    table="refund_reason",
+    table='refund_reason',
     column_list=[
-        Column("refund_reason_id", "INT", uniqueness=True),
-        Column("store_group_id", "INT"),
-        Column("label", "VARCHAR(100)"),
-        Column("access", "VARCHAR(15)"),
+        Column('refund_reason_id', 'INT', uniqueness=True),
+        Column('store_group_id', 'INT'),
+        Column('label', 'VARCHAR(100)'),
+        Column('access', 'VARCHAR(15)'),
     ],
 )

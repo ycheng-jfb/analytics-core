@@ -4,7 +4,7 @@ from include.utils.acquisition.lake_consolidated_table_config import (
 from include.utils.snowflake import Column
 
 table_config = TableConfig(
-    table="gaming_prevention_log_detail",
+    table='gaming_prevention_log_detail',
     company_join_sql="""
        SELECT DISTINCT
            L.GAMING_PREVENTION_LOG_DETAIL_ID,
@@ -17,23 +17,23 @@ table_config = TableConfig(
        INNER JOIN {database}.{source_schema}.gaming_prevention_log_detail AS L
            ON L.GAMING_PREVENTION_LOG_ID = GPL.GAMING_PREVENTION_LOG_ID """,
     column_list=[
-        Column("gaming_prevention_log_detail_id", "INT", uniqueness=True, key=True),
-        Column("gaming_prevention_log_id", "INT", key=True),
-        Column("gaming_prevention_check_id", "INT"),
-        Column("gaming_prevention_query_id", "INT"),
-        Column("order_id", "INT", key=True),
-        Column("hits", "INT"),
-        Column("base_score", "NUMBER(18, 4)"),
-        Column("boost_factor", "NUMBER(18, 4)"),
-        Column("score", "NUMBER(18, 4)"),
+        Column('gaming_prevention_log_detail_id', 'INT', uniqueness=True, key=True),
+        Column('gaming_prevention_log_id', 'INT', key=True),
+        Column('gaming_prevention_check_id', 'INT'),
+        Column('gaming_prevention_query_id', 'INT'),
+        Column('order_id', 'INT', key=True),
+        Column('hits', 'INT'),
+        Column('base_score', 'NUMBER(18, 4)'),
+        Column('boost_factor', 'NUMBER(18, 4)'),
+        Column('score', 'NUMBER(18, 4)'),
         Column(
-            "datetime_added",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_added',
+            'TIMESTAMP_NTZ(3)',
         ),
         Column(
-            "datetime_modified",
-            "TIMESTAMP_NTZ(3)",
+            'datetime_modified',
+            'TIMESTAMP_NTZ(3)',
         ),
     ],
-    watermark_column="datetime_modified",
+    watermark_column='datetime_modified',
 )

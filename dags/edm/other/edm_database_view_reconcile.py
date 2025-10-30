@@ -20,17 +20,17 @@ from include.config.email_lists import data_integration_support, edw_engineering
 from include.utils import snowflake
 
 default_args = {
-    "start_date": pendulum.datetime(2020, 1, 1, tz="America/Los_Angeles"),
-    "retries": 1,
-    "owner": owners.data_integrations,
-    "email": data_integration_support,
-    "on_failure_callback": SlackFailureCallback("slack_alert_edm"),
+    'start_date': pendulum.datetime(2020, 1, 1, tz='America/Los_Angeles'),
+    'retries': 1,
+    'owner': owners.data_integrations,
+    'email': data_integration_support,
+    "on_failure_callback": SlackFailureCallback('slack_alert_edm'),
 }
 
 dag = DAG(
-    dag_id="edm_database_view_reconcile",
+    dag_id='edm_database_view_reconcile',
     default_args=default_args,
-    schedule="0 13 * * 3",
+    schedule='0 13 * * 3',
     catchup=False,
     max_active_tasks=1,
     max_active_runs=1,
@@ -46,12 +46,10 @@ class ViewConfig:
 
 view_config_list = [
     ViewConfig(
-        view_db_list=["edw.data_model"],
-        email_to_list=data_integration_support + edw_engineering,
+        view_db_list=['edw.data_model'], email_to_list=data_integration_support + edw_engineering
     ),
     ViewConfig(
-        view_db_list=["edw.reporting"],
-        email_to_list=data_integration_support + edw_engineering,
+        view_db_list=['edw.reporting'], email_to_list=data_integration_support + edw_engineering
     ),
 ]
 
@@ -92,11 +90,7 @@ class ReconcileViewSnowflake(BaseOperator):
         query = f"""SELECT TABLE_CATALOG||'.'||TABLE_SCHEMA||'.'||TABLE_NAME as VIEW_NAME
                     FROM {database_name}.INFORMATION_SCHEMA.VIEWS
                     WHERE table_schema"""
-        query += (
-            "<>'INFORMATION_SCHEMA';"
-            if schema_name is None
-            else f"=UPPER('{schema_name}');"
-        )
+        query += "<>'INFORMATION_SCHEMA';" if schema_name is None else f"=UPPER('{schema_name}');"
         cur = sf_con.cursor()
         cur.execute(command=query)
         view_list = [rows[0] for rows in cur.fetchall()]
@@ -113,12 +107,12 @@ class ReconcileViewSnowflake(BaseOperator):
         """
         index = data.lower().index("select")
         view_data = data[index:].strip(" ")
-        view_def = "".join(e for e in view_data if e.isalnum())
+        view_def = ''.join(e for e in view_data if e.isalnum())
         return view_def
 
     def read_view_definition_from_snowflake(self, view_name, sf_con):
         cur = sf_con.cursor()
-        updated_view_name = ".".join(['"' + i + '"' for i in view_name.split(".", 2)])
+        updated_view_name = '.'.join(['"' + i + '"' for i in view_name.split('.', 2)])
         cur.execute(f"select get_ddl('view', '{updated_view_name}')")
         rows = cur.fetchall()
         data = rows[0][0]
@@ -130,25 +124,17 @@ class ReconcileViewSnowflake(BaseOperator):
         view_path = Path(SQL_DIR, database_directory, "views", view_script.lower())
         if not os.path.exists(view_path):
             return
-        with open(view_path, "r") as file:
-            data = file.read().replace("\n", "")
+        with open(view_path, 'r') as file:
+            data = file.read().replace('\n', '')
             parsed_data = self.parse_view_definition(data=data)
             return parsed_data
 
     @staticmethod
-    def send_mail_alert(
-        views_not_matching, views_not_present, email_to_list, email_cc_list
-    ):
-        mismatch_df = pd.DataFrame(
-            data=views_not_matching, columns=["mismatch_view_list"]
-        )
-        missing_df = pd.DataFrame(data=views_not_present, columns=["missing_view_list"])
-        html_content = (
-            f"{mismatch_df.to_html(index=False)}" if len(mismatch_df) != 0 else ""
-        )
-        html_content += (
-            f"<br><br>{missing_df.to_html(index=False)}" if len(missing_df) != 0 else ""
-        )
+    def send_mail_alert(views_not_matching, views_not_present, email_to_list, email_cc_list):
+        mismatch_df = pd.DataFrame(data=views_not_matching, columns=['mismatch_view_list'])
+        missing_df = pd.DataFrame(data=views_not_present, columns=['missing_view_list'])
+        html_content = f"{mismatch_df.to_html(index=False)}" if len(mismatch_df) != 0 else ''
+        html_content += f"<br><br>{missing_df.to_html(index=False)}" if len(missing_df) != 0 else ''
         send_email(
             to=email_to_list,
             cc=email_cc_list,
@@ -157,19 +143,11 @@ class ReconcileViewSnowflake(BaseOperator):
         )
 
     @staticmethod
-    def send_mail_alert(
-        views_not_matching, views_not_present, email_to_list, email_cc_list
-    ):
-        mismatch_df = pd.DataFrame(
-            data=views_not_matching, columns=["mismatch_view_list"]
-        )
-        missing_df = pd.DataFrame(data=views_not_present, columns=["missing_view_list"])
-        html_content = (
-            f"{mismatch_df.to_html(index=False)}" if len(mismatch_df) != 0 else ""
-        )
-        html_content += (
-            f"<br><br>{missing_df.to_html(index=False)}" if len(missing_df) != 0 else ""
-        )
+    def send_mail_alert(views_not_matching, views_not_present, email_to_list, email_cc_list):
+        mismatch_df = pd.DataFrame(data=views_not_matching, columns=['mismatch_view_list'])
+        missing_df = pd.DataFrame(data=views_not_present, columns=['missing_view_list'])
+        html_content = f"{mismatch_df.to_html(index=False)}" if len(mismatch_df) != 0 else ''
+        html_content += f"<br><br>{missing_df.to_html(index=False)}" if len(missing_df) != 0 else ''
         send_email(
             to=email_to_list,
             cc=email_cc_list,
@@ -183,7 +161,7 @@ class ReconcileViewSnowflake(BaseOperator):
             views_not_matching, views_not_present
         )
         # sends the slack notification to data_integrations channel
-        send_slack_message(message=slack_message, conn_id="slack_data_integrations")
+        send_slack_message(message=slack_message, conn_id='slack_data_integrations')
 
     @staticmethod
     def format_slack_message(views_not_matching, views_not_present):
@@ -210,8 +188,8 @@ class ReconcileViewSnowflake(BaseOperator):
             cur = cnx.cursor(cursor_class=DictCursor)
             cur.execute(query_tag)
             for view_db in view_database_list:
-                view_database = view_db.split(".")[0]
-                view_schema = view_db.split(".")[1] if "." in view_db else None
+                view_database = view_db.split('.')[0]
+                view_schema = view_db.split('.')[1] if '.' in view_db else None
                 view_list = self.get_view_names(view_database, view_schema, cnx)
                 for view in view_list:
                     snowflake_view_ddl = self.read_view_definition_from_snowflake(
@@ -221,15 +199,15 @@ class ReconcileViewSnowflake(BaseOperator):
                         database_directory=view_database, view_name=view
                     )
                     if not repo_view_ddl:
-                        views_not_present.append(f"{view}")
+                        views_not_present.append(f'{view}')
                     elif repo_view_ddl == snowflake_view_ddl:
                         pass
                     elif repo_view_ddl.lower() != snowflake_view_ddl.lower():
-                        views_not_matching.append(f"{view}")
+                        views_not_matching.append(f'{view}')
                     else:
                         pass
         if not views_not_matching and not views_not_present:
-            print("All good")
+            print('All good')
         else:
             self.send_mail_alert(
                 views_not_matching=views_not_matching,
@@ -246,7 +224,7 @@ class ReconcileViewSnowflake(BaseOperator):
 with dag:
     for view in view_config_list:
         check_view_definition = ReconcileViewSnowflake(
-            task_id=f"check_view_definition_repo_database_{view.view_db_list[0]}",
+            task_id=f'check_view_definition_repo_database_{view.view_db_list[0]}',
             snowflake_conn_id=conn_ids.Snowflake.default,
             view_database=view.view_db_list,
             email_to_list=view.email_to_list,

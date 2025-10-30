@@ -81,7 +81,7 @@ class SentryToS3Operator(BaseRowsToS3CsvOperator):
 
     def yield_rows_from_data(self, data) -> Iterator[dict]:
         updated_at = pendulum.DateTime.utcnow().isoformat()
-        for row in data["data"]:
+        for row in data['data']:
             row = {
                 **{key: value for key, value in row.items() if key in self.column_list},
                 "updated_at": updated_at,
@@ -101,27 +101,19 @@ class SentryToS3Operator(BaseRowsToS3CsvOperator):
             raise Exception(response.content)
 
         while True:
-            if int(response.headers["x-sentry-rate-limit-remaining"]) == 0:
+            if int(response.headers['x-sentry-rate-limit-remaining']) == 0:
                 current_time = int(time.time())
-                rate_limit_reset_time = int(
-                    response.headers["x-sentry-rate-limit-reset"]
-                )
+                rate_limit_reset_time = int(response.headers['x-sentry-rate-limit-reset'])
                 wait_time = abs(rate_limit_reset_time - current_time)
-                self.log.info(
-                    f"Rate limit exceeded and it will reset in {wait_time/60} minute(s)"
-                )
+                self.log.info(f"Rate limit exceeded and it will reset in {wait_time/60} minute(s)")
                 time.sleep(wait_time)
 
             data = response.json()
             yield from self.yield_rows_from_data(data)
-            has_next_page = re.findall(r'results="([^"]+)"', response.headers["link"])[
-                1
-            ]
+            has_next_page = re.findall(r'results="([^"]+)"', response.headers['link'])[1]
             if has_next_page == "true":
                 print("Pulling the next 100 records")
-                self.config["cursor"] = re.findall(
-                    r'cursor="([^"]+)"', response.headers["link"]
-                )[1]
+                self.config['cursor'] = re.findall(r'cursor="([^"]+)"', response.headers['link'])[1]
                 response = requests.get(url=url, headers=headers, params=self.config)
             else:
                 break

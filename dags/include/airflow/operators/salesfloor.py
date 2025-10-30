@@ -20,8 +20,8 @@ class SalesfloorExportToSFTP(SnowflakeToSFTPOperator):
         dt = pendulum.parse(self.timestamp)
         new_dt = dt.add(seconds=30 * batch_count)
         str_dt = str(new_dt.replace(tzinfo=None))
-        final_dt = str_dt.replace("-", "").replace(":", "").replace("T", "-")
-        return self.filename.replace(".csv", "-" + final_dt + ".csv")
+        final_dt = str_dt.replace('-', '').replace(':', '').replace('T', '-')
+        return self.filename.replace('.csv', '-' + final_dt + '.csv')
 
     def export_to_files(self, sql, local_path) -> list:
         batch_count = 1
@@ -42,7 +42,7 @@ class SalesfloorExportToSFTP(SnowflakeToSFTPOperator):
                         dialect=self.dialect,
                         delimiter=self.field_delimiter,
                         quoting=csv.QUOTE_MINIMAL,
-                        escapechar="\\",
+                        escapechar='\\',
                     )
                     if self.header:
                         column_list = self.get_effective_column_list(
