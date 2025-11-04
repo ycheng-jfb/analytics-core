@@ -576,7 +576,7 @@ VALUES ('JUSTFAB', 'EU', 'AT')
 CREATE OR REPLACE TEMPORARY TABLE _current_status AS
 SELECT DISTINCT FIRST_VALUE(case when is_active = 1 then 'Active' else 'Inactive' end)
                             OVER (PARTITION BY dp.store_id,dp.product_sku ORDER BY is_active DESC) AS product_status,
-                dp.product_sku,
+                REGEXP_REPLACE(dp.sku, '-[0-9]+$', '') AS product_sku,
                 dp.store_id
 FROM edw_prod.new_stg.dim_product AS dp;
 

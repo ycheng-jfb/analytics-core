@@ -70,17 +70,19 @@ WHERE UPPER(division_id) IN ('JUSTFAB', 'SHOEDAZZLE', 'FABKIDS');
 CREATE OR REPLACE TRANSIENT TABLE gfb.gfb_inventory_data_set AS
 SELECT UPPER(CASE
                  WHEN (CASE
-                           WHEN id.warehouse_id = 107 THEN 'NA'
-                           WHEN id.warehouse_id = 109 THEN 'NA'
+                           WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                            WHEN id.warehouse_id = 154 THEN 'NA'
-                           WHEN id.warehouse_id = 231 THEN 'NA'
+                           WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                            WHEN id.warehouse_id = 421 THEN 'NA'
                            WHEN id.warehouse_id = 221 THEN 'EU'
                            WHEN id.warehouse_id = 366 THEN 'EU'
                            WHEN id.warehouse_id = 466 THEN 'NA'
                            WHEN id.warehouse_id = 601 THEN 'NA'
+                           WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                           WHEN id.warehouse_id = 245 THEN 'NA'
+                           WHEN id.warehouse_id = 405 THEN 'EU'
                      END) = 'EU' THEN 'JUSTFAB' -- this is for FK product in JFEU
-                 WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                 WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                  ELSE id.brand END)                                         AS business_unit
      , CASE
            WHEN id.warehouse_id IN ('221', '366') THEN 'JUSTFAB'
@@ -88,50 +90,61 @@ SELECT UPPER(CASE
            ELSE UPPER(CASE
                           WHEN (CASE
                                     WHEN id.warehouse_id = 107 THEN 'NA'
-                                    WHEN id.warehouse_id = 109 THEN 'NA'
+                                    WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                     WHEN id.warehouse_id = 154 THEN 'NA'
-                                    WHEN id.warehouse_id = 231 THEN 'NA'
+                                    WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                     WHEN id.warehouse_id = 421 THEN 'NA'
                                     WHEN id.warehouse_id = 221 THEN 'EU'
                                     WHEN id.warehouse_id = 366 THEN 'EU'
                                     WHEN id.warehouse_id = 466 THEN 'NA'
                                     WHEN id.warehouse_id = 601 THEN 'NA'
+                                    WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                    WHEN id.warehouse_id = 245 THEN 'NA'
+                                    WHEN id.warehouse_id = 405 THEN 'EU'
                               END) = 'EU' THEN 'JUSTFAB' -- this is for FK product in JFEU
-                          WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                          WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                           ELSE id.brand END)
     END                                                                     AS main_brand
      , (CASE
-            WHEN id.warehouse_id = 107 THEN 'NA'
-            WHEN id.warehouse_id = 109 THEN 'NA'
+            WHEN id.warehouse_id IN (109, 215) THEN 'NA'
             WHEN id.warehouse_id = 154 THEN 'NA'
-            WHEN id.warehouse_id = 231 THEN 'NA'
+            WHEN id.warehouse_id IN (231, 242) THEN 'NA'
             WHEN id.warehouse_id = 421 THEN 'NA'
             WHEN id.warehouse_id = 221 THEN 'EU'
             WHEN id.warehouse_id = 366 THEN 'EU'
             WHEN id.warehouse_id = 466 THEN 'NA'
             WHEN id.warehouse_id = 601 THEN 'NA'
+            WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+            WHEN id.warehouse_id = 245 THEN 'NA'
+            WHEN id.warehouse_id = 405 THEN 'EU'
     END)                                                                    AS region
      , (CASE
             WHEN id.warehouse_id = 107 THEN 'US'
-            WHEN id.warehouse_id = 109 THEN 'CA'
+            WHEN id.warehouse_id IN (109, 215) THEN 'CA'
             WHEN id.warehouse_id = 154 THEN 'US'
-            WHEN id.warehouse_id = 231 THEN 'US'
+            WHEN id.warehouse_id IN (231, 242) THEN 'US'
             WHEN id.warehouse_id = 421 THEN 'US'
             WHEN id.warehouse_id = 221 THEN 'FR'
             WHEN id.warehouse_id = 366 THEN 'UK'
             WHEN id.warehouse_id = 466 THEN 'US'
             WHEN id.warehouse_id = 601 THEN 'US'
+            WHEN id.warehouse_id IN (284, 44, 346) THEN 'US'
+            WHEN id.warehouse_id = 245 THEN 'US'
+            WHEN id.warehouse_id = 405 THEN 'FR'
     END)                                                                    AS country
      , (CASE
             WHEN id.warehouse_id = 107 THEN 'KENTUCKY'
-            WHEN id.warehouse_id = 109 THEN 'CANADA'
+            WHEN id.warehouse_id IN (109, 215) THEN 'CANADA'
             WHEN id.warehouse_id = 154 THEN 'KENTUCKY'
-            WHEN id.warehouse_id = 231 THEN 'PERRIS'
+            WHEN id.warehouse_id IN (231, 242) THEN 'PERRIS'
             WHEN id.warehouse_id = 421 THEN 'KENTUCKY'
             WHEN id.warehouse_id = 221 THEN 'NETHERLANDS'
             WHEN id.warehouse_id = 366 THEN 'UK'
             WHEN id.warehouse_id = 466 THEN 'TIJUANA'
             WHEN id.warehouse_id = 601 THEN 'MIRACLE MILES'
+            WHEN id.warehouse_id IN (284, 44, 346) THEN 'NEW JERSEY'
+            WHEN id.warehouse_id = 245 THEN 'WINIT'
+            WHEN id.warehouse_id = 405 THEN 'NETHERLANDS'
     END)                                                                    AS warehouse
      , id.warehouse_id
      , local_date                                                           AS inventory_date
@@ -158,143 +171,165 @@ FROM edw_prod.data_model_jfb.fact_inventory_history id
          LEFT JOIN _product_size ps
                    ON ps.business_unit = UPPER(CASE
                                                    WHEN (CASE
-                                                             WHEN id.warehouse_id = 107 THEN 'NA'
-                                                             WHEN id.warehouse_id = 109 THEN 'NA'
+                                                             WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                                              WHEN id.warehouse_id = 154 THEN 'NA'
-                                                             WHEN id.warehouse_id = 231 THEN 'NA'
+                                                             WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                                              WHEN id.warehouse_id = 421 THEN 'NA'
                                                              WHEN id.warehouse_id = 221 THEN 'EU'
                                                              WHEN id.warehouse_id = 366 THEN 'EU'
                                                              WHEN id.warehouse_id = 466 THEN 'NA'
                                                              WHEN id.warehouse_id = 601 THEN 'NA'
+                                                             WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                                             WHEN id.warehouse_id = 245 THEN 'NA'
+                                                             WHEN id.warehouse_id = 405 THEN 'EU'
                                                        END) = 'EU' THEN 'JUSTFAB' -- this is for FK product in JFEU
-                                                   WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                                                   WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                                                    ELSE id.brand END)
                        AND ps.region = (CASE
-                                            WHEN id.warehouse_id = 107 THEN 'NA'
-                                            WHEN id.warehouse_id = 109 THEN 'NA'
+                                            WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                             WHEN id.warehouse_id = 154 THEN 'NA'
-                                            WHEN id.warehouse_id = 231 THEN 'NA'
+                                            WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                             WHEN id.warehouse_id = 421 THEN 'NA'
                                             WHEN id.warehouse_id = 221 THEN 'EU'
                                             WHEN id.warehouse_id = 366 THEN 'EU'
                                             WHEN id.warehouse_id = 466 THEN 'NA'
                                             WHEN id.warehouse_id = 601 THEN 'NA'
+                                            WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                            WHEN id.warehouse_id = 245 THEN 'NA'
+                                            WHEN id.warehouse_id = 405 THEN 'EU'
                            END)
                        AND ps.sku = id.sku
          LEFT JOIN lake_view.sharepoint.gfb_merch_clearance_sku_list mcsl
                    ON LOWER(mcsl.business_unit) = LOWER(CASE
                                                             WHEN (CASE
-                                                                      WHEN id.warehouse_id = 107 THEN 'NA'
-                                                                      WHEN id.warehouse_id = 109 THEN 'NA'
+                                                                      WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                                                       WHEN id.warehouse_id = 154 THEN 'NA'
-                                                                      WHEN id.warehouse_id = 231 THEN 'NA'
+                                                                      WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                                                       WHEN id.warehouse_id = 421 THEN 'NA'
                                                                       WHEN id.warehouse_id = 221 THEN 'EU'
                                                                       WHEN id.warehouse_id = 366 THEN 'EU'
                                                                       WHEN id.warehouse_id = 466 THEN 'NA'
                                                                       WHEN id.warehouse_id = 601 THEN 'NA'
+                                                                      WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                                                      WHEN id.warehouse_id = 245 THEN 'NA'
+                                                                      WHEN id.warehouse_id = 405 THEN 'EU'
                                                                 END) = 'EU'
                                                                 THEN 'JUSTFAB' -- this is for FK product in JFEU
-                                                            WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                                                            WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                                                             ELSE id.brand END)
                        AND LOWER(mcsl.region) = LOWER(CASE
-                                                          WHEN id.warehouse_id = 107 THEN 'NA'
-                                                          WHEN id.warehouse_id = 109 THEN 'NA'
+                                                          WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                                           WHEN id.warehouse_id = 154 THEN 'NA'
-                                                          WHEN id.warehouse_id = 231 THEN 'NA'
+                                                          WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                                           WHEN id.warehouse_id = 421 THEN 'NA'
                                                           WHEN id.warehouse_id = 221 THEN 'EU'
                                                           WHEN id.warehouse_id = 366 THEN 'EU'
                                                           WHEN id.warehouse_id = 466 THEN 'NA'
                                                           WHEN id.warehouse_id = 601 THEN 'NA'
+                                                          WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                                          WHEN id.warehouse_id = 245 THEN 'NA'
+                                                          WHEN id.warehouse_id = 405 THEN 'EU'
                            END)
                        AND LOWER(mcsl.sku) = LOWER(id.product_sku)
                        AND local_date BETWEEN mcsl.start_date AND COALESCE(mcsl.end_date, CURRENT_DATE())
          LEFT JOIN _product_sale_price_hist psph
                    ON LOWER(psph.store_brand) = LOWER(CASE
                                                           WHEN (CASE
-                                                                    WHEN id.warehouse_id = 107 THEN 'NA'
-                                                                    WHEN id.warehouse_id = 109 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                                                     WHEN id.warehouse_id = 154 THEN 'NA'
-                                                                    WHEN id.warehouse_id = 231 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                                                     WHEN id.warehouse_id = 421 THEN 'NA'
                                                                     WHEN id.warehouse_id = 221 THEN 'EU'
                                                                     WHEN id.warehouse_id = 366 THEN 'EU'
                                                                     WHEN id.warehouse_id = 466 THEN 'NA'
                                                                     WHEN id.warehouse_id = 601 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                                                    WHEN id.warehouse_id = 245 THEN 'NA'
+                                                                    WHEN id.warehouse_id = 405 THEN 'EU'
                                                               END) = 'EU'
                                                               THEN 'JUSTFAB' -- this is for FK product in JFEU
-                                                          WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                                                          WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                                                           ELSE id.brand END)
                        AND LOWER(psph.store_country) = LOWER(CASE
                                                                  WHEN id.warehouse_id = 107 THEN 'US'
-                                                                 WHEN id.warehouse_id = 109 THEN 'CA'
+                                                                 WHEN id.warehouse_id IN (109, 215) THEN 'CA'
                                                                  WHEN id.warehouse_id = 154 THEN 'US'
-                                                                 WHEN id.warehouse_id = 231 THEN 'US'
+                                                                 WHEN id.warehouse_id IN (231, 242) THEN 'US'
                                                                  WHEN id.warehouse_id = 421 THEN 'US'
                                                                  WHEN id.warehouse_id = 221 THEN 'FR'
                                                                  WHEN id.warehouse_id = 366 THEN 'UK'
                                                                  WHEN id.warehouse_id = 466 THEN 'US'
                                                                  WHEN id.warehouse_id = 601 THEN 'US'
+                                                                 WHEN id.warehouse_id IN (284, 44, 346) THEN 'US'
+                                                                 WHEN id.warehouse_id = 245 THEN 'US'
+                                                                 WHEN id.warehouse_id = 405 THEN 'FR'
                            END)
                        AND LOWER(psph.product_sku) = LOWER(id.product_sku)
                        AND local_date >= psph.effective_start_datetime AND local_date < psph.effective_end_datetime
          LEFT JOIN _remove_gwp rg
                    ON UPPER(rg.business_unit) = UPPER(CASE
                                                           WHEN (CASE
-                                                                    WHEN id.warehouse_id = 107 THEN 'NA'
-                                                                    WHEN id.warehouse_id = 109 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                                                     WHEN id.warehouse_id = 154 THEN 'NA'
-                                                                    WHEN id.warehouse_id = 231 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                                                     WHEN id.warehouse_id = 421 THEN 'NA'
                                                                     WHEN id.warehouse_id = 221 THEN 'EU'
                                                                     WHEN id.warehouse_id = 366 THEN 'EU'
                                                                     WHEN id.warehouse_id = 466 THEN 'NA'
                                                                     WHEN id.warehouse_id = 601 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                                                    WHEN id.warehouse_id = 245 THEN 'NA'
+                                                                    WHEN id.warehouse_id = 405 THEN 'EU'
                                                               END) = 'EU'
                                                               THEN 'JUSTFAB' -- this is for FK product in JFEU
-                                                          WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                                                          WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                                                           ELSE id.brand END)
                        AND rg.store_country = (CASE
                                                    WHEN id.warehouse_id = 107 THEN 'US'
-                                                   WHEN id.warehouse_id = 109 THEN 'CA'
+                                                   WHEN id.warehouse_id IN (109, 215) THEN 'CA'
                                                    WHEN id.warehouse_id = 154 THEN 'US'
-                                                   WHEN id.warehouse_id = 231 THEN 'US'
+                                                   WHEN id.warehouse_id IN (231, 242) THEN 'US'
                                                    WHEN id.warehouse_id = 421 THEN 'US'
                                                    WHEN id.warehouse_id = 221 THEN 'FR'
                                                    WHEN id.warehouse_id = 366 THEN 'UK'
                                                    WHEN id.warehouse_id = 466 THEN 'US'
                                                    WHEN id.warehouse_id = 601 THEN 'US'
+                                                   WHEN id.warehouse_id IN (284, 44, 346) THEN 'US'
+                                                   WHEN id.warehouse_id = 245 THEN 'US'
+                                                   WHEN id.warehouse_id = 405 THEN 'FR'
                            END)
                        AND rg.sku = id.sku
-WHERE id.is_retail = 'N'
-  AND id.brand IN ('SHOE DAZZLE', 'JUSTFAB', 'FABKIDS')
+WHERE id.brand IN ('SHOE DAZZLE', 'JUSTFAB', 'FABKIDS','SHOEDAZZLE')
   AND (CASE
            WHEN id.warehouse_id = 107 THEN 'NA'
-           WHEN id.warehouse_id = 109 THEN 'NA'
+           WHEN id.warehouse_id IN (109, 215) THEN 'NA'
            WHEN id.warehouse_id = 154 THEN 'NA'
-           WHEN id.warehouse_id = 231 THEN 'NA'
+           WHEN id.warehouse_id IN (231, 242) THEN 'NA'
            WHEN id.warehouse_id = 421 THEN 'NA'
            WHEN id.warehouse_id = 221 THEN 'EU'
            WHEN id.warehouse_id = 366 THEN 'EU'
            WHEN id.warehouse_id = 466 THEN 'NA'
            WHEN id.warehouse_id = 601 THEN 'NA'
+           WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+           WHEN id.warehouse_id = 245 THEN 'NA'
+           WHEN id.warehouse_id = 405 THEN 'EU'
     END) IS NOT NULL
   AND rg.product_type IS NULL
 GROUP BY UPPER(CASE
                    WHEN (CASE
-                             WHEN id.warehouse_id = 107 THEN 'NA'
-                             WHEN id.warehouse_id = 109 THEN 'NA'
+                             WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                              WHEN id.warehouse_id = 154 THEN 'NA'
-                             WHEN id.warehouse_id = 231 THEN 'NA'
+                             WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                              WHEN id.warehouse_id = 421 THEN 'NA'
                              WHEN id.warehouse_id = 221 THEN 'EU'
                              WHEN id.warehouse_id = 366 THEN 'EU'
                              WHEN id.warehouse_id = 466 THEN 'NA'
                              WHEN id.warehouse_id = 601 THEN 'NA'
-                       END) = 'EU' THEN 'JUSTFAB'
-                   WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                             WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                             WHEN id.warehouse_id = 245 THEN 'NA'
+                             WHEN id.warehouse_id = 405 THEN 'EU'
+                       END) = 'EU' THEN 'JUSTFAB' -- this is for FK product in JFEU
+                   WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                    ELSE id.brand END)
        , CASE
              WHEN id.warehouse_id IN ('221', '366') THEN 'JUSTFAB'
@@ -302,50 +337,62 @@ GROUP BY UPPER(CASE
              ELSE UPPER(CASE
                             WHEN (CASE
                                       WHEN id.warehouse_id = 107 THEN 'NA'
-                                      WHEN id.warehouse_id = 109 THEN 'NA'
+                                      WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                       WHEN id.warehouse_id = 154 THEN 'NA'
-                                      WHEN id.warehouse_id = 231 THEN 'NA'
+                                      WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                       WHEN id.warehouse_id = 421 THEN 'NA'
                                       WHEN id.warehouse_id = 221 THEN 'EU'
                                       WHEN id.warehouse_id = 366 THEN 'EU'
                                       WHEN id.warehouse_id = 466 THEN 'NA'
                                       WHEN id.warehouse_id = 601 THEN 'NA'
+                                      WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                      WHEN id.warehouse_id = 245 THEN 'NA'
+                                      WHEN id.warehouse_id = 405 THEN 'EU'
                                 END) = 'EU' THEN 'JUSTFAB' -- this is for FK product in JFEU
-                            WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                            WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                             ELSE id.brand END)
     END
        , (CASE
               WHEN id.warehouse_id = 107 THEN 'NA'
-              WHEN id.warehouse_id = 109 THEN 'NA'
+              WHEN id.warehouse_id IN (109, 215) THEN 'NA'
               WHEN id.warehouse_id = 154 THEN 'NA'
-              WHEN id.warehouse_id = 231 THEN 'NA'
+              WHEN id.warehouse_id IN (231, 242) THEN 'NA'
               WHEN id.warehouse_id = 421 THEN 'NA'
               WHEN id.warehouse_id = 221 THEN 'EU'
               WHEN id.warehouse_id = 366 THEN 'EU'
               WHEN id.warehouse_id = 466 THEN 'NA'
               WHEN id.warehouse_id = 601 THEN 'NA'
+              WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+              WHEN id.warehouse_id = 245 THEN 'NA'
+              WHEN id.warehouse_id = 405 THEN 'EU'
     END)
        , (CASE
               WHEN id.warehouse_id = 107 THEN 'US'
-              WHEN id.warehouse_id = 109 THEN 'CA'
+              WHEN id.warehouse_id IN (109, 215) THEN 'CA'
               WHEN id.warehouse_id = 154 THEN 'US'
-              WHEN id.warehouse_id = 231 THEN 'US'
+              WHEN id.warehouse_id IN (231, 242) THEN 'US'
               WHEN id.warehouse_id = 421 THEN 'US'
               WHEN id.warehouse_id = 221 THEN 'FR'
               WHEN id.warehouse_id = 366 THEN 'UK'
               WHEN id.warehouse_id = 466 THEN 'US'
               WHEN id.warehouse_id = 601 THEN 'US'
+              WHEN id.warehouse_id IN (284, 44, 346) THEN 'US'
+              WHEN id.warehouse_id = 245 THEN 'US'
+              WHEN id.warehouse_id = 405 THEN 'FR'
     END)
        , (CASE
               WHEN id.warehouse_id = 107 THEN 'KENTUCKY'
-              WHEN id.warehouse_id = 109 THEN 'CANADA'
+              WHEN id.warehouse_id IN (109, 215) THEN 'CANADA'
               WHEN id.warehouse_id = 154 THEN 'KENTUCKY'
-              WHEN id.warehouse_id = 231 THEN 'PERRIS'
+              WHEN id.warehouse_id IN (231, 242) THEN 'PERRIS'
               WHEN id.warehouse_id = 421 THEN 'KENTUCKY'
               WHEN id.warehouse_id = 221 THEN 'NETHERLANDS'
               WHEN id.warehouse_id = 366 THEN 'UK'
               WHEN id.warehouse_id = 466 THEN 'TIJUANA'
               WHEN id.warehouse_id = 601 THEN 'MIRACLE MILES'
+              WHEN id.warehouse_id IN (284, 44, 346) THEN 'NEW JERSEY'
+              WHEN id.warehouse_id = 245 THEN 'WINIT'
+              WHEN id.warehouse_id = 405 THEN 'NETHERLANDS'
     END)
        , id.warehouse_id
        , local_date
@@ -358,16 +405,19 @@ CREATE OR REPLACE TRANSIENT TABLE gfb.gfb_inventory_data_set_current AS
 SELECT UPPER(CASE
                  WHEN (CASE
                            WHEN id.warehouse_id = 107 THEN 'NA'
-                           WHEN id.warehouse_id = 109 THEN 'NA'
+                           WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                            WHEN id.warehouse_id = 154 THEN 'NA'
-                           WHEN id.warehouse_id = 231 THEN 'NA'
+                           WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                            WHEN id.warehouse_id = 421 THEN 'NA'
                            WHEN id.warehouse_id = 221 THEN 'EU'
                            WHEN id.warehouse_id = 366 THEN 'EU'
                            WHEN id.warehouse_id = 466 THEN 'NA'
                            WHEN id.warehouse_id = 601 THEN 'NA'
+                           WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                           WHEN id.warehouse_id = 245 THEN 'NA'
+                           WHEN id.warehouse_id = 405 THEN 'EU'
                      END) = 'EU' THEN 'JUSTFAB' -- this is for FK product in JFEU
-                 WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                 WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                  ELSE id.brand END)                                         AS business_unit
      , CASE
            WHEN id.warehouse_id IN ('221', '366') THEN 'JUSTFAB'
@@ -375,50 +425,62 @@ SELECT UPPER(CASE
            ELSE UPPER(CASE
                           WHEN (CASE
                                     WHEN id.warehouse_id = 107 THEN 'NA'
-                                    WHEN id.warehouse_id = 109 THEN 'NA'
+                                    WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                     WHEN id.warehouse_id = 154 THEN 'NA'
-                                    WHEN id.warehouse_id = 231 THEN 'NA'
+                                    WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                     WHEN id.warehouse_id = 421 THEN 'NA'
                                     WHEN id.warehouse_id = 221 THEN 'EU'
                                     WHEN id.warehouse_id = 366 THEN 'EU'
                                     WHEN id.warehouse_id = 466 THEN 'NA'
                                     WHEN id.warehouse_id = 601 THEN 'NA'
+                                    WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                    WHEN id.warehouse_id = 245 THEN 'NA'
+                                    WHEN id.warehouse_id = 405 THEN 'EU'
                               END) = 'EU' THEN 'JUSTFAB' -- this is for FK product in JFEU
-                          WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                          WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                           ELSE id.brand END)
     END                                                                     AS main_brand
      , (CASE
             WHEN id.warehouse_id = 107 THEN 'NA'
-            WHEN id.warehouse_id = 109 THEN 'NA'
+            WHEN id.warehouse_id IN (109, 215) THEN 'NA'
             WHEN id.warehouse_id = 154 THEN 'NA'
-            WHEN id.warehouse_id = 231 THEN 'NA'
+            WHEN id.warehouse_id IN (231, 242) THEN 'NA'
             WHEN id.warehouse_id = 421 THEN 'NA'
             WHEN id.warehouse_id = 221 THEN 'EU'
             WHEN id.warehouse_id = 366 THEN 'EU'
             WHEN id.warehouse_id = 466 THEN 'NA'
             WHEN id.warehouse_id = 601 THEN 'NA'
+            WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+            WHEN id.warehouse_id = 245 THEN 'NA'
+            WHEN id.warehouse_id = 405 THEN 'EU'
     END)                                                                    AS region
      , (CASE
             WHEN id.warehouse_id = 107 THEN 'US'
-            WHEN id.warehouse_id = 109 THEN 'CA'
+            WHEN id.warehouse_id IN (109, 215) THEN 'CA'
             WHEN id.warehouse_id = 154 THEN 'US'
-            WHEN id.warehouse_id = 231 THEN 'US'
+            WHEN id.warehouse_id IN (231, 242) THEN 'US'
             WHEN id.warehouse_id = 421 THEN 'US'
             WHEN id.warehouse_id = 221 THEN 'FR'
             WHEN id.warehouse_id = 366 THEN 'UK'
             WHEN id.warehouse_id = 466 THEN 'US'
             WHEN id.warehouse_id = 601 THEN 'US'
+            WHEN id.warehouse_id IN (284, 44, 346) THEN 'US'
+            WHEN id.warehouse_id = 245 THEN 'US'
+            WHEN id.warehouse_id = 405 THEN 'FR'
     END)                                                                    AS country
      , (CASE
             WHEN id.warehouse_id = 107 THEN 'KENTUCKY'
-            WHEN id.warehouse_id = 109 THEN 'CANADA'
+            WHEN id.warehouse_id IN (109, 215) THEN 'CANADA'
             WHEN id.warehouse_id = 154 THEN 'KENTUCKY'
-            WHEN id.warehouse_id = 231 THEN 'PERRIS'
+            WHEN id.warehouse_id IN (231, 242) THEN 'PERRIS'
             WHEN id.warehouse_id = 421 THEN 'KENTUCKY'
             WHEN id.warehouse_id = 221 THEN 'NETHERLANDS'
             WHEN id.warehouse_id = 366 THEN 'UK'
             WHEN id.warehouse_id = 466 THEN 'TIJUANA'
             WHEN id.warehouse_id = 601 THEN 'MIRACLE MILES'
+            WHEN id.warehouse_id IN (284, 44, 346) THEN 'NEW JERSEY'
+            WHEN id.warehouse_id = 245 THEN 'WINIT'
+            WHEN id.warehouse_id = 405 THEN 'NETHERLANDS'
     END)                                                                    AS warehouse
      , id.warehouse_id
      , id.product_sku
@@ -445,43 +507,52 @@ FROM edw_prod.data_model_jfb.fact_inventory id
                    ON ps.business_unit = UPPER(CASE
                                                    WHEN (CASE
                                                              WHEN id.warehouse_id = 107 THEN 'NA'
-                                                             WHEN id.warehouse_id = 109 THEN 'NA'
+                                                             WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                                              WHEN id.warehouse_id = 154 THEN 'NA'
-                                                             WHEN id.warehouse_id = 231 THEN 'NA'
+                                                             WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                                              WHEN id.warehouse_id = 421 THEN 'NA'
                                                              WHEN id.warehouse_id = 221 THEN 'EU'
                                                              WHEN id.warehouse_id = 366 THEN 'EU'
                                                              WHEN id.warehouse_id = 466 THEN 'NA'
                                                              WHEN id.warehouse_id = 601 THEN 'NA'
+                                                             WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                                             WHEN id.warehouse_id = 245 THEN 'NA'
+                                                             WHEN id.warehouse_id = 405 THEN 'EU'
                                                        END) = 'EU' THEN 'JUSTFAB' -- this is for FK product in JFEU
-                                                   WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                                                   WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                                                    ELSE id.brand END)
                        AND ps.region = (CASE
                                             WHEN id.warehouse_id = 107 THEN 'NA'
-                                            WHEN id.warehouse_id = 109 THEN 'NA'
+                                            WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                             WHEN id.warehouse_id = 154 THEN 'NA'
-                                            WHEN id.warehouse_id = 231 THEN 'NA'
+                                            WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                             WHEN id.warehouse_id = 421 THEN 'NA'
                                             WHEN id.warehouse_id = 221 THEN 'EU'
                                             WHEN id.warehouse_id = 366 THEN 'EU'
                                             WHEN id.warehouse_id = 466 THEN 'NA'
                                             WHEN id.warehouse_id = 601 THEN 'NA'
+                                            WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                            WHEN id.warehouse_id = 245 THEN 'NA'
+                                            WHEN id.warehouse_id = 405 THEN 'EU'
                            END)
                        AND ps.sku = id.sku
          LEFT JOIN lake_view.sharepoint.gfb_merch_clearance_sku_list mcsl
                    ON LOWER(mcsl.business_unit) = LOWER(CASE
-                                                            WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                                                            WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                                                             ELSE id.brand END)
                        AND LOWER(mcsl.region) = LOWER(CASE
                                                           WHEN id.warehouse_id = 107 THEN 'NA'
-                                                          WHEN id.warehouse_id = 109 THEN 'NA'
+                                                          WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                                           WHEN id.warehouse_id = 154 THEN 'NA'
-                                                          WHEN id.warehouse_id = 231 THEN 'NA'
+                                                          WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                                           WHEN id.warehouse_id = 421 THEN 'NA'
                                                           WHEN id.warehouse_id = 221 THEN 'EU'
                                                           WHEN id.warehouse_id = 366 THEN 'EU'
                                                           WHEN id.warehouse_id = 466 THEN 'NA'
                                                           WHEN id.warehouse_id = 601 THEN 'NA'
+                                                          WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                                          WHEN id.warehouse_id = 245 THEN 'NA'
+                                                          WHEN id.warehouse_id = 405 THEN 'EU'
                            END)
                        AND LOWER(mcsl.sku) = LOWER(id.product_sku)
                        AND
@@ -490,28 +561,34 @@ FROM edw_prod.data_model_jfb.fact_inventory id
                    ON LOWER(psph.store_brand) = LOWER(CASE
                                                           WHEN (CASE
                                                                     WHEN id.warehouse_id = 107 THEN 'NA'
-                                                                    WHEN id.warehouse_id = 109 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                                                     WHEN id.warehouse_id = 154 THEN 'NA'
-                                                                    WHEN id.warehouse_id = 231 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                                                     WHEN id.warehouse_id = 421 THEN 'NA'
                                                                     WHEN id.warehouse_id = 221 THEN 'EU'
                                                                     WHEN id.warehouse_id = 366 THEN 'EU'
                                                                     WHEN id.warehouse_id = 466 THEN 'NA'
                                                                     WHEN id.warehouse_id = 601 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                                                    WHEN id.warehouse_id = 245 THEN 'NA'
+                                                                    WHEN id.warehouse_id = 405 THEN 'EU'
                                                               END) = 'EU'
                                                               THEN 'JUSTFAB' -- this is for FK product in JFEU
-                                                          WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                                                          WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                                                           ELSE id.brand END)
                        AND LOWER(psph.store_country) = LOWER(CASE
                                                                  WHEN id.warehouse_id = 107 THEN 'US'
-                                                                 WHEN id.warehouse_id = 109 THEN 'CA'
+                                                                 WHEN id.warehouse_id IN (109, 215) THEN 'CA'
                                                                  WHEN id.warehouse_id = 154 THEN 'US'
-                                                                 WHEN id.warehouse_id = 231 THEN 'US'
+                                                                 WHEN id.warehouse_id IN (231, 242) THEN 'US'
                                                                  WHEN id.warehouse_id = 421 THEN 'US'
                                                                  WHEN id.warehouse_id = 221 THEN 'FR'
                                                                  WHEN id.warehouse_id = 366 THEN 'UK'
                                                                  WHEN id.warehouse_id = 466 THEN 'US'
                                                                  WHEN id.warehouse_id = 601 THEN 'US'
+                                                                 WHEN id.warehouse_id IN (284, 44, 346) THEN 'US'
+                                                                 WHEN id.warehouse_id = 245 THEN 'US'
+                                                                 WHEN id.warehouse_id = 405 THEN 'FR'
                            END)
                        AND LOWER(psph.product_sku) = LOWER(id.product_sku)
                        AND $today >= psph.effective_start_datetime AND $today < psph.effective_end_datetime
@@ -519,57 +596,68 @@ FROM edw_prod.data_model_jfb.fact_inventory id
                    ON UPPER(rg.business_unit) = UPPER(CASE
                                                           WHEN (CASE
                                                                     WHEN id.warehouse_id = 107 THEN 'NA'
-                                                                    WHEN id.warehouse_id = 109 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                                                     WHEN id.warehouse_id = 154 THEN 'NA'
-                                                                    WHEN id.warehouse_id = 231 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                                                     WHEN id.warehouse_id = 421 THEN 'NA'
                                                                     WHEN id.warehouse_id = 221 THEN 'EU'
                                                                     WHEN id.warehouse_id = 366 THEN 'EU'
                                                                     WHEN id.warehouse_id = 466 THEN 'NA'
                                                                     WHEN id.warehouse_id = 601 THEN 'NA'
+                                                                    WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                                                    WHEN id.warehouse_id = 245 THEN 'NA'
+                                                                    WHEN id.warehouse_id = 405 THEN 'EU'
                                                               END) = 'EU'
                                                               THEN 'JUSTFAB' -- this is for FK product in JFEU
-                                                          WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                                                          WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                                                           ELSE id.brand END)
                        AND rg.store_country = (CASE
                                                    WHEN id.warehouse_id = 107 THEN 'US'
-                                                   WHEN id.warehouse_id = 109 THEN 'CA'
+                                                   WHEN id.warehouse_id IN (109, 215) THEN 'CA'
                                                    WHEN id.warehouse_id = 154 THEN 'US'
-                                                   WHEN id.warehouse_id = 231 THEN 'US'
+                                                   WHEN id.warehouse_id IN (231, 242) THEN 'US'
                                                    WHEN id.warehouse_id = 421 THEN 'US'
                                                    WHEN id.warehouse_id = 221 THEN 'FR'
                                                    WHEN id.warehouse_id = 366 THEN 'UK'
                                                    WHEN id.warehouse_id = 466 THEN 'US'
                                                    WHEN id.warehouse_id = 601 THEN 'US'
+                                                   WHEN id.warehouse_id IN (284, 44, 346) THEN 'US'
+                                                   WHEN id.warehouse_id = 245 THEN 'US'
+                                                   WHEN id.warehouse_id = 405 THEN 'FR'
                            END)
                        AND rg.sku = id.sku
-WHERE id.is_retail = 'N'
-  AND id.brand IN ('SHOE DAZZLE', 'JUSTFAB', 'FABKIDS')
+WHERE id.brand IN ('SHOE DAZZLE', 'JUSTFAB', 'FABKIDS','SHOEDAZZLE')
   AND (CASE
            WHEN id.warehouse_id = 107 THEN 'NA'
-           WHEN id.warehouse_id = 109 THEN 'NA'
+           WHEN id.warehouse_id IN (109, 215) THEN 'NA'
            WHEN id.warehouse_id = 154 THEN 'NA'
-           WHEN id.warehouse_id = 231 THEN 'NA'
+           WHEN id.warehouse_id IN (231, 242) THEN 'NA'
            WHEN id.warehouse_id = 421 THEN 'NA'
            WHEN id.warehouse_id = 221 THEN 'EU'
            WHEN id.warehouse_id = 366 THEN 'EU'
            WHEN id.warehouse_id = 466 THEN 'NA'
            WHEN id.warehouse_id = 601 THEN 'NA'
+           WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+           WHEN id.warehouse_id = 245 THEN 'NA'
+           WHEN id.warehouse_id = 405 THEN 'EU'
     END) IS NOT NULL
   AND rg.product_type IS NULL
 GROUP BY UPPER(CASE
                    WHEN (CASE
                              WHEN id.warehouse_id = 107 THEN 'NA'
-                             WHEN id.warehouse_id = 109 THEN 'NA'
+                             WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                              WHEN id.warehouse_id = 154 THEN 'NA'
-                             WHEN id.warehouse_id = 231 THEN 'NA'
+                             WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                              WHEN id.warehouse_id = 421 THEN 'NA'
                              WHEN id.warehouse_id = 221 THEN 'EU'
                              WHEN id.warehouse_id = 366 THEN 'EU'
                              WHEN id.warehouse_id = 466 THEN 'NA'
                              WHEN id.warehouse_id = 601 THEN 'NA'
+                             WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                             WHEN id.warehouse_id = 245 THEN 'NA'
+                             WHEN id.warehouse_id = 405 THEN 'EU'
                        END) = 'EU' THEN 'JUSTFAB'
-                   WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                   WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                    ELSE id.brand END)
        , CASE
              WHEN id.warehouse_id IN ('221', '366') THEN 'JUSTFAB'
@@ -577,50 +665,62 @@ GROUP BY UPPER(CASE
              ELSE UPPER(CASE
                             WHEN (CASE
                                       WHEN id.warehouse_id = 107 THEN 'NA'
-                                      WHEN id.warehouse_id = 109 THEN 'NA'
+                                      WHEN id.warehouse_id IN (109, 215) THEN 'NA'
                                       WHEN id.warehouse_id = 154 THEN 'NA'
-                                      WHEN id.warehouse_id = 231 THEN 'NA'
+                                      WHEN id.warehouse_id IN (231, 242) THEN 'NA'
                                       WHEN id.warehouse_id = 421 THEN 'NA'
                                       WHEN id.warehouse_id = 221 THEN 'EU'
                                       WHEN id.warehouse_id = 366 THEN 'EU'
                                       WHEN id.warehouse_id = 466 THEN 'NA'
                                       WHEN id.warehouse_id = 601 THEN 'NA'
+                                      WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+                                      WHEN id.warehouse_id = 245 THEN 'NA'
+                                      WHEN id.warehouse_id = 405 THEN 'EU'
                                 END) = 'EU' THEN 'JUSTFAB' -- this is for FK product in JFEU
-                            WHEN id.brand = 'SHOE DAZZLE' THEN 'SHOEDAZZLE'
+                            WHEN id.brand IN ('SHOE DAZZLE','SHOEDAZZLE') THEN 'SHOEDAZZLE'
                             ELSE id.brand END)
     END
        , (CASE
               WHEN id.warehouse_id = 107 THEN 'NA'
-              WHEN id.warehouse_id = 109 THEN 'NA'
+              WHEN id.warehouse_id IN (109, 215) THEN 'NA'
               WHEN id.warehouse_id = 154 THEN 'NA'
-              WHEN id.warehouse_id = 231 THEN 'NA'
+              WHEN id.warehouse_id IN (231, 242) THEN 'NA'
               WHEN id.warehouse_id = 421 THEN 'NA'
               WHEN id.warehouse_id = 221 THEN 'EU'
               WHEN id.warehouse_id = 366 THEN 'EU'
               WHEN id.warehouse_id = 466 THEN 'NA'
               WHEN id.warehouse_id = 601 THEN 'NA'
+              WHEN id.warehouse_id IN (284, 44, 346) THEN 'NA'
+              WHEN id.warehouse_id = 245 THEN 'NA'
+              WHEN id.warehouse_id = 405 THEN 'EU'
     END)
        , (CASE
               WHEN id.warehouse_id = 107 THEN 'US'
-              WHEN id.warehouse_id = 109 THEN 'CA'
+              WHEN id.warehouse_id IN (109, 215) THEN 'CA'
               WHEN id.warehouse_id = 154 THEN 'US'
-              WHEN id.warehouse_id = 231 THEN 'US'
+              WHEN id.warehouse_id IN (231, 242) THEN 'US'
               WHEN id.warehouse_id = 421 THEN 'US'
               WHEN id.warehouse_id = 221 THEN 'FR'
               WHEN id.warehouse_id = 366 THEN 'UK'
               WHEN id.warehouse_id = 466 THEN 'US'
               WHEN id.warehouse_id = 601 THEN 'US'
+              WHEN id.warehouse_id IN (284, 44, 346) THEN 'US'
+              WHEN id.warehouse_id = 245 THEN 'US'
+              WHEN id.warehouse_id = 405 THEN 'FR'
     END)
        , (CASE
               WHEN id.warehouse_id = 107 THEN 'KENTUCKY'
-              WHEN id.warehouse_id = 109 THEN 'CANADA'
+              WHEN id.warehouse_id IN (109, 215) THEN 'CANADA'
               WHEN id.warehouse_id = 154 THEN 'KENTUCKY'
-              WHEN id.warehouse_id = 231 THEN 'PERRIS'
+              WHEN id.warehouse_id IN (231, 242) THEN 'PERRIS'
               WHEN id.warehouse_id = 421 THEN 'KENTUCKY'
               WHEN id.warehouse_id = 221 THEN 'NETHERLANDS'
               WHEN id.warehouse_id = 366 THEN 'UK'
               WHEN id.warehouse_id = 466 THEN 'TIJUANA'
               WHEN id.warehouse_id = 601 THEN 'MIRACLE MILES'
+              WHEN id.warehouse_id IN (284, 44, 346) THEN 'NEW JERSEY'
+              WHEN id.warehouse_id = 245 THEN 'WINIT'
+              WHEN id.warehouse_id = 405 THEN 'NETHERLANDS'
     END)
        , id.warehouse_id
        , id.product_sku
