@@ -3,38 +3,47 @@
 -- 需要更新的数据 或者插入的数据
 CREATE OR REPLACE TEMP TABLE EDW_PROD.NEW_STG._dim_promo_history AS 
 with promotion_rule_cart as (
-    select *,55 store_id
+    select *,55 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
     ) AS last_updated
-    ,CONCAT('550000000',"promotion_id","id")::NUMBER(38,0) promo_id
+    ,CONCAT("promotion_id","id",'55')::NUMBER(38,0) promo_id
     from LAKE_MMOS."mmos_membership_marketing_shoedazzle"."promotion_rule_cart"
     where "_fivetran_deleted" = false
     union all 
-    select *,26 store_id
+    select *,26 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
     ) AS last_updated
-    ,CONCAT('260000000',"promotion_id","id")::NUMBER(38,0) promo_id
+    ,CONCAT("promotion_id","id",'26')::NUMBER(38,0) promo_id
     from LAKE_MMOS."mmos_membership_marketing_us"."promotion_rule_cart"
     where "_fivetran_deleted" = false
     union all 
-    select *,46 store_id
+    select *,46 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
     ) AS last_updated
-    ,CONCAT('460000000',"promotion_id","id")::NUMBER(38,0) promo_id
+    ,CONCAT("promotion_id","id",'46')::NUMBER(38,0) promo_id
     from LAKE_MMOS."mmos_membership_marketing_fabkids"."promotion_rule_cart"
+    where "_fivetran_deleted" = false
+    union all 
+    select *,2000 site_id
+    ,LEAST(
+        CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
+        CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
+    ) AS last_updated
+    ,CONCAT("promotion_id","id",'2000')::NUMBER(38,0) promo_id
+    from LAKE_MMOS."mmos_membership_marketing_eu"."promotion_rule_cart"
     where "_fivetran_deleted" = false
 )
 ,promotion_rule_product as (
     select 
         "id"
     ,"promotion_id"
-    ,CONCAT('550000000',"promotion_id","id")::NUMBER(38,0) promo_id
+    ,CONCAT("promotion_id","id",'55')::NUMBER(38,0) promo_id
     ,"rule_type"
     ,"discount_type"
     ,"discount_value"
@@ -48,7 +57,7 @@ with promotion_rule_cart as (
     ,"country_code"
     ,"_fivetran_deleted"
     ,"_fivetran_synced"
-    ,55 store_id
+    ,55 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
@@ -59,7 +68,7 @@ with promotion_rule_cart as (
     select 
         "id"
     ,"promotion_id"
-    ,CONCAT('260000000',"promotion_id","id")::NUMBER(38,0) promo_id
+    ,CONCAT("promotion_id","id",'26')::NUMBER(38,0) promo_id
     ,"rule_type"
     ,"discount_type"
     ,"discount_value"
@@ -73,7 +82,7 @@ with promotion_rule_cart as (
     ,"country_code"
     ,"_fivetran_deleted"
     ,"_fivetran_synced"
-    ,26 store_id
+    ,26 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
@@ -84,7 +93,7 @@ with promotion_rule_cart as (
     select 
         "id"
     ,"promotion_id"
-    ,CONCAT('460000000',"promotion_id","id")::NUMBER(38,0) promo_id
+    ,CONCAT("promotion_id","id",'46')::NUMBER(38,0) promo_id
     ,"rule_type"
     ,"discount_type"
     ,"discount_value"
@@ -98,44 +107,78 @@ with promotion_rule_cart as (
     ,"country_code"
     ,"_fivetran_deleted"
     ,"_fivetran_synced"
-    ,46 store_id
+    ,46 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
     ) AS last_updated
     from LAKE_MMOS."mmos_membership_marketing_fabkids"."promotion_rule_product"
     where "_fivetran_deleted" = false
-)
-,promotion_rule_shipping as (
-    select *,55 store_id
+    union all 
+    select 
+        "id"
+    ,"promotion_id"
+    ,CONCAT("promotion_id","id",'2000')::NUMBER(38,0) promo_id
+    ,"rule_type"
+    ,"discount_type"
+    ,"discount_value"
+    ,"variant_condition"
+    ,"min_quantity"
+    ,"max_quantity"
+    ,"is_first_order_only"
+    ,"created_at"
+    ,"updated_at"
+    ,"sort"
+    ,"country_code"
+    ,"_fivetran_deleted"
+    ,"_fivetran_synced"
+    ,2000 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
     ) AS last_updated
-    ,CONCAT('550000000',"promotion_id","id")::NUMBER(38,0) promo_id
+    from LAKE_MMOS."mmos_membership_marketing_eu"."promotion_rule_product"
+    where "_fivetran_deleted" = false
+)
+,promotion_rule_shipping as (
+    select *,55 site_id
+    ,LEAST(
+        CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
+        CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
+    ) AS last_updated
+    ,CONCAT("promotion_id","id",'55')::NUMBER(38,0) promo_id
     from LAKE_MMOS."mmos_membership_marketing_shoedazzle"."promotion_rule_shipping"
     where "_fivetran_deleted" = false
     union all 
-    select *,26 store_id
+    select *,26 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
     ) AS last_updated
-    ,CONCAT('260000000',"promotion_id","id")::NUMBER(38,0) promo_id
+    ,CONCAT("promotion_id","id",'26')::NUMBER(38,0) promo_id
     from LAKE_MMOS."mmos_membership_marketing_us"."promotion_rule_shipping"
     where "_fivetran_deleted" = false
     union all 
-    select *,46 store_id
+    select *,46 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
     ) AS last_updated
-    ,CONCAT('460000000',"promotion_id","id")::NUMBER(38,0) promo_id
+    ,CONCAT("promotion_id","id",'46')::NUMBER(38,0) promo_id
     from LAKE_MMOS."mmos_membership_marketing_fabkids"."promotion_rule_shipping"
+    where "_fivetran_deleted" = false
+    union all 
+    select *,2000 site_id
+    ,LEAST(
+        CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
+        CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
+    ) AS last_updated
+    ,CONCAT("promotion_id","id",'2000')::NUMBER(38,0) promo_id
+    from LAKE_MMOS."mmos_membership_marketing_eu"."promotion_rule_shipping"
     where "_fivetran_deleted" = false
 )
 ,promotion as (
-    select *,55 store_id
+    select *,55 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
@@ -143,7 +186,7 @@ with promotion_rule_cart as (
     from LAKE_MMOS."mmos_membership_marketing_shoedazzle"."promotion"
     where "_fivetran_deleted" = false
     union all 
-    select *,26 store_id
+    select *,26 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
@@ -151,28 +194,41 @@ with promotion_rule_cart as (
     from LAKE_MMOS."mmos_membership_marketing_us"."promotion"
     where "_fivetran_deleted" = false
     union all 
-    select *,46 store_id
+    select *,46 site_id
     ,LEAST(
         CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
         CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
     ) AS last_updated
     from LAKE_MMOS."mmos_membership_marketing_fabkids"."promotion"
     where "_fivetran_deleted" = false
+    union all 
+    select *,2000 site_id
+    ,LEAST(
+        CONVERT_TIMEZONE('UTC','America/Los_Angeles', TO_TIMESTAMP_NTZ("updated_at")),
+        CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")
+    ) AS last_updated
+    from LAKE_MMOS."mmos_membership_marketing_eu"."promotion"
+    where "_fivetran_deleted" = false
 )
 ,promotion_user_group as (
-    select *,55 store_id
+    select *,55 site_id
     ,CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")  AS last_updated
     from LAKE_MMOS."mmos_membership_marketing_shoedazzle"."promotion_user_group"
     where "_fivetran_deleted" = false
     union all 
-    select *,26 store_id
+    select *,26 site_id
     ,CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")  AS last_updated
     from LAKE_MMOS."mmos_membership_marketing_us"."promotion_user_group"
     where "_fivetran_deleted" = false
     union all 
-    select *,46 store_id
+    select *,46 site_id
     ,CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")  AS last_updated
     from LAKE_MMOS."mmos_membership_marketing_fabkids"."promotion_user_group"
+    where "_fivetran_deleted" = false
+    union all 
+    select *,2000 site_id
+    ,CONVERT_TIMEZONE('America/Los_Angeles', "_fivetran_synced")  AS last_updated
+    from LAKE_MMOS."mmos_membership_marketing_eu"."promotion_user_group"
     where "_fivetran_deleted" = false
 )
 ,promotion_rule as(
@@ -183,7 +239,7 @@ select
       else cast("rule_type"as VARCHAR(256)) end                  discount_type
 ,iff( "rule_type" in (1,3),"discount_value",null)       discount_percentage
 ,iff("rule_type" in (2,4)      ,"discount_value",null)  discount_rate
-,store_id
+,site_id
 ,last_updated
 ,promo_id promo_id
 from promotion_rule_cart
@@ -198,7 +254,7 @@ select
       else cast("discount_type"as VARCHAR(256)) end  discount_type
 ,iff("discount_type" in (1,3) ,"discount_value",null)  discount_percentage
 ,iff("discount_type" = 2      ,"discount_value",null)  discount_rate
-,store_id
+,site_id
 ,last_updated
 ,promo_id promo_id
 from promotion_rule_product
@@ -211,7 +267,7 @@ select
 ,null          discount_type
 ,null          discount_percentage
 ,null          discount_rate
-,store_id
+,site_id
 ,last_updated
 ,promo_id promo_id
 from promotion_rule_shipping
@@ -264,11 +320,11 @@ select
 ,1 as is_current -- 是否为当前有效
 ,CURRENT_DATE() as meta_create_datetime -- 元数据创建日期时间
 ,CURRENT_DATE() as meta_update_datetime -- 元数据更新日期时间
-,t1.store_id store_id 
+,t1.site_id site_id 
 from promotion t1 
-inner join promotion_rule t2  on t1."id" = t2.promotion_id and t1.store_id =t2.store_id
+inner join promotion_rule t2  on t1."id" = t2.promotion_id and t1.site_id =t2.site_id
 left join promotion_user_group  t3
-    on t1."id" = t3."promotion_id" and t1.store_id =t3.store_id
+    on t1."id" = t3."promotion_id" and t1.site_id =t3.site_id
 left join EDW_PROD.NEW_STG.dim_promo_history  dph on dph.promo_id = t2.promo_id
 where LEAST(
     COALESCE(t1.last_updated, '1900-01-01'::TIMESTAMP_NTZ),
@@ -336,7 +392,7 @@ EFFECTIVE_END_DATETIME,
 IS_CURRENT,
 META_CREATE_DATETIME,
 META_UPDATE_DATETIME,
-store_id
+site_id
 ) 
 select 
 *

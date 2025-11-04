@@ -1,43 +1,50 @@
 CREATE OR REPLACE TEMP TABLE EDW_PROD.NEW_STG._promotion_rule_product_discount AS 
     with promotion_rule_cart as (
-        select *,55 store_id,CONCAT('550000000',"promotion_id","id")::NUMBER(38,0) promo_id
+        select *,55 site_id
+        ,CONCAT("promotion_id","id",'55')::NUMBER(38,0) promo_id
         from LAKE_MMOS."mmos_membership_marketing_shoedazzle"."promotion_rule_cart"
+        where "_fivetran_deleted" = false
         union all 
-        select *,26 store_id,CONCAT('260000000',"promotion_id","id")::NUMBER(38,0) promo_id
+        select *,26 site_id
+        ,CONCAT("promotion_id","id",'26')::NUMBER(38,0) promo_id
         from LAKE_MMOS."mmos_membership_marketing_us"."promotion_rule_cart"
+        where "_fivetran_deleted" = false
         union all 
-        select *,46 store_id,CONCAT('460000000',"promotion_id","id")::NUMBER(38,0) promo_id
+        select *,46 site_id
+        ,CONCAT("promotion_id","id",'46')::NUMBER(38,0) promo_id
         from LAKE_MMOS."mmos_membership_marketing_fabkids"."promotion_rule_cart"
+        where "_fivetran_deleted" = false
+        union all 
+        select *,2000 site_id
+        ,CONCAT("promotion_id","id",'2000')::NUMBER(38,0) promo_id
+        from LAKE_MMOS."mmos_membership_marketing_eu"."promotion_rule_cart"
+        where "_fivetran_deleted" = false
     )
     ,promotion_rule_product as (
-        select *,55 store_id,CONCAT('550000000',"promotion_id","id")::NUMBER(38,0) promo_id
+        select *,55 site_id,CONCAT("promotion_id","id",'55')::NUMBER(38,0) promo_id
         from LAKE_MMOS."mmos_membership_marketing_shoedazzle"."promotion_rule_product"
         union all 
-        select *,26 store_id,CONCAT('260000000',"promotion_id","id")::NUMBER(38,0) promo_id
+        select *,26 site_id,CONCAT("promotion_id","id",'26')::NUMBER(38,0) promo_id
         from LAKE_MMOS."mmos_membership_marketing_us"."promotion_rule_product"
         union all 
-        select *,46 store_id,CONCAT('460000000',"promotion_id","id")::NUMBER(38,0) promo_id
+        select *,46 site_id,CONCAT("promotion_id","id",'46')::NUMBER(38,0) promo_id
         from LAKE_MMOS."mmos_membership_marketing_fabkids"."promotion_rule_product"
+        union all 
+        select *,2000 site_id,CONCAT("promotion_id","id",'2000')::NUMBER(38,0) promo_id
+        from LAKE_MMOS."mmos_membership_marketing_eu"."promotion_rule_product"
     )
     ,promotion_rule_shipping as (
-        select *,55 store_id,CONCAT('550000000',"promotion_id","id")::NUMBER(38,0) promo_id
+        select *,55 site_id,CONCAT("promotion_id","id",'55')::NUMBER(38,0) promo_id
         from LAKE_MMOS."mmos_membership_marketing_shoedazzle"."promotion_rule_shipping"
         union all 
-        select *,26 store_id,CONCAT('260000000',"promotion_id","id")::NUMBER(38,0) promo_id
+        select *,26 site_id,CONCAT("promotion_id","id",'26')::NUMBER(38,0) promo_id
         from LAKE_MMOS."mmos_membership_marketing_us"."promotion_rule_shipping"
         union all 
-        select *,46 store_id,CONCAT('460000000',"promotion_id","id")::NUMBER(38,0) promo_id
+        select *,46 site_id,CONCAT("promotion_id","id",'46')::NUMBER(38,0) promo_id
         from LAKE_MMOS."mmos_membership_marketing_fabkids"."promotion_rule_shipping"
-    )
-    ,promotion as (
-        select *,55 store_id
-        from LAKE_MMOS."mmos_membership_marketing_shoedazzle"."promotion"
         union all 
-        select *,26 store_id
-        from LAKE_MMOS."mmos_membership_marketing_us"."promotion"
-        union all 
-        select *,46 store_id
-        from LAKE_MMOS."mmos_membership_marketing_fabkids"."promotion"
+        select *,2000 site_id,CONCAT("promotion_id","id",'2000')::NUMBER(38,0) promo_id
+        from LAKE_MMOS."mmos_membership_marketing_eu"."promotion_rule_shipping"
     )
     select
          t1."id"                promotion_id
@@ -46,9 +53,9 @@ CREATE OR REPLACE TEMP TABLE EDW_PROD.NEW_STG._promotion_rule_product_discount A
         ,t2.discount_percentage discount_percentage
         ,t2.discount_rate       discount_rate
         ,t1."promotion_code"    promotion_code
-        ,t1.store_id 
+        ,t1.site_id 
         ,t2.promo_id            promo_id
-    from promotion t1
+    from LAKE_MMOS."MMOS_MEMBERSHIP_MARKETING"."promotion" t1
     inner join 
     (
         select
@@ -58,7 +65,7 @@ CREATE OR REPLACE TEMP TABLE EDW_PROD.NEW_STG._promotion_rule_product_discount A
               else cast("rule_type"as VARCHAR(256)) end                  discount_type
         ,iff( "rule_type" in (2,4),"discount_value",null)       discount_percentage
         ,iff("rule_type" in (1,3)   ,"discount_value",null)  discount_rate
-        ,store_id
+        ,site_id
         ,promo_id
         from promotion_rule_cart
         where "_fivetran_deleted" = false
@@ -72,7 +79,7 @@ CREATE OR REPLACE TEMP TABLE EDW_PROD.NEW_STG._promotion_rule_product_discount A
               else cast("discount_type"as VARCHAR(256)) end  discount_type
         ,iff("discount_type" = 2 ,"discount_value",null)  discount_percentage
         ,iff("discount_type"  in (1,3)     ,"discount_value",null)  discount_rate
-        ,store_id
+        ,site_id
         ,promo_id
         from promotion_rule_product
         where "_fivetran_deleted" = false
@@ -84,76 +91,18 @@ CREATE OR REPLACE TEMP TABLE EDW_PROD.NEW_STG._promotion_rule_product_discount A
         ,null          discount_type
         ,null          discount_percentage
         ,null          discount_rate
-        ,store_id
+        ,site_id
         ,promo_id
         from promotion_rule_shipping
         where "_fivetran_deleted" = false
-    ) t2  on t1."id" = t2.promotion_id and t1.store_id = t2.store_id
+    ) t2  on t1."id" = t2.promotion_id and t1.site_id = t2.site_id
     where t1."promotion_gid"<>''
 ;
 
 
 CREATE OR REPLACE TEMP TABLE EDW_PROD.NEW_STG._DIM_DISCOUNT AS 
-with DISCOUNT_AUTOMATIC_APP as (
-    select *,55 as store_id 
-    from LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.DISCOUNT_AUTOMATIC_APP
-    union all 
-    select *,26 as store_id 
-    from LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.DISCOUNT_AUTOMATIC_APP
-    union all 
-    select *,46 as store_id 
-    from LAKE_MMOS.SHOPIFY_FABKIDS_PROD.DISCOUNT_AUTOMATIC_APP
-)
-,DISCOUNT_AUTOMATIC_BASIC as (
-    select *,55 as store_id 
-    from LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.DISCOUNT_AUTOMATIC_BASIC
-    -- union all 
-    -- select *,55 as store_id 
-    -- from LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.DISCOUNT_AUTOMATIC_BASIC
-)
-,DISCOUNT_CODE_BASIC as (
-    select *,55 as store_id 
-    from LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.DISCOUNT_CODE_BASIC
-    union all 
-    select *,26 as store_id 
-    from LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.DISCOUNT_CODE_BASIC
-    union all 
-    select *,46 as store_id 
-    from LAKE_MMOS.SHOPIFY_FABKIDS_PROD.DISCOUNT_CODE_BASIC
-)
-,DISCOUNT_CODE_APP as (
-    select *,55 as store_id 
-    from LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.DISCOUNT_CODE_APP
-    union all 
-    select *,26 as store_id 
-    from LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.DISCOUNT_CODE_APP
-    union all 
-    select *,46 as store_id 
-    from LAKE_MMOS.SHOPIFY_FABKIDS_PROD.DISCOUNT_CODE_APP
-)
-,DISCOUNT_CODE_BXGY as (
-    select *,55 as store_id 
-    from LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.DISCOUNT_CODE_BXGY
-    union all 
-    select *,26 as store_id 
-    from LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.DISCOUNT_CODE_BXGY
-    union all 
-    select *,46 as store_id 
-    from LAKE_MMOS.SHOPIFY_FABKIDS_PROD.DISCOUNT_CODE_BXGY
-)
-,DISCOUNT_CODE_FREE_SHIPPING as (
-    select *,55 as store_id 
-    from LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.DISCOUNT_CODE_FREE_SHIPPING
-    union all 
-    select *,26 as store_id 
-    from LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.DISCOUNT_CODE_FREE_SHIPPING
-    union all 
-    select *,46 as store_id 
-    from LAKE_MMOS.SHOPIFY_FABKIDS_PROD.DISCOUNT_CODE_FREE_SHIPPING
-)
-
 select 
-     CONCAT(t1.store_id,t1.id)::NUMBER(38,0)   as discount_id
+     CONCAT(t1.site_id,t1.id)::NUMBER(38,0)   as discount_id
     ,t1.app_discount_type_discount_class       as discount_applied_to
     ,cast(t2.discount_type as VARCHAR(256))                         as discount_calculation_method
     ,t1.title                                  as discount_label
@@ -165,18 +114,18 @@ select
           else null end as discount_status_code
     ,current_date                                      as meta_create_datetime
     ,current_date                                      as meta_update_datetime
-    ,t1.store_id
+    ,t1.site_id
     ,t2.promotion_code
     ,t2.promo_id as promotion_id
-from DISCOUNT_AUTOMATIC_APP t1 
+from LAKE_MMOS.SHOPIFY.DISCOUNT_AUTOMATIC_APP t1 
 left join EDW_PROD.NEW_STG._promotion_rule_product_discount t2 
-    on cast(t1.discount_id as VARCHAR(50)) = t2.promotion_gid and t1.store_id = t2.store_id
+    on cast(t1.discount_id as VARCHAR(50)) = t2.promotion_gid and t1.site_id = t2.site_id
 where _fivetran_deleted = false
 
 union all 
 
 select 
-     CONCAT(t1.store_id,t1.id)::NUMBER(38,0)   as discount_id
+     CONCAT(t1.site_id,t1.id)::NUMBER(38,0)   as discount_id
     ,t1.discount_class                        as discount_applied_to
     ,case when customer_gets_value_percentage is null 
           and customer_gets_value_amount_amount is not null then 'flat_price'
@@ -192,18 +141,18 @@ select
           else null end as discount_status_code
     ,current_date                                      as meta_create_datetime
     ,current_date                                      as meta_update_datetime
-    ,t1.store_id
+    ,t1.site_id
     ,t2.promotion_code
     ,t2.promo_id as promotion_id
-from DISCOUNT_AUTOMATIC_BASIC t1 
+from LAKE_MMOS.SHOPIFY.DISCOUNT_AUTOMATIC_BASIC t1 
 left join EDW_PROD.NEW_STG._promotion_rule_product_discount t2 
-    on cast(t1.id as VARCHAR(50)) = t2.promotion_gid and t1.store_id = t2.store_id
+    on cast(t1.id as VARCHAR(50)) = t2.promotion_gid and t1.site_id = t2.site_id
 where _fivetran_deleted = false
 
 union all 
 
 select 
-     CONCAT(t1.store_id,t1.id)::NUMBER(38,0)   as discount_id
+     CONCAT(t1.site_id,t1.id)::NUMBER(38,0)   as discount_id
     ,t1.app_discount_type_discount_class       as discount_applied_to
     ,cast(t2.discount_type as VARCHAR(256))                         as discount_calculation_method
     ,t1.title                                  as discount_label
@@ -215,12 +164,12 @@ select
           else null end as discount_status_code
     ,current_date                                      as meta_create_datetime
     ,current_date                                      as meta_update_datetime
-    ,t1.store_id
+    ,t1.site_id
     ,t2.promotion_code
     ,t2.promo_id as promotion_id
-from DISCOUNT_CODE_APP t1 
+from LAKE_MMOS.SHOPIFY.DISCOUNT_CODE_APP t1 
 left join EDW_PROD.NEW_STG._promotion_rule_product_discount t2 
-    on cast(t1.id as VARCHAR(50)) = t2.promotion_gid and t1.store_id = t2.store_id
+    on cast(t1.id as VARCHAR(50)) = t2.promotion_gid and t1.site_id = t2.site_id
 where _fivetran_deleted = false and  APP_DISCOUNT_TYPE_DESCRIPTION <> 'vip-credit-function'
 
 union all 
@@ -274,7 +223,7 @@ union all
 -- union all 
 
 select 
-     CONCAT(t1.store_id,t1.id)::NUMBER(38,0)   as discount_id
+     CONCAT(t1.site_id,t1.id)::NUMBER(38,0)   as discount_id
     ,t1.discount_class                        as discount_applied_to
     ,case when customer_gets_value_percentage is null 
           and customer_gets_value_amount_amount is not null then 'fixed_amount'
@@ -290,18 +239,18 @@ select
           else null end as discount_status_code
     ,current_date                                      as meta_create_datetime
     ,current_date                                      as meta_update_datetime
-    ,t1.store_id
+    ,t1.site_id
     ,t2.promotion_code
     ,t2.promo_id as promotion_id
-from DISCOUNT_CODE_BASIC t1 
+from LAKE_MMOS.SHOPIFY.DISCOUNT_CODE_BASIC t1 
 left join EDW_PROD.NEW_STG._promotion_rule_product_discount t2 
-    on cast(t1.id as VARCHAR(50)) = t2.promotion_gid and t1.store_id = t2.store_id
+    on cast(t1.id as VARCHAR(50)) = t2.promotion_gid and t1.site_id = t2.site_id
 where _fivetran_deleted = false
 
 union all 
 
 select 
-     CONCAT(t1.store_id,t1.id)::NUMBER(38,0)   as discount_id
+     CONCAT(t1.site_id,t1.id)::NUMBER(38,0)   as discount_id
     ,t1.discount_class                         as discount_applied_to
     -- ,null                                      as discount_calculation_method
      ,case when customer_gets_value_percentage is null 
@@ -318,18 +267,18 @@ select
           else null end as discount_status_code
     ,current_date                                      as meta_create_datetime
     ,current_date                                      as meta_update_datetime
-    ,t1.store_id
+    ,t1.site_id
     ,t2.promotion_code
     ,t2.promo_id as promotion_id
-from DISCOUNT_CODE_BXGY t1 
+from LAKE_MMOS.SHOPIFY.DISCOUNT_CODE_BXGY t1 
 left join EDW_PROD.NEW_STG._promotion_rule_product_discount t2 
-    on cast(t1.id as VARCHAR(50)) = t2.promotion_gid and t1.store_id = t2.store_id
+    on cast(t1.id as VARCHAR(50)) = t2.promotion_gid and t1.site_id = t2.site_id
 where _fivetran_deleted = false
 
 union all 
 
 select 
-     CONCAT(t1.store_id,t1.id)::NUMBER(38,0)   as discount_id
+     CONCAT(t1.site_id,t1.id)::NUMBER(38,0)   as discount_id
     ,t1.discount_class                         as discount_applied_to
     ,'fixed_amount'                              as discount_calculation_method
     ,t1.title                                  as discount_label
@@ -341,12 +290,12 @@ select
           else null end as discount_status_code
     ,current_date                                      as meta_create_datetime
     ,current_date                                      as meta_update_datetime
-    ,t1.store_id
+    ,t1.site_id
     ,t2.promotion_code
     ,t2.promo_id as promotion_id
-from DISCOUNT_CODE_FREE_SHIPPING t1 
+from LAKE_MMOS.SHOPIFY.DISCOUNT_CODE_FREE_SHIPPING t1 
 left join EDW_PROD.NEW_STG._promotion_rule_product_discount t2 
-    on cast(t1.id as VARCHAR(50)) = t2.promotion_gid and t1.store_id = t2.store_id
+    on cast(t1.id as VARCHAR(50)) = t2.promotion_gid and t1.site_id = t2.site_id
 where _fivetran_deleted = false
 ;
 
@@ -364,7 +313,7 @@ select
 ,discount_status_code
 ,meta_create_datetime
 ,meta_update_datetime
-,store_id
+,site_id
 ,promotion_code
 ,promotion_id
 from EDW_PROD.NEW_STG._DIM_DISCOUNT
