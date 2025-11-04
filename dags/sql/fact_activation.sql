@@ -232,6 +232,7 @@ WHEN NOT MATCHED THEN
 
 
 
+
 -- 所有新系统的event
 CREATE OR REPLACE TEMPORARY TABLE EDW_PROD.NEW_STG._fact_activation__all_events as 
 SELECT
