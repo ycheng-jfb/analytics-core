@@ -213,4 +213,75 @@ FROM LAKE_MMOS."mmos_membership_marketing_fabkids".user_shard_all t1
 -- left join edw_prod.stg.fact_membership_event t2 on t1."member_number" = t2.customer_id and t2.membership_event_type = 'registration'
 where TO_CHAR(TO_TIMESTAMP_TZ(t1."created_at"), 'YYYY-MM-DD HH24:MI:SS') >= '2025-10-15'
 and "is_delete" = 0
+
+union all 
+
+select
+     null REGISTRATION_KEY,
+     null MEMBERSHIP_EVENT_KEY,
+     t1.store_id as store_id,
+     t1."id"::NUMBER(38,0) CUSTOMER_ID,
+     null META_ORIGINAL_CUSTOMER_ID,
+     TO_CHAR(TO_TIMESTAMP_TZ(t1."created_at"), 'YYYY-MM-DD HH24:MI:SS') AS registration_local_datetime,
+     null as session_id,
+     null as is_reactivated_lead,
+     null as uri,
+     null as hdyh_values_shown,
+     null as cdetail_lead_type,
+     null as cdetail_origin,
+     null as cdetail_initial_medium,
+     null as how_did_you_hear,
+     null as dm_gateway_id,
+     null as dm_site_id,
+     null as utm_medium,
+     null as utm_source,
+     null as utm_campaign,
+     null as utm_content,
+     null as utm_term,
+     null as ccode,
+     null as pcode,
+     null as scode,
+     null as acode,
+     null as master_product_id,
+     case when t1."register_device_platform" in ('ios','android') then 'Mobile'
+          when t1."register_device_platform" in ('web','h5') then 'Desktop'
+          else 'Unknown' end as device,
+     null as browser,
+     case when t1."register_device_platform" ='ios' then 'IOS'
+          when t1."register_device_platform" ='android' then 'Android'
+          else 'Unknown' end as operating_system,
+     null as META_ROW_HASH,
+     null as META_CREATE_DATETIME,
+     null as META_UPDATE_DATETIME,
+     null as IS_DELETED,
+     null as IS_TEST_CUSTOMER,
+     null as registration_channel_type,
+     null as registration_channel,
+     null as registration_subchannel,
+     false is_secondary_registration,
+     false is_secondary_registration_after_vip,
+     null as has_membership_password,
+     null as has_membership_password_first_value,
+     false as is_retail_registration,
+     null as retail_location,
+     null as uri_utm_medium,
+     null as uri_utm_source,
+     null as uri_utm_campaign,
+     null as uri_utm_content,
+     null as uri_utm_term,
+     null as uri_device,
+     null as uri_browser,
+     null as rpt_utm_medium,
+     null as rpt_utm_source,
+     null as rpt_utm_campaign,
+     null as rpt_utm_content,
+     null as rpt_utm_term,
+     null as rpt_device,
+     null as rpt_browser,
+     false as is_fake_retail_registration,
+     null as IS_REACTIVATED_LEAD_RAW,
+     null as how_did_you_hear_parent
+from LAKE_MMOS."mmos_membership_marketing_eu".USER_SHARD_ALL t1
+where TO_TIMESTAMP_TZ(t1."created_at")>='2025-10-22' 
+and t1."is_delete" = 0
 ;
