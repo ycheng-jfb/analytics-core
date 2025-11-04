@@ -2,7 +2,7 @@ name: airflow_jfb_cicd
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -12,15 +12,19 @@ jobs:
   manual-approval:
     name: Manual approval gate
     runs-on: ubuntu-latest
-
-    # 👇 this line makes GitHub show a manual "Review required" gate
     environment:
       name: manual-approval
       url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
+      - name: Waiting message
+        run: echo "Waiting for environment approval in 'manual-approval'..."
 
-      - name: Wait for approval
-        run: echo "✅ This job will pause until manually approved in the 'manual-approval' environment."
+  after-approval:
+    name: After approval (runs only once approved)
+    runs-on: ubuntu-latest
+    needs: manual-approval
+    steps:
+      - name: Confirm
+        run: echo "Approved ✅ — running post-approval steps."
