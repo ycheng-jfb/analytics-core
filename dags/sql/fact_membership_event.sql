@@ -253,7 +253,7 @@ select
     ,current_date as meta_create_datetime
     ,current_date as meta_update_datetime
 from LAKE_MMOS."mmos_membership_marketing_us"."user_shard_all" t1
-where TO_TIMESTAMP_TZ(t1."created_at")>='2025-10-15' and t1."is_delete" = 0
+where TO_TIMESTAMP_TZ(t1."created_at")>='2025-09-23' and t1."is_delete" = 0
 
 union all
 
@@ -275,7 +275,7 @@ select
     ,current_date as meta_create_datetime
     ,current_date as meta_update_datetime
 from LAKE_MMOS."mmos_membership_marketing_eu".USER_SHARD_ALL t1
-where TO_TIMESTAMP_TZ(t1."created_at")>='2025-10-15' and t1."is_delete" = 0
+where TO_TIMESTAMP_TZ(t1."created_at")>='2025-10-22' and t1."is_delete" = 0
 
 ;
 
