@@ -619,3 +619,111 @@ WHEN NOT MATCHED THEN
         src.META_UPDATE_DATETIME
         )
 ;
+
+
+UPDATE EDW_PROD.NEW_STG.FACT_ACTIVATION AS tgt                   -- 要更新的目标表
+set 
+    tgt.utm_medium = src.utm_medium,
+    tgt.utm_source = src.utm_source,
+    tgt.utm_campaign = src.utm_campaign,
+    tgt.utm_content = src.utm_content,
+    tgt.utm_term = src.utm_term
+FROM ( 
+     with t1 as (
+         select 
+           iff(us."id" is null,LEAD(us."id") IGNORE NULLS OVER (partition by t1.anonymous_id,t1.store_id,date(CONVERT_TIMEZONE('UTC','America/Los_Angeles',t1.timestamp)) ORDER BY CONVERT_TIMEZONE('UTC','America/Los_Angeles',t1.timestamp))
+             ,us."id") customer_id
+         ,t1.SESSION_ID
+         ,t1.store_id store_id
+         ,t1.CONTEXT_CAMPAIGN_MEDIUM as utm_medium
+         ,t1.CONTEXT_CAMPAIGN_SOURCE as utm_source
+         ,t1.CONTEXT_CAMPAIGN_NAME as utm_campaign
+         ,t1.CONTEXT_CAMPAIGN_CONTENT as utm_content
+         ,t1.CONTEXT_CAMPAIGN_TERM as utm_term
+         ,CONVERT_TIMEZONE('UTC','America/Los_Angeles',t1.timestamp)::TIMESTAMP_TZ(3) registration_local_datetime
+         ,date(CONVERT_TIMEZONE('UTC','America/Los_Angeles',t1.timestamp)) registration_local_date
+         ,2 label
+         ,anonymous_id
+         from SEGMENT_EVENTS.JAVASCRIPT_JUSTFAB_NA_PROD.PAGES t1
+         left join LAKE_MMOS."mmos_membership_marketing_shoedazzle"."user_shard_all" us on t1.shopify_customer_id = us."user_gid"
+
+         union all 
+
+                  select 
+           iff(us."id" is null,LEAD(us."id") IGNORE NULLS OVER (partition by t1.anonymous_id,t1.store_id,date(CONVERT_TIMEZONE('UTC','America/Los_Angeles',t1.timestamp)) ORDER BY CONVERT_TIMEZONE('UTC','America/Los_Angeles',t1.timestamp))
+             ,us."id") customer_id
+         ,t1.SESSION_ID
+         ,t1.store_id store_id
+         ,t1.CONTEXT_CAMPAIGN_MEDIUM as utm_medium
+         ,t1.CONTEXT_CAMPAIGN_SOURCE as utm_source
+         ,t1.CONTEXT_CAMPAIGN_NAME as utm_campaign
+         ,t1.CONTEXT_CAMPAIGN_CONTENT as utm_content
+         ,t1.CONTEXT_CAMPAIGN_TERM as utm_term
+         ,CONVERT_TIMEZONE('UTC','America/Los_Angeles',t1.timestamp)::TIMESTAMP_TZ(3) registration_local_datetime
+         ,date(CONVERT_TIMEZONE('UTC','America/Los_Angeles',t1.timestamp)) registration_local_date
+         ,2 label
+         ,anonymous_id
+         from SEGMENT_EVENTS.JAVASCRIPT_JUSTFAB_NA_PROD2.PAGES t1
+         left join LAKE_MMOS."mmos_membership_marketing_us"."user_shard_all" us on t1.shopify_customer_id = us."user_gid"
+
+         union all 
+     
+         select 
+          customer_id
+         ,cast(SESSION_ID as varchar) SESSION_ID
+         ,store_id
+         ,utm_medium
+         ,utm_source
+         ,utm_campaign
+         ,utm_content
+         ,utm_term
+         ,activation_local_datetime
+         ,date(activation_local_datetime) registration_local_date
+         ,1 label
+         ,null anonymous_id
+         -- ,cast(null as VARCHAR(16777216)) anonymous_id
+         from EDW_PROD.NEW_STG.FACT_ACTIVATION
+         where store_id in (55,26)
+     )
+     ,t2 as (
+     select 
+          customer_id
+         ,LAG(session_id) IGNORE NULLS OVER (partition by customer_id,store_id,registration_local_date ORDER BY registration_local_datetime) AS session_id
+         ,store_id
+         ,LAG(utm_medium) IGNORE NULLS OVER (partition by customer_id,store_id,registration_local_date ORDER BY registration_local_datetime) AS utm_medium
+         ,LAG(utm_source) IGNORE NULLS OVER (partition by customer_id,store_id,registration_local_date ORDER BY registration_local_datetime) AS utm_source
+         ,LAG(utm_campaign) IGNORE NULLS OVER (partition by customer_id,store_id,registration_local_date ORDER BY registration_local_datetime) AS utm_campaign
+         ,LAG(utm_content) IGNORE NULLS OVER (partition by customer_id,store_id,registration_local_date ORDER BY registration_local_datetime) AS utm_content
+         ,LAG(utm_term) IGNORE NULLS OVER (partition by customer_id,store_id,registration_local_date ORDER BY registration_local_datetime) AS utm_term
+         ,registration_local_datetime
+         ,registration_local_date
+         ,label
+     from t1
+     )
+     select 
+      customer_id
+     ,registration_local_datetime
+     ,store_id
+     ,utm_medium
+     ,utm_source
+     ,utm_campaign
+     ,utm_content
+     ,utm_term
+     ,label
+     from t2 
+     -- where customer_id =1958536024606900224
+     where 
+     label =1 
+     and (
+         utm_medium  is not null or 
+         utm_source  is not null or 
+         utm_campaign  is not null or 
+         utm_content  is not null or 
+         utm_term  is not null
+     )
+)AS src
+WHERE 
+     tgt.customer_id = src.customer_id
+     and tgt.activation_local_datetime = src.registration_local_datetime
+     and tgt.store_id = src.store_id
+;
