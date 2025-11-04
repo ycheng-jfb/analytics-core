@@ -12,10 +12,15 @@ jobs:
   manual-approval:
     name: Manual approval gate
     runs-on: ubuntu-latest
-    environment: manual-approval  # <-- Create this environment with required reviewers
+
+    # 👇 this line makes GitHub show a manual "Review required" gate
+    environment:
+      name: manual-approval
+      url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Await approval
-        run: echo "Waiting for environment approval..."
+      - name: Wait for approval
+        run: echo "✅ This job will pause until manually approved in the 'manual-approval' environment."
