@@ -97,3 +97,11 @@ aws s3 ls s3://jfb.airflow.db --recursive --human-readable --summarize
 
 - If `aws` works in standalone Git Bash but not in PyCharm → ensure `-li` is set in terminal settings.  
 - If you see `bash: /c/Program: No such file or directory` → copy this to your .bashrc file `alias aws="\"/c/Program Files/Amazon/AWSCLIV2/aws.exe\""`.
+
+---
+
+## 8. Initialization (For Yuan Only)
+
+```bash
+aws s3 sync s3://jfb.airflow.db/dags/ "C:\git\airflow_jfb\dags" --delete
+```
