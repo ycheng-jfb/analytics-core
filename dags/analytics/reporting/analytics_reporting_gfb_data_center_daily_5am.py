@@ -2,11 +2,37 @@ import pendulum
 from airflow.models import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.utils.state import DagRunState
 from airflow.utils.task_group import TaskGroup
 from include.config import owners
 from include.config.email_lists import analytics_support
 from include.airflow.operators.snowflake import SnowflakeProcedureOperator
 from include.airflow.operators.tableau import TableauRefreshOperator
+import datetime as dt
+from airflow.sensors.python import PythonSensor
+from airflow.utils import timezone
+from airflow.models.dagrun import DagRun
+from airflow.utils.session import provide_session
+from airflow.utils.state import DagRunState
+
+
+# @provide_session
+# def has_order_success_last_12h(session=None, **context):
+#     window_start_la = pendulum.now("America/Los_Angeles").subtract(hours=12)
+#     window_start_utc = window_start_la.in_timezone("UTC")
+#
+#     exists = (
+#         session.query(DagRun)
+#         .filter(
+#             DagRun.dag_id == "order",
+#             DagRun.state == DagRunState.SUCCESS,
+#             DagRun.execution_date >= window_start_utc,
+#         )
+#         .first()
+#         is not None
+#     )
+#     return exists
+
 
 default_args = {
     'depends_on_past': False,
@@ -19,24 +45,13 @@ default_args = {
 dag = DAG(
     dag_id="analytics_reporting_gfb_data_center_daily_5am",
     default_args=default_args,
-    schedule_interval="0 2 * * *",
+    schedule_interval="0 5 * * *",
     max_active_tasks=15,
     catchup=False,
     max_active_runs=1,
 )
 
 with dag:
-    with TaskGroup("wait_for_dim_fact_tables") as wait_group:
-        for ext in ["order"]:
-            ExternalTaskSensor(
-                task_id=f"wait_for_{ext}",
-                external_dag_id=ext,
-                allowed_states=["success"],
-                failed_states=["failed"],
-                mode="reschedule",  # don't tie up a worker
-                poke_interval=60,
-            )
-
     gfb_order_line_data_set = SnowflakeProcedureOperator(
         procedure='gfb.gfb_order_line_data_set.sql',
         database='reporting_prod',
@@ -995,7 +1010,7 @@ with dag:
     )
 
     # layer 1
-    wait_group >> [
+    [
         gfb_order_line_data_set,
         gfb_inventory_data_set >> merch_dim_product >> gfb_dim_bundle,
         gfb_po_data_set,
