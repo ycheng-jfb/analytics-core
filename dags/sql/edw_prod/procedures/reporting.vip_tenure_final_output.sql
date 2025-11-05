@@ -809,6 +809,7 @@ GROUP BY vip_cohort
 ;
 
 
+
 INSERT INTO snapshot.vip_tenure_final_output (vip_cohort,
                                               month_date,
                                               tenure,
@@ -838,6 +839,7 @@ INSERT INTO snapshot.vip_tenure_final_output (vip_cohort,
                                               credits_cancelled_active_vip,
                                               credits_cancelled_inactive_vip,
                                               snapshot_datetime)
+--CREATE OR REPLACE TABLE snapshot.vip_tenure_final_output as
 SELECT vip_cohort,
        month_date,
        tenure,

@@ -2,20 +2,17 @@ name: airflow_jfb_cicd
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  manual-approval:
-    name: Manual approval gate
+  deploy:
     runs-on: ubuntu-latest
-    environment: manual-approval  # <-- Create this environment with required reviewers
+    environment:
+      name: manual-approval
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Await approval
-        run: echo "Waiting for environment approval..."
+      - uses: actions/checkout@v4
+      - run: echo "Running after manual approval"

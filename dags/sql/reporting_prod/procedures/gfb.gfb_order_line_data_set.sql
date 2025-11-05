@@ -78,13 +78,21 @@ FROM edw_prod.data_model_jfb.dim_product
 WHERE product_type = 'BYO'
   AND product_name ILIKE '2 for 1%';
 
+CREATE OR REPLACE TEMPORARY TABLE _new_two_for_one_flag AS
+SELECT store_id
+     , product_id
+     , effective_start_datetime
+     , effective_end_datetime
+FROM edw_prod.data_model_jfb.dim_product_price_history
+WHERE is_two_for_one = TRUE;
+
 CREATE OR REPLACE TEMPORARY TABLE _order_line_detail_place_date AS
-SELECT DISTINCT UPPER(st.store_brand)                                                            AS business_unit
-              , UPPER(st.store_region)                                                           AS region
+SELECT DISTINCT UPPER(st.store_brand)                                                                   AS business_unit
+              , UPPER(st.store_region)                                                                  AS region
               , (CASE
                      WHEN dc.specialty_country_code = 'GB' THEN 'UK'
-                     WHEN dc.specialty_country_code NOT IN ('Unknown','',NULL) THEN dc.specialty_country_code
-                     ELSE st.store_country END)                                                  AS country
+                     WHEN dc.specialty_country_code NOT IN ('Unknown', '', NULL) THEN dc.specialty_country_code
+                     ELSE st.store_country END)                                                         AS country
               , fol.order_id
               , fol.order_line_id
               , fo.session_id
@@ -92,56 +100,57 @@ SELECT DISTINCT UPPER(st.store_brand)                                           
               , dp.product_id
               , dp.product_type
               , dpt.product_type_name
-              , CASE WHEN dp.product_sku IS NULL OR dp.product_sku = '' THEN TRIM(REGEXP_SUBSTR(dp.sku, '^[^-]+-[^-]+'))
-                        ELSE dp.product_sku END AS product_sku
+              , CASE
+                    WHEN dp.product_sku IS NULL OR dp.product_sku = '' THEN TRIM(REGEXP_SUBSTR(dp.sku, '^[^-]+-[^-]+'))
+                    ELSE dp.product_sku END                                                             AS product_sku
               , dp.sku
               , dp.product_name
-              , dp.color                                                                         AS dp_color
-              , LOWER(dp.size)                                                                   AS dp_size
-              , CAST(fol.order_local_datetime AS DATE)                                           AS order_date
+              , dp.color                                                                                AS dp_color
+              , LOWER(dp.size)                                                                          AS dp_size
+              , CAST(fol.order_local_datetime AS DATE)                                                  AS order_date
               , (CASE
                      WHEN dosc.order_classification_l1 = 'Product Order' THEN 'product order'
                      WHEN dosc.order_classification_l1 = 'Billing Order' THEN 'credit billing'
                      WHEN dosc.order_classification_l1 = 'Exchange' THEN 'exchange'
                      WHEN dosc.order_classification_l1 = 'Reship' THEN 'reship'
-    END)                                                                                         AS order_classification
+    END)                                                                                                AS order_classification
               , (CASE
                      WHEN domc.membership_order_type_l2 = 'Guest' THEN 'ecom'
                      WHEN domc.membership_order_type_l1 = 'Activating VIP' THEN 'vip activating'
-                     ELSE 'vip repeat' END)                                                      AS order_type
+                     ELSE 'vip repeat' END)                                                             AS order_type
               , (CASE
                      WHEN st.store_brand_abbr IN ('JF', 'SD') AND ROUND(mcsl.sale_price) - mcsl.sale_price = 0.03
                          THEN 'clearance'
                      WHEN st.store_brand_abbr IN ('FK') AND ROUND(mcsl.sale_price) - mcsl.sale_price = 0.01
                          THEN 'clearance'
                      WHEN mcsl.sale_price > 0 THEN 'markdown'
-                     ELSE 'regular' END)                                                         AS clearance_flag
-              , mcsl.sale_price                                                                  AS clearance_price
+                     ELSE 'regular' END)                                                                AS clearance_flag
+              , mcsl.sale_price                                                                         AS clearance_price
               , (CASE
                      WHEN lop.product_sku IS NOT NULL THEN 'lead only'
-                     ELSE 'not lead only' END)                                                   AS lead_only_flag
-              , prom_1.promo_id                                                                  AS promo_id_1
-              , UPPER(IFF(CONTAINS(prom_1.code, 'REV_'), up_1.code, prom_1.code))                AS promo_code_1
-              , prom_2.promo_id                                                                  AS promo_id_2
-              , UPPER(IFF(CONTAINS(prom_2.code, 'REV_'), up_2.code, prom_2.code))                AS promo_code_2
+                     ELSE 'not lead only' END)                                                          AS lead_only_flag
+              , prom_1.promo_id                                                                         AS promo_id_1
+              , UPPER(IFF(CONTAINS(prom_1.code, 'REV_'), up_1.code, prom_1.code))                       AS promo_code_1
+              , prom_2.promo_id                                                                         AS promo_id_2
+              , UPPER(IFF(CONTAINS(prom_2.code, 'REV_'), up_2.code, prom_2.code))                       AS promo_code_2
               , dpm.is_prepaid_creditcard
-              , dpm.raw_creditcard_type                                                          AS creditcard_type
+              , dpm.raw_creditcard_type                                                                 AS creditcard_type
               , (CASE
                      WHEN order_date >= '2020-01-01' AND dw.country_code = 'CA'
                          THEN 'Just Fabulous'
-                     ELSE dw.warehouse_name END)                                                 AS warehouse_name
+                     ELSE dw.warehouse_name END)                                                        AS warehouse_name
               , (CASE
                      WHEN order_date >= '2020-01-01' AND dw.country_code = 'CA'
                          THEN 'Louisville'
-                     ELSE dw.city END)                                                           AS warehouse_city
+                     ELSE dw.city END)                                                                  AS warehouse_city
               , (CASE
                      WHEN order_date >= '2020-01-01' AND dw.country_code = 'CA'
                          THEN 'KY'
-                     ELSE dw.state END)                                                          AS warehouse_state
+                     ELSE dw.state END)                                                                 AS warehouse_state
               , (CASE
                      WHEN order_date >= '2020-01-01' AND dw.country_code = 'CA'
                          THEN 'US'
-                     ELSE dw.country_code END)                                                   AS warehouse_country
+                     ELSE dw.country_code END)                                                          AS warehouse_country
               , fol.bundle_product_id
               , bch.bundle_component_product_id
               , fol.bundle_order_line_id
@@ -149,88 +158,93 @@ SELECT DISTINCT UPPER(st.store_brand)                                           
               , (CASE
                      WHEN ops.order_product_source_name LIKE '%look%' AND business_unit != 'FABKIDS'
                          THEN SPLIT_PART(ops.order_product_source_name, ':', -1)
-                     ELSE NULL END)                                                              AS bundle_product_id_jfsd
+                     ELSE NULL END)                                                                     AS bundle_product_id_jfsd
               , fol.warehouse_id
 
               --Sales
-              , fol.item_quantity                                                                AS total_qty_sold
+              , fol.item_quantity                                                                       AS total_qty_sold
               , (fol.subtotal_excl_tariff_local_amount - fol.product_discount_local_amount) *
-                COALESCE(fol.order_date_usd_conversion_rate, 1)                                  AS total_product_revenue
+                COALESCE(fol.order_date_usd_conversion_rate, 1)                                         AS total_product_revenue
               , COALESCE(fol.reporting_landed_cost_local_amount, 0) *
-                COALESCE(fol.order_date_usd_conversion_rate, 1)                                  AS total_cogs
+                COALESCE(fol.order_date_usd_conversion_rate, 1)                                         AS total_cogs
               , COALESCE(fol.reporting_landed_cost_local_amount_accounting, 0) *
-                COALESCE(fol.order_date_usd_conversion_rate, 1)                                  AS total_cogs_without_tariff
+                COALESCE(fol.order_date_usd_conversion_rate, 1)                                         AS total_cogs_without_tariff
               , fol.product_discount_local_amount *
-                COALESCE(fol.order_date_usd_conversion_rate, 1)                                  AS total_discount
-              , fol.tax_local_amount * COALESCE(fol.order_date_usd_conversion_rate, 1)           AS total_tax
+                COALESCE(fol.order_date_usd_conversion_rate, 1)                                         AS total_discount
+              , fol.tax_local_amount * COALESCE(fol.order_date_usd_conversion_rate, 1)                  AS total_tax
               , fol.subtotal_excl_tariff_local_amount *
-                COALESCE(fol.order_date_usd_conversion_rate, 1)                                  AS order_line_subtotal
+                COALESCE(fol.order_date_usd_conversion_rate, 1)                                         AS order_line_subtotal
               , fo.subtotal_excl_tariff_local_amount *
-                COALESCE(fol.order_date_usd_conversion_rate, 1)                                  AS order_subtotal
+                COALESCE(fol.order_date_usd_conversion_rate, 1)                                         AS order_subtotal
               , (CASE
                      WHEN fo.subtotal_excl_tariff_local_amount = 0 THEN 0
                      ELSE fol.subtotal_excl_tariff_local_amount / fo.subtotal_excl_tariff_local_amount
-    END)                                                                                         AS order_line_revenue_percent
+    END)                                                                                                AS order_line_revenue_percent
               , fol.cash_credit_local_amount *
-                COALESCE(fol.order_date_usd_conversion_rate, 1)                                  AS total_cash_credit_amount
+                COALESCE(fol.order_date_usd_conversion_rate, 1)                                         AS total_cash_credit_amount
               , fol.non_cash_credit_local_amount *
-                COALESCE(fol.order_date_usd_conversion_rate, 1)                                  AS total_non_cash_credit_amount
+                COALESCE(fol.order_date_usd_conversion_rate, 1)                                         AS total_non_cash_credit_amount
               , fo.shipping_revenue_local_amount *
-                COALESCE(fol.order_date_usd_conversion_rate, 1)                                  AS order_shipping_revenue
+                COALESCE(fol.order_date_usd_conversion_rate, 1)                                         AS order_shipping_revenue
               , fo.shipping_cost_local_amount *
-                COALESCE(fol.order_date_usd_conversion_rate, 1)                                  AS order_shipping_cost
+                COALESCE(fol.order_date_usd_conversion_rate, 1)                                         AS order_shipping_cost
               ,
         (fol.product_subtotal_local_amount - fol.product_discount_local_amount + fol.shipping_revenue_local_amount -
          fol.non_cash_credit_local_amount - fol.cash_credit_local_amount) *
-        COALESCE(fol.order_date_usd_conversion_rate, 1)                                          AS cash_collected_amount
-              ,SUM(fol.cash_credit_local_amount) OVER(PARTITION BY fol.order_id) AS order_cash_credit_local_amount
-              ,SUM(cash_collected_amount) OVER(PARTITION BY fol.order_id) AS order_cash_collected_amount
+        COALESCE(fol.order_date_usd_conversion_rate, 1)                                                 AS cash_collected_amount
+              , SUM(fol.cash_credit_local_amount) OVER (PARTITION BY fol.order_id)                      AS order_cash_credit_local_amount
+              , SUM(cash_collected_amount) OVER (PARTITION BY fol.order_id)                             AS order_cash_collected_amount
 
-              ,   CASE
+              , CASE
                     WHEN IFNULL(order_cash_credit_local_amount, 0) = 0 THEN 'Only Cash'
-                    WHEN IFNULL(order_cash_collected_amount, 0)= 0 THEN 'Credits Only'
-                    ELSE 'Cash & Credits' END                                                   AS credit_order_type
+                    WHEN IFNULL(order_cash_collected_amount, 0) = 0 THEN 'Credits Only'
+                    ELSE 'Cash & Credits' END                                                           AS credit_order_type
               , IFNULL(IFNULL(fol.subtotal_excl_tariff_local_amount, 0)
                            + IFNULL(fol.tariff_revenue_local_amount, 0)
                            - IFNULL(fol.product_discount_local_amount, 0)
                            - IFNULL(fol.non_cash_credit_local_amount, 0)
     ,
-                       0)                                                                        AS total_product_revenue_with_tariff
-              , fol.token_count                                                                  AS tokens_applied
+                       0)                                                                               AS total_product_revenue_with_tariff
+              , fol.token_count                                                                         AS tokens_applied
               , fol.token_local_amount
               , IFF(fol.token_count > 0, (fol.subtotal_excl_tariff_local_amount - fol.product_discount_local_amount) *
                                          COALESCE(fol.order_date_usd_conversion_rate, 1),
-                    0)                                                                           AS token_product_revenue
+                    0)                                                                                  AS token_product_revenue
               , IFF(fol.token_count > 0, IFNULL(IFNULL(fol.subtotal_excl_tariff_local_amount, 0)
                                                     + IFNULL(fol.tariff_revenue_local_amount, 0)
                                                     - IFNULL(fol.product_discount_local_amount, 0)
                                                     - IFNULL(fol.non_cash_credit_local_amount, 0)
     ,
                                                 0),
-                    0)                                                                           AS token_product_revenue_with_tariff
+                    0)                                                                                  AS token_product_revenue_with_tariff
               , IFF(fol.token_count > 0,
                     COALESCE(fol.reporting_landed_cost_local_amount, 0) *
-                    COALESCE(fol.order_date_usd_conversion_rate, 1), 0)                          AS token_cogs
+                    COALESCE(fol.order_date_usd_conversion_rate, 1), 0)                                 AS token_cogs
               , IFF(fol.token_count > 0, fol.product_discount_local_amount *
-                                         COALESCE(fol.order_date_usd_conversion_rate, 1), 0)     AS token_discount
-              , IFF(tfo.product_type = 'BYO', fol.token_count, 0)                                AS two_for_one_applied
-              , IFF(tfo.product_type = 'BYO', fol.token_local_amount, 0)                         AS two_for_one_amount
+                                         COALESCE(fol.order_date_usd_conversion_rate, 1),
+                    0)                                                                                  AS token_discount
+              , IFF(tfo.product_type = 'BYO' OR ntfo.product_id IS NOT NULL, fol.token_count,
+                    0)                                                                                  AS two_for_one_applied
+              , IFF(tfo.product_type = 'BYO' OR ntfo.product_id IS NOT NULL, fol.token_local_amount,
+                    0)                                                                                  AS two_for_one_amount
               , IFF(two_for_one_applied > 0,
                     (fol.subtotal_excl_tariff_local_amount - fol.product_discount_local_amount) *
                     COALESCE(fol.order_date_usd_conversion_rate, 1),
-                    0)                                                                           AS two_for_one_product_revenue
+                    0)                                                                                  AS two_for_one_product_revenue
               , IFF(two_for_one_applied > 0, IFNULL(IFNULL(fol.subtotal_excl_tariff_local_amount, 0)
                                                         + IFNULL(fol.tariff_revenue_local_amount, 0)
                                                         - IFNULL(fol.product_discount_local_amount, 0)
                                                         - IFNULL(fol.non_cash_credit_local_amount, 0)
     ,
                                                     0),
-                    0)                                                                           AS two_for_one_product_revenue_with_tariff
+                    0)                                                                                  AS two_for_one_product_revenue_with_tariff
               , IFF(two_for_one_applied > 0,
                     COALESCE(fol.reporting_landed_cost_local_amount, 0) *
-                    COALESCE(fol.order_date_usd_conversion_rate, 1), 0)                          AS two_for_one_cogs
+                    COALESCE(fol.order_date_usd_conversion_rate, 1),
+                    0)                                                                                  AS two_for_one_cogs
               , IFF(two_for_one_applied > 0, fol.product_discount_local_amount *
-                                             COALESCE(fol.order_date_usd_conversion_rate, 1), 0) AS two_for_one_discount
+                                             COALESCE(fol.order_date_usd_conversion_rate, 1),
+                    0)                                                                                  AS two_for_one_discount
 FROM edw_prod.data_model_jfb.fact_order_line fol
          JOIN reporting_prod.gfb.vw_store st
               ON st.store_id = fol.store_id
@@ -238,8 +252,8 @@ FROM edw_prod.data_model_jfb.fact_order_line fol
               ON dos.order_status_key = fol.order_status_key
          JOIN edw_prod.data_model_jfb.dim_order_line_status dols
               ON dols.order_line_status_key = fol.order_line_status_key
-         left JOIN edw_prod.data_model_jfb.dim_order_membership_classification domc
-              ON domc.order_membership_classification_key = fol.order_membership_classification_key
+         LEFT JOIN edw_prod.data_model_jfb.dim_order_membership_classification domc
+                   ON domc.order_membership_classification_key = fol.order_membership_classification_key
          JOIN edw_prod.data_model_jfb.dim_product dp
               ON dp.product_id = fol.product_id
          JOIN edw_prod.data_model_jfb.dim_product_type dpt
@@ -294,12 +308,16 @@ FROM edw_prod.data_model_jfb.fact_order_line fol
                    ON ops.order_product_source_key = fol.order_product_source_key
          LEFT JOIN _two_for_one_bundle tfo
                    ON tfo.product_id = fol.bundle_product_id
+         LEFT JOIN _new_two_for_one_flag ntfo
+                   ON ntfo.store_id = fol.store_id
+                       AND ntfo.product_id = fol.product_id
+                       AND ntfo.effective_start_datetime <= fol.order_local_datetime
+                       AND ntfo.effective_end_datetime >= fol.order_local_datetime
 WHERE dos.order_status IN ('Success', 'Pending')
   AND dols.order_line_status != 'Cancelled'
   AND dosc.order_classification_l1 IN ('Billing Order', 'Exchange', 'Product Order', 'Reship')
   AND fol.order_local_datetime IS NOT NULL
   AND CAST(fol.order_local_datetime AS DATE) >= $start_date;
-
 
 CREATE OR REPLACE TEMPORARY TABLE _order_line_detail_ship_date AS
 SELECT DISTINCT UPPER(st.store_brand)                                                            AS business_unit
@@ -407,13 +425,13 @@ SELECT DISTINCT UPPER(st.store_brand)                                           
         (fol.product_subtotal_local_amount - fol.product_discount_local_amount + fol.shipping_revenue_local_amount -
          fol.non_cash_credit_local_amount - fol.cash_credit_local_amount) *
         COALESCE(fol.order_date_usd_conversion_rate, 1)                                          AS cash_collected_amount
-              ,SUM(fol.cash_credit_local_amount) OVER(PARTITION BY fol.order_id) AS order_cash_credit_local_amount
-              ,SUM(cash_collected_amount) OVER(PARTITION BY fol.order_id) AS order_cash_collected_amount
+              , SUM(fol.cash_credit_local_amount) OVER (PARTITION BY fol.order_id)               AS order_cash_credit_local_amount
+              , SUM(cash_collected_amount) OVER (PARTITION BY fol.order_id)                      AS order_cash_collected_amount
 
-              ,   CASE
+              , CASE
                     WHEN IFNULL(order_cash_credit_local_amount, 0) = 0 THEN 'Only Cash'
-                    WHEN IFNULL(order_cash_collected_amount, 0)= 0 THEN 'Credits Only'
-                    ELSE 'Cash & Credits' END                                                   AS credit_order_type
+                    WHEN IFNULL(order_cash_collected_amount, 0) = 0 THEN 'Credits Only'
+                    ELSE 'Cash & Credits' END                                                    AS credit_order_type
               , IFNULL(IFNULL(fol.subtotal_excl_tariff_local_amount, 0)
                            + IFNULL(fol.tariff_revenue_local_amount, 0)
                            - IFNULL(fol.product_discount_local_amount, 0)
@@ -437,8 +455,10 @@ SELECT DISTINCT UPPER(st.store_brand)                                           
                     COALESCE(fol.order_date_usd_conversion_rate, 1), 0)                          AS token_cogs
               , IFF(fol.token_count > 0, fol.product_discount_local_amount *
                                          COALESCE(fol.order_date_usd_conversion_rate, 1), 0)     AS token_discount
-              , IFF(tfo.product_type = 'BYO', fol.token_count, 0)                                AS two_for_one_applied
-              , IFF(tfo.product_type = 'BYO', fol.token_local_amount, 0)                         AS two_for_one_amount
+              , IFF(tfo.product_type = 'BYO' OR ntfo.product_id IS NOT NULL, fol.token_count,
+                    0)                                                                                  AS two_for_one_applied
+              , IFF(tfo.product_type = 'BYO' OR ntfo.product_id IS NOT NULL, fol.token_local_amount,
+                    0)                                                                                  AS two_for_one_amount
               , IFF(two_for_one_applied > 0,
                     (fol.subtotal_excl_tariff_local_amount - fol.product_discount_local_amount) *
                     COALESCE(fol.order_date_usd_conversion_rate, 1),
@@ -462,8 +482,8 @@ FROM edw_prod.data_model_jfb.fact_order_line fol
               ON dos.order_status_key = fol.order_status_key
          JOIN edw_prod.data_model_jfb.dim_order_line_status dols
               ON dols.order_line_status_key = fol.order_line_status_key
-         left JOIN edw_prod.data_model_jfb.dim_order_membership_classification domc
-              ON domc.order_membership_classification_key = fol.order_membership_classification_key
+         LEFT JOIN edw_prod.data_model_jfb.dim_order_membership_classification domc
+                   ON domc.order_membership_classification_key = fol.order_membership_classification_key
          JOIN edw_prod.data_model_jfb.dim_product dp
               ON dp.product_id = fol.product_id
          JOIN edw_prod.data_model_jfb.dim_product_type dpt
@@ -519,6 +539,11 @@ FROM edw_prod.data_model_jfb.fact_order_line fol
                    ON ops.order_product_source_key = fol.order_product_source_key
          LEFT JOIN _two_for_one_bundle tfo
                    ON tfo.product_id = fol.bundle_product_id
+         LEFT JOIN _new_two_for_one_flag ntfo
+                   ON ntfo.store_id = fol.store_id
+                       AND ntfo.product_id = fol.product_id
+                       AND ntfo.effective_start_datetime <= fol.order_local_datetime
+                       AND ntfo.effective_end_datetime >= fol.order_local_datetime
 WHERE dos.order_status = 'Success'
   AND dols.order_line_status != 'Cancelled'
   AND dosc.order_classification_l1 IN ('Billing Order', 'Exchange', 'Product Order', 'Reship')
@@ -611,7 +636,9 @@ FROM (
                            AND dosc.is_test_order = 0
                   JOIN edw_prod.data_model_jfb.dim_return_status drs
                        ON drs.return_status_key = frl.return_status_key
-         WHERE (drs.return_status = 'Resolved' OR (dp.membership_brand_id IN (10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,25,26,27,28,29) AND drs.return_status IN ('Resolved','Unknown')))
+         WHERE (drs.return_status = 'Resolved' OR (dp.membership_brand_id IN
+                                                   (10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+                                                    27, 28, 29) AND drs.return_status IN ('Resolved', 'Unknown')))
            AND drc.return_condition != 'Damaged'
            AND dosc.order_classification_l1 IN ('Exchange', 'Product Order', 'Reship')
          GROUP BY fol.order_line_id
@@ -650,78 +677,78 @@ WHERE order_date >= $start_date;
 
 INSERT INTO reporting_prod.gfb.gfb_order_line_data_set_place_date
 SELECT old.business_unit
-      ,old.region
-      ,old.country
-      ,old.order_id
-      ,old.order_line_id
-      ,old.session_id
-      ,old.customer_id
-      ,old.product_id
-      ,old.product_type
-      ,old.product_type_name
-      ,old.credit_order_type
-      ,old.product_sku
-      ,old.sku
-      ,old.product_name
-      ,old.dp_color
-      ,old.dp_size
-      ,old.order_date
-      ,old.order_classification
-      ,old.order_type
-      ,old.clearance_flag
-      ,old.clearance_price
-      ,old.lead_only_flag
-      ,old.promo_id_1
-      ,old.promo_code_1
-      ,old.promo_id_2
-      ,old.promo_code_2
-      ,old.is_prepaid_creditcard
-      ,old.creditcard_type
-      ,old.warehouse_name
-      ,old.warehouse_city
-      ,old.warehouse_state
-      ,old.warehouse_country
-      ,old.bundle_product_id
-      ,old.bundle_component_product_id
-      ,old.bundle_order_line_id
-      ,old.order_product_source_name
-      ,old.bundle_product_id_jfsd
-      ,old.warehouse_id
-      ,old.total_qty_sold
-      ,old.total_product_revenue
-      ,old.total_cogs
-      ,old.total_cogs_without_tariff
-      ,old.total_discount
-      ,old.total_tax
-      ,old.order_line_subtotal
-      ,old.order_subtotal
-      ,old.order_line_revenue_percent
-      ,old.total_cash_credit_amount
-      ,old.total_non_cash_credit_amount
-      ,old.order_shipping_revenue
-      ,old.order_shipping_cost
-      ,old.cash_collected_amount
-      ,old.total_product_revenue_with_tariff
-      ,old.tokens_applied
-      ,old.token_local_amount
-      ,old.token_product_revenue
-      ,old.token_product_revenue_with_tariff
-      ,old.token_cogs
-      ,old.token_discount
-      ,old.two_for_one_applied
-      ,old.two_for_one_amount
-      ,old.two_for_one_product_revenue
-      ,old.two_for_one_product_revenue_with_tariff
-      ,old.two_for_one_cogs
-      ,old.two_for_one_discount
+     , old.region
+     , old.country
+     , old.order_id
+     , old.order_line_id
+     , old.session_id
+     , old.customer_id
+     , old.product_id
+     , old.product_type
+     , old.product_type_name
+     , old.credit_order_type
+     , old.product_sku
+     , old.sku
+     , old.product_name
+     , old.dp_color
+     , old.dp_size
+     , old.order_date
+     , old.order_classification
+     , old.order_type
+     , old.clearance_flag
+     , old.clearance_price
+     , old.lead_only_flag
+     , old.promo_id_1
+     , old.promo_code_1
+     , old.promo_id_2
+     , old.promo_code_2
+     , old.is_prepaid_creditcard
+     , old.creditcard_type
+     , old.warehouse_name
+     , old.warehouse_city
+     , old.warehouse_state
+     , old.warehouse_country
+     , old.bundle_product_id
+     , old.bundle_component_product_id
+     , old.bundle_order_line_id
+     , old.order_product_source_name
+     , old.bundle_product_id_jfsd
+     , old.warehouse_id
+     , old.total_qty_sold
+     , old.total_product_revenue
+     , old.total_cogs
+     , old.total_cogs_without_tariff
+     , old.total_discount
+     , old.total_tax
+     , old.order_line_subtotal
+     , old.order_subtotal
+     , old.order_line_revenue_percent
+     , old.total_cash_credit_amount
+     , old.total_non_cash_credit_amount
+     , old.order_shipping_revenue
+     , old.order_shipping_cost
+     , old.cash_collected_amount
+     , old.total_product_revenue_with_tariff
+     , old.tokens_applied
+     , old.token_local_amount
+     , old.token_product_revenue
+     , old.token_product_revenue_with_tariff
+     , old.token_cogs
+     , old.token_discount
+     , old.two_for_one_applied
+     , old.two_for_one_amount
+     , old.two_for_one_product_revenue
+     , old.two_for_one_product_revenue_with_tariff
+     , old.two_for_one_cogs
+     , old.two_for_one_discount
 
      , cb.chargeback_date
-     , coalesce(cb.total_chargeback_amount, 0) * old.order_line_revenue_percent    AS total_chargeback_amount
+     , COALESCE(cb.total_chargeback_amount, 0) * old.order_line_revenue_percent    AS total_chargeback_amount
 
      , rf.refund_date
-     , coalesce(rf.total_refund_amount, 0) * old.order_line_revenue_percent        AS total_refund_amount
-     , coalesce(rf.total_refund_cash_amount, 0) * old.order_line_revenue_percent   AS total_refund_cash_amount
-     , coalesce(rf.total_refund_credit_amount, 0) * old.order_line_revenue_percent AS total_refund_credit_amount
+     , COALESCE(rf.total_refund_amount, 0) * old.order_line_revenue_percent        AS total_refund_amount
+     , COALESCE(rf.total_refund_cash_amount, 0) * old.order_line_revenue_percent   AS total_refund_cash_amount
+     , COALESCE(rf.total_refund_credit_amount, 0) * old.order_line_revenue_percent AS total_refund_credit_amount
 
      , rd.return_date
      , rd.return_reason
@@ -729,8 +756,8 @@ SELECT old.business_unit
      , rd.total_return_dollars
      , rd.total_refund_cost
 
-     , old.order_shipping_revenue * old.order_line_revenue_percent    AS total_shipping_revenue
-     , old.order_shipping_cost * old.order_line_revenue_percent       AS total_shipping_cost
+     , old.order_shipping_revenue * old.order_line_revenue_percent                 AS total_shipping_revenue
+     , old.order_shipping_cost * old.order_line_revenue_percent                    AS total_shipping_cost
 
      , a.shipping_country
      , a.shipping_state
@@ -766,77 +793,77 @@ WHERE ship_date >= $start_date;
 
 INSERT INTO reporting_prod.gfb.gfb_order_line_data_set_ship_date
 SELECT old.business_unit
-      ,old.region
-      ,old.country
-      ,old.order_id
-      ,old.order_line_id
-      ,old.session_id
-      ,old.customer_id
-      ,old.product_id
-      ,old.product_type
-      ,old.credit_order_type
-      ,old.product_sku
-      ,old.sku
-      ,old.product_name
-      ,old.dp_color
-      ,old.dp_size
-      ,old.ship_date
-      ,old.order_classification
-      ,old.order_type
-      ,old.clearance_flag
-      ,old.clearance_price
-      ,old.lead_only_flag
-      ,old.promo_id_1
-      ,old.promo_code_1
-      ,old.promo_id_2
-      ,old.promo_code_2
-      ,old.is_prepaid_creditcard
-      ,old.creditcard_type
-      ,old.warehouse_name
-      ,old.warehouse_city
-      ,old.warehouse_state
-      ,old.warehouse_country
-      ,old.bundle_product_id
-      ,old.bundle_component_product_id
-      ,old.bundle_order_line_id
-      ,old.order_product_source_name
-      ,old.bundle_product_id_jfsd
-      ,old.warehouse_id
-      ,old.total_qty_sold
-      ,old.total_product_revenue
-      ,old.total_cogs
-      ,old.total_cogs_without_tariff
-      ,old.total_discount
-      ,old.total_tax
-      ,old.order_line_subtotal
-      ,old.order_subtotal
-      ,old.order_line_revenue_percent
-      ,old.total_cash_credit_amount
-      ,old.total_non_cash_credit_amount
-      ,old.order_shipping_revenue
-      ,old.order_shipping_cost
-      ,old.cash_collected_amount
-      ,old.total_product_revenue_with_tariff
-      ,old.tokens_applied
-      ,old.token_local_amount
-      ,old.token_product_revenue
-      ,old.token_product_revenue_with_tariff
-      ,old.token_cogs
-      ,old.token_discount
-      ,old.two_for_one_applied
-      ,old.two_for_one_amount
-      ,old.two_for_one_product_revenue
-      ,old.two_for_one_product_revenue_with_tariff
-      ,old.two_for_one_cogs
-      ,old.two_for_one_discount
+     , old.region
+     , old.country
+     , old.order_id
+     , old.order_line_id
+     , old.session_id
+     , old.customer_id
+     , old.product_id
+     , old.product_type
+     , old.credit_order_type
+     , old.product_sku
+     , old.sku
+     , old.product_name
+     , old.dp_color
+     , old.dp_size
+     , old.ship_date
+     , old.order_classification
+     , old.order_type
+     , old.clearance_flag
+     , old.clearance_price
+     , old.lead_only_flag
+     , old.promo_id_1
+     , old.promo_code_1
+     , old.promo_id_2
+     , old.promo_code_2
+     , old.is_prepaid_creditcard
+     , old.creditcard_type
+     , old.warehouse_name
+     , old.warehouse_city
+     , old.warehouse_state
+     , old.warehouse_country
+     , old.bundle_product_id
+     , old.bundle_component_product_id
+     , old.bundle_order_line_id
+     , old.order_product_source_name
+     , old.bundle_product_id_jfsd
+     , old.warehouse_id
+     , old.total_qty_sold
+     , old.total_product_revenue
+     , old.total_cogs
+     , old.total_cogs_without_tariff
+     , old.total_discount
+     , old.total_tax
+     , old.order_line_subtotal
+     , old.order_subtotal
+     , old.order_line_revenue_percent
+     , old.total_cash_credit_amount
+     , old.total_non_cash_credit_amount
+     , old.order_shipping_revenue
+     , old.order_shipping_cost
+     , old.cash_collected_amount
+     , old.total_product_revenue_with_tariff
+     , old.tokens_applied
+     , old.token_local_amount
+     , old.token_product_revenue
+     , old.token_product_revenue_with_tariff
+     , old.token_cogs
+     , old.token_discount
+     , old.two_for_one_applied
+     , old.two_for_one_amount
+     , old.two_for_one_product_revenue
+     , old.two_for_one_product_revenue_with_tariff
+     , old.two_for_one_cogs
+     , old.two_for_one_discount
 
      , cb.chargeback_date
-     , coalesce(cb.total_chargeback_amount, 0) * old.order_line_revenue_percent    AS total_chargeback_amount
+     , COALESCE(cb.total_chargeback_amount, 0) * old.order_line_revenue_percent    AS total_chargeback_amount
 
      , rf.refund_date
-     , coalesce(rf.total_refund_amount, 0) * old.order_line_revenue_percent        AS total_refund_amount
-     , coalesce(rf.total_refund_cash_amount, 0) * old.order_line_revenue_percent   AS total_refund_cash_amount
-     , coalesce(rf.total_refund_credit_amount, 0) * old.order_line_revenue_percent AS total_refund_credit_amount
+     , COALESCE(rf.total_refund_amount, 0) * old.order_line_revenue_percent        AS total_refund_amount
+     , COALESCE(rf.total_refund_cash_amount, 0) * old.order_line_revenue_percent   AS total_refund_cash_amount
+     , COALESCE(rf.total_refund_credit_amount, 0) * old.order_line_revenue_percent AS total_refund_credit_amount
 
      , rd.return_date
      , rd.return_reason
@@ -844,8 +871,8 @@ SELECT old.business_unit
      , rd.total_return_dollars
      , rd.total_refund_cost
 
-     , old.order_shipping_revenue * old.order_line_revenue_percent    AS total_shipping_revenue
-     , old.order_shipping_cost * old.order_line_revenue_percent       AS total_shipping_cost
+     , old.order_shipping_revenue * old.order_line_revenue_percent                 AS total_shipping_revenue
+     , old.order_shipping_cost * old.order_line_revenue_percent                    AS total_shipping_cost
 
      , a.shipping_country
      , a.shipping_state
