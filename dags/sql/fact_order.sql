@@ -63,7 +63,7 @@ with orders as (
 order_line_flag AS (
     SELECT
             l.order_id,
-            max(PRICE) price
+            max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT) price
         FROM LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.ORDER_LINE l
         left join metafield m on m.owner_id = l.product_id
         where m.OWNER_ID is not null
@@ -144,7 +144,7 @@ select
       a.order_id
     ,c.order_line_id
     , COALESCE(d.code,d.title)
-    ,a.price*a.QUANTITY order_line_price
+    ,PARSE_JSON(a.price_set):presentment_money:amount::FLOAT * a.QUANTITY order_line_price
     ,e."price" price
     ,iff(e."id" is not null,0,c.AMOUNT_SET_PRESENTMENT_MONEY_AMOUNT) as order_line_discount_local_amount -- 非vip_credit的折扣金额取shopify的折扣金额
     -- 分摊比例
@@ -168,7 +168,7 @@ SELECT
   old.id,
   old.order_id,
   oa.vip_credit_id,
-  COALESCE(oa.product_subtotal_local_amount,old.price * old.QUANTITY) as product_subtotal_local_amount
+  COALESCE(oa.product_subtotal_local_amount,PARSE_JSON(old.price_set):presentment_money:amount::FLOAT * old.QUANTITY) as product_subtotal_local_amount
 FROM LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.order_line old
 LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
     ) sub
@@ -197,13 +197,13 @@ LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
     max(ol.quantity) unit_count,
     max(case when t.kind  in ('capture','sale') then t.amount end) payment_transaction_local_amount,
     max(p2.product_subtotal_local_amount) product_subtotal_local_amount,
-    max(o.TOTAL_TAX) tax_local_amount,
+    max(PARSE_JSON(o.total_tax_set):presentment_money:amount::FLOAT) tax_local_amount,
     max(case when t.kind  in ('capture','sale')and t.GATEWAY = 'gift_card' then t.amount else 0 end) cash_giftco_credit_local_amount,
     count(distinct case when t.kind  in ('capture','sale') and t.GATEWAY = 'gift_card' then t.id end) cash_giftco_credit_count,
-    max(osl.PRICE) shipping_revenue_before_discount_local_amount,
+    max(PARSE_JSON(osl.price_set):presentment_money:amount::FLOAT) shipping_revenue_before_discount_local_amount,
     max(ol_disc.discount) AS product_discount_local_amount,
     max(case
-        when da_shipping.VALUE_TYPE = 'percentage' then osl.PRICE * da_shipping.VALUE / 100
+        when da_shipping.VALUE_TYPE = 'percentage' then PARSE_JSON(osl.price_set):presentment_money:amount::FLOAT * da_shipping.VALUE / 100
         when da_shipping.VALUE_TYPE = 'fixed_amount' then da_shipping.VALUE
         else 0
     end) AS shipping_discount_local_amount,
@@ -223,7 +223,7 @@ LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
         - COALESCE(max(tariff_discount_local_amout.discount),0) --tariff_discount_local_amout
         , 0) as tariff_revenue_local_amount,
     max(CONVERT_TIMEZONE('America/Los_Angeles', o.PROCESSED_AT)) order_placed_local_datetime,
-    max(o.TOTAL_LINE_ITEMS_PRICE) AS shopify_total_line_items_price,
+    max(PARSE_JSON(o.TOTAL_LINE_ITEMS_PRICE_SET):presentment_money:amount::FLOAT) AS shopify_total_line_items_price,
     max(tariff_discount_local_amout.discount) AS tariff_discount_local_amout,
     max(ot.price) tariff_revenue_before_discount_local_amount
 FROM LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD."ORDER" o
@@ -631,7 +631,7 @@ with orders as (
 order_line_flag AS (
     SELECT
             l.order_id,
-            max(PRICE) price
+            max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT) price
         FROM LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.ORDER_LINE l
         left join metafield m on m.owner_id = l.product_id
         where m.OWNER_ID is not null
@@ -712,7 +712,7 @@ select
       a.order_id
     ,c.order_line_id
     , COALESCE(d.code,d.title)
-    ,a.price*a.QUANTITY order_line_price
+    ,PARSE_JSON(a.price_set):presentment_money:amount::FLOAT * a.QUANTITY  order_line_price
     ,e."price" price
     ,iff(e."id" is not null,0,c.AMOUNT_SET_PRESENTMENT_MONEY_AMOUNT) as order_line_discount_local_amount -- 非vip_credit的折扣金额取shopify的折扣金额
     -- 分摊比例
@@ -736,7 +736,7 @@ SELECT
   old.id,
   old.order_id,
   oa.vip_credit_id,
-  COALESCE(oa.product_subtotal_local_amount,old.price * old.QUANTITY) as product_subtotal_local_amount
+  COALESCE(oa.product_subtotal_local_amount,PARSE_JSON(old.price_set):presentment_money:amount::FLOAT * old.QUANTITY) as product_subtotal_local_amount
 FROM LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.order_line old
 LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
     ) sub
@@ -765,13 +765,13 @@ LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
     max(ol.quantity) unit_count,
     max(case when t.kind  in ('capture','sale') then t.amount end) payment_transaction_local_amount,
     max(p2.product_subtotal_local_amount) product_subtotal_local_amount,
-    max(o.TOTAL_TAX) tax_local_amount,
+    max(PARSE_JSON(o.total_tax_set):presentment_money:amount::FLOAT) tax_local_amount,
     max(case when t.kind  in ('capture','sale')and t.GATEWAY = 'gift_card' then t.amount else 0 end) cash_giftco_credit_local_amount,
     count(distinct case when t.kind  in ('capture','sale') and t.GATEWAY = 'gift_card' then t.id end) cash_giftco_credit_count,
-    max(osl.PRICE) shipping_revenue_before_discount_local_amount,
+    max(PARSE_JSON(osl.price_set):presentment_money:amount::FLOAT) shipping_revenue_before_discount_local_amount,
     max(ol_disc.discount) AS product_discount_local_amount,
     max(case
-        when da_shipping.VALUE_TYPE = 'percentage' then osl.PRICE * da_shipping.VALUE / 100
+        when da_shipping.VALUE_TYPE = 'percentage' then PARSE_JSON(osl.price_set):presentment_money:amount::FLOAT * da_shipping.VALUE / 100
         when da_shipping.VALUE_TYPE = 'fixed_amount' then da_shipping.VALUE
         else 0
     end) AS shipping_discount_local_amount,
@@ -791,7 +791,7 @@ LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
         - COALESCE(max(tariff_discount_local_amout.discount),0) --tariff_discount_local_amout
         , 0) as tariff_revenue_local_amount,
     max(CONVERT_TIMEZONE('America/Los_Angeles', o.PROCESSED_AT)) order_placed_local_datetime,
-    max(o.TOTAL_LINE_ITEMS_PRICE) AS shopify_total_line_items_price,
+    max(PARSE_JSON(o.TOTAL_LINE_ITEMS_PRICE_SET):presentment_money:amount::FLOAT) AS shopify_total_line_items_price,
     max(tariff_discount_local_amout.discount) AS tariff_discount_local_amout,
     max(ot.price) tariff_revenue_before_discount_local_amount
 FROM LAKE_MMOS.SHOPIFY_JUSTFAB_PROD."ORDER" o
@@ -1202,7 +1202,7 @@ with orders as (
 order_line_flag AS (
     SELECT
             l.order_id,
-            max(PRICE) price
+            max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT) price
         FROM LAKE_MMOS.SHOPIFY_FABKIDS_PROD.ORDER_LINE l
         left join metafield m on m.owner_id = l.product_id
         where m.OWNER_ID is not null
@@ -1283,7 +1283,7 @@ select
       a.order_id
     ,c.order_line_id
     , COALESCE(d.code,d.title)
-    ,a.price*a.QUANTITY order_line_price
+    ,PARSE_JSON(a.price_set):presentment_money:amount::FLOAT * a.QUANTITY  order_line_price
     ,e."price" price
     ,iff(e."id" is not null,0,c.AMOUNT_SET_PRESENTMENT_MONEY_AMOUNT) as order_line_discount_local_amount -- 非vip_credit的折扣金额取shopify的折扣金额
     -- 分摊比例
@@ -1307,7 +1307,7 @@ SELECT
   old.id,
   old.order_id,
   oa.vip_credit_id,
-  COALESCE(oa.product_subtotal_local_amount,old.price * old.QUANTITY) as product_subtotal_local_amount
+  COALESCE(oa.product_subtotal_local_amount,PARSE_JSON(old.price_set):presentment_money:amount::FLOAT * old.QUANTITY) as product_subtotal_local_amount
 FROM LAKE_MMOS.SHOPIFY_FABKIDS_PROD.order_line old
 LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
     ) sub
@@ -1336,13 +1336,13 @@ LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
     max(ol.quantity) unit_count,
     max(case when t.kind  in ('capture','sale') then t.amount end) payment_transaction_local_amount,
     max(p2.product_subtotal_local_amount) product_subtotal_local_amount,
-    max(o.TOTAL_TAX) tax_local_amount,
+    max(PARSE_JSON(o.total_tax_set):presentment_money:amount::FLOAT) tax_local_amount,
     max(case when t.kind  in ('capture','sale')and t.GATEWAY = 'gift_card' then t.amount else 0 end) cash_giftco_credit_local_amount,
     count(distinct case when t.kind  in ('capture','sale') and t.GATEWAY = 'gift_card' then t.id end) cash_giftco_credit_count,
-    max(osl.PRICE) shipping_revenue_before_discount_local_amount,
+    max(PARSE_JSON(osl.price_set):presentment_money:amount::FLOAT) shipping_revenue_before_discount_local_amount,
     max(ol_disc.discount) AS product_discount_local_amount,
     max(case
-        when da_shipping.VALUE_TYPE = 'percentage' then osl.PRICE * da_shipping.VALUE / 100
+        when da_shipping.VALUE_TYPE = 'percentage' then PARSE_JSON(osl.price_set):presentment_money:amount::FLOAT * da_shipping.VALUE / 100
         when da_shipping.VALUE_TYPE = 'fixed_amount' then da_shipping.VALUE
         else 0
     end) AS shipping_discount_local_amount,
@@ -1362,7 +1362,7 @@ LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
         - COALESCE(max(tariff_discount_local_amout.discount),0) --tariff_discount_local_amout
         , 0) as tariff_revenue_local_amount,
     max(CONVERT_TIMEZONE('America/Los_Angeles', o.PROCESSED_AT)) order_placed_local_datetime,
-    max(o.TOTAL_LINE_ITEMS_PRICE) AS shopify_total_line_items_price,
+    max(PARSE_JSON(o.TOTAL_LINE_ITEMS_PRICE_SET):presentment_money:amount::FLOAT) AS shopify_total_line_items_price,
     max(tariff_discount_local_amout.discount) AS tariff_discount_local_amout,
     max(ot.price) tariff_revenue_before_discount_local_amount
 FROM LAKE_MMOS.SHOPIFY_FABKIDS_PROD."ORDER" o
@@ -1769,7 +1769,7 @@ p4 as (
         order_line_flag AS (
             SELECT
                     l.order_id,
-                    max(PRICE) price
+                    max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT) price
                 FROM LAKE_MMOS.SHOPIFY_JFEU_PROD.ORDER_LINE l
                 left join metafield m on m.owner_id = l.product_id
                 where m.OWNER_ID is not null
@@ -1850,7 +1850,7 @@ p4 as (
             a.order_id
             ,c.order_line_id
             , COALESCE(d.code,d.title)
-            ,a.price*a.QUANTITY order_line_price
+            ,PARSE_JSON(a.price_set):presentment_money:amount::FLOAT * a.QUANTITY  order_line_price
             ,e."price" price
             ,iff(e."id" is not null,0,c.AMOUNT_SET_PRESENTMENT_MONEY_AMOUNT) as order_line_discount_local_amount -- 非vip_credit的折扣金额取shopify的折扣金额
             -- 分摊比例
@@ -1874,7 +1874,7 @@ p4 as (
         old.id,
         old.order_id,
         oa.vip_credit_id,
-        COALESCE(oa.product_subtotal_local_amount,old.price * old.QUANTITY) as product_subtotal_local_amount
+  COALESCE(oa.product_subtotal_local_amount,PARSE_JSON(old.price_set):presentment_money:amount::FLOAT * old.QUANTITY) as product_subtotal_local_amount
         FROM LAKE_MMOS.SHOPIFY_JFEU_PROD.order_line old
         LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
             ) sub
@@ -1902,23 +1902,20 @@ p4 as (
             -- 优化unit_count计算，确保与简单查询一致
             max(ol.quantity) unit_count,
             max(case when t.kind  in ('capture','sale') then t.amount end) payment_transaction_local_amount,
-            max(p2.product_subtotal_local_amount) product_subtotal_local_amount,
-            max(o.TOTAL_TAX) tax_local_amount,
+            max(p2.product_subtotal_local_amount)-max(o.TOTAL_TAX) product_subtotal_local_amount,
+            max(PARSE_JSON(o.total_tax_set):presentment_money:amount::FLOAT) tax_local_amount,
             max(case when t.kind  in ('capture','sale')and t.GATEWAY = 'gift_card' then t.amount else 0 end) cash_giftco_credit_local_amount,
             count(distinct case when t.kind  in ('capture','sale') and t.GATEWAY = 'gift_card' then t.id end) cash_giftco_credit_count,
-            max(osl.PRICE) shipping_revenue_before_discount_local_amount,
+            max(PARSE_JSON(osl.price_set):presentment_money:amount::FLOAT) shipping_revenue_before_discount_local_amount,
             max(ol_disc.discount) AS product_discount_local_amount,
             max(case
-                when da_shipping.VALUE_TYPE = 'percentage' then osl.PRICE * da_shipping.VALUE / 100
+                when da_shipping.VALUE_TYPE = 'percentage' then PARSE_JSON(osl.price_set):presentment_money:amount::FLOAT * da_shipping.VALUE / 100
                 when da_shipping.VALUE_TYPE = 'fixed_amount' then da_shipping.VALUE
                 else 0
             end) AS shipping_discount_local_amount,
             max(CONVERT_TIMEZONE('America/Los_Angeles', o.PROCESSED_AT)) order_placed_local,
-            max(p2.product_subtotal_local_amount) -
-            COALESCE(
-            COALESCE(max(ot.price), 0) - COALESCE(max(tariff_discount_local_amout.discount), 0),
-            0
-        ) as subtotal_excl_tariff_local_amount,
+            max(p2.product_subtotal_local_amount) - max(o.TOTAL_TAX) -
+                COALESCE(COALESCE(max(ot.price), 0) - COALESCE(max(tariff_discount_local_amout.discount), 0),0) as subtotal_excl_tariff_local_amount,
             max(t.PAYMENT_CREDIT_CARD_COMPANY ) PAYMENT_CREDIT_CARD_COMPANY,
             max(CONVERT_TIMEZONE('America/Los_Angeles', f.CREATED_AT)) shipped_local_datetime,
             max(o.FINANCIAL_STATUS) AS FINANCIAL_STATUS,
@@ -1929,7 +1926,7 @@ p4 as (
                 - COALESCE(max(tariff_discount_local_amout.discount),0) --tariff_discount_local_amout
                 , 0) as tariff_revenue_local_amount,
             max(CONVERT_TIMEZONE('America/Los_Angeles', o.PROCESSED_AT)) order_placed_local_datetime,
-            max(o.TOTAL_LINE_ITEMS_PRICE) AS shopify_total_line_items_price,
+            max(PARSE_JSON(o.TOTAL_LINE_ITEMS_PRICE_SET):presentment_money:amount::FLOAT) AS shopify_total_line_items_price,
             max(tariff_discount_local_amout.discount) AS tariff_discount_local_amout,
             max(ot.price) tariff_revenue_before_discount_local_amount
         FROM LAKE_MMOS.SHOPIFY_JFEU_PROD."ORDER" o

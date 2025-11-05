@@ -30,8 +30,10 @@ l_p_1 as (
       ol.variant_id AS product_id,
       ol.PRODUCT_ID as master_product_id,
       ol.quantity AS item_quantity,
-      ol.price * ol.QUANTITY AS product_subtotal_local_amount,
-      ol.price  AS price_offered_local_amount,
+      -- ol.price * ol.QUANTITY AS product_subtotal_local_amount,
+      -- ol.price  AS price_offered_local_amount,
+      PARSE_JSON(ol.price_set):presentment_money:amount::FLOAT * ol.QUANTITY AS product_subtotal_local_amount,
+      PARSE_JSON(ol.price_set):presentment_money:amount::FLOAT   AS price_offered_local_amount,
       ol.properties,
       f.customer_id,
       -- o.PROCESSED_AT AS order_local_datetime,
@@ -93,7 +95,7 @@ l_p_1 as (
         a.order_id
       ,c.order_line_id
       , COALESCE(d.code,d.title) 
-      ,a.price*a.QUANTITY order_line_price
+      ,PARSE_JSON(a.price_set):presentment_money:amount::FLOAT * a.QUANTITY order_line_price
       ,e."price" price
       ,iff(e."id" is not null,0,c.AMOUNT_SET_PRESENTMENT_MONEY_AMOUNT) as order_line_discount_local_amount -- 非vip_credit的折扣金额取shopify的折扣金额
       -- 分摊比例
@@ -344,8 +346,8 @@ l_p_1 as (
       ol.variant_id AS product_id,
       ol.PRODUCT_ID as master_product_id,
       ol.quantity AS item_quantity,
-      ol.price * ol.QUANTITY AS product_subtotal_local_amount,
-      ol.price  AS price_offered_local_amount,
+      PARSE_JSON(ol.price_set):presentment_money:amount::FLOAT * ol.QUANTITY AS product_subtotal_local_amount,
+      PARSE_JSON(ol.price_set):presentment_money:amount::FLOAT  AS price_offered_local_amount,
       ol.properties,
       f.customer_id,
       -- o.PROCESSED_AT AS order_local_datetime,
@@ -407,7 +409,7 @@ l_p_1 as (
         a.order_id
       ,c.order_line_id
       , COALESCE(d.code,d.title) 
-      ,a.price*a.QUANTITY order_line_price
+      ,PARSE_JSON(a.price_set):presentment_money:amount::FLOAT *a.QUANTITY order_line_price
       ,e."price" price
       ,iff(e."id" is not null,0,c.AMOUNT_SET_PRESENTMENT_MONEY_AMOUNT) as order_line_discount_local_amount -- 非vip_credit的折扣金额取shopify的折扣金额
       -- 分摊比例
@@ -658,8 +660,8 @@ l_p_1 as (
       ol.variant_id AS product_id,
       ol.PRODUCT_ID as master_product_id,
       ol.quantity AS item_quantity,
-      ol.price * ol.QUANTITY AS product_subtotal_local_amount,
-      ol.price  AS price_offered_local_amount,
+      PARSE_JSON(ol.price_set):presentment_money:amount::FLOAT * ol.QUANTITY AS product_subtotal_local_amount,
+      PARSE_JSON(ol.price_set):presentment_money:amount::FLOAT  AS price_offered_local_amount,
       ol.properties,
       f.customer_id,
       -- o.PROCESSED_AT AS order_local_datetime,
@@ -721,7 +723,7 @@ l_p_1 as (
         a.order_id
       ,c.order_line_id
       , COALESCE(d.code,d.title)
-      ,a.price*a.QUANTITY order_line_price
+      ,PARSE_JSON(a.price_set):presentment_money:amount::FLOAT *a.QUANTITY order_line_price
       ,e."price" price
       ,iff(e."id" is not null,0,c.AMOUNT_SET_PRESENTMENT_MONEY_AMOUNT) as order_line_discount_local_amount -- 非vip_credit的折扣金额取shopify的折扣金额
       -- 分摊比例
@@ -972,8 +974,8 @@ l_p_1 as (
       ol.store_variant_id AS product_id,
       ol.store_master_product_id as master_product_id,
       ol.quantity AS item_quantity,
-      ol.price * ol.QUANTITY AS product_subtotal_local_amount,
-      ol.price  AS price_offered_local_amount,
+      PARSE_JSON(ol.price_set):presentment_money:amount::FLOAT * ol.QUANTITY AS product_subtotal_local_amount,
+      PARSE_JSON(ol.price_set):presentment_money:amount::FLOAT  AS price_offered_local_amount,
       ol.properties,
       f.customer_id,
       -- o.PROCESSED_AT AS order_local_datetime,
@@ -990,7 +992,8 @@ l_p_1 as (
       f.order_completion_local_datetime,
       o.CURRENCY AS currency_key,
       date(o.PROCESSED_AT) order_placed_local_datetime,
-      iff(m.owner_id is not null,1,0) is_tariff
+      iff(m.owner_id is not null,1,0) is_tariff,
+      f.TAX_LOCAL_AMOUNT
     FROM LAKE_MMOS.SHOPIFY_JFEU_PROD."ORDER" o
     JOIN LAKE_MMOS.SHOPIFY_JFEU_PROD.order_line_store_view ol  ON  o.id = ol.order_id
     LEFT JOIN EDW_PROD.NEW_STG.DIM_PRODUCT b ON ol.store_variant_id = b.product_id
@@ -1035,7 +1038,7 @@ l_p_1 as (
         a.order_id
       ,c.order_line_id
       , COALESCE(d.code,d.title)
-      ,a.price*a.QUANTITY order_line_price
+      ,PARSE_JSON(a.price_set):presentment_money:amount::FLOAT *a.QUANTITY order_line_price
       ,e."price" price
       ,iff(e."id" is not null,0,c.AMOUNT_SET_PRESENTMENT_MONEY_AMOUNT) as order_line_discount_local_amount -- 非vip_credit的折扣金额取shopify的折扣金额
       -- 分摊比例
@@ -1057,48 +1060,40 @@ l_p_1 as (
 
   -- 计算订单分摊比例
   ,allocation_ratios AS (
-  SELECT
-    old.order_line_id,
-    old.order_id,
-    COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount) as product_subtotal_local_amount,
-    COALESCE(dc.product_discount_local_amount,0) product_discount_local_amount ,
-    COALESCE(oa.order_line_discount_local_amount,0) order_line_discount_local_amount, -- 非vip_credit的折扣金额取shopify的折扣金额
-    -- 单行sku计算折后价
-    -- (old.product_subtotal_local_amount - COALESCE(dc.product_discount_local_amount, 0)) AS discounted_line_amount,
-    -- 计算订单总折后价
-    -- SUM(old.product_subtotal_local_amount - COALESCE(dc.product_discount_local_amount, 0))
-    --   OVER (PARTITION BY old.order_id) AS total_order_discounted_amount,
-    -- 计算订单分摊比例
-    -- CASE
-    --   WHEN SUM(COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount)  - COALESCE(oa.order_line_discount_local_amount,0)) OVER (PARTITION BY old.order_id) > 0 THEN
-    --     (COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount)  - COALESCE(oa.order_line_discount_local_amount,0))
-    --      /(SUM(COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount)  - COALESCE(oa.order_line_discount_local_amount,0)) OVER (PARTITION BY old.order_id))
-    --   ELSE 0
-    -- END AS order_allocation_ratio
-
-    CASE
-      WHEN old.is_tariff = 1 then 0
-      when SUM(iff(old.is_tariff = 1 , 0,COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount) - COALESCE(oa.order_line_discount_local_amount,0))
-                  ) OVER (PARTITION BY old.order_id) > 0 THEN
-        (COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount)  - COALESCE(oa.order_line_discount_local_amount,0))
-        /(SUM(iff(old.is_tariff = 1 , 0,COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount) - COALESCE(oa.order_line_discount_local_amount,0))
-                  ) OVER (PARTITION BY old.order_id))
-      ELSE 0
-    END AS order_allocation_ratio
-    -- 计算折扣分摊比例
-    -- CASE
-    --   WHEN SUM(dc.product_discount_local_amount) OVER (PARTITION BY old.order_id) > 0 THEN
-    --     dc.product_discount_local_amount /
-    --     SUM(dc.product_discount_local_amount) OVER (PARTITION BY old.order_id)
-    --   ELSE 0
-    -- END AS discount_allocation_ratio,
-    -- -- 订单总支付金额
-    ,COALESCE(old.order_total_payment_amount,0) order_total_payment_amount
-    ,iff(oa.vip_credit_id is not null,oa.ratio,0)                         as token_count
-    ,iff(oa.vip_credit_id is not null,oa.product_subtotal_local_amount,0) as token_local_amount
-  FROM order_line_data old
-  LEFT JOIN discount_calculation dc ON old.order_line_id = dc.order_line_id
-  LEFT JOIN order_line_discount_and_product_amount oa ON old.order_line_id = oa.order_line_id
+  select 
+   order_line_id
+  ,order_id
+  ,product_subtotal_local_amount - COALESCE(order_allocation_ratio * TAX_LOCAL_AMOUNT,0) as product_subtotal_local_amount
+  ,product_discount_local_amount
+  ,order_line_discount_local_amount
+  ,order_allocation_ratio
+  ,order_total_payment_amount
+  ,token_count
+  ,token_local_amount
+  from (
+    SELECT
+      old.order_line_id,
+      old.order_id,
+      COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount) as product_subtotal_local_amount,
+      COALESCE(dc.product_discount_local_amount,0) product_discount_local_amount ,
+      COALESCE(oa.order_line_discount_local_amount,0) order_line_discount_local_amount, -- 非vip_credit的折扣金额取shopify的折扣金额
+      CASE
+        WHEN old.is_tariff = 1 then 0
+        when SUM(iff(old.is_tariff = 1 , 0,COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount) - COALESCE(oa.order_line_discount_local_amount,0))
+                    ) OVER (PARTITION BY old.order_id) > 0 THEN
+          (COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount)  - COALESCE(oa.order_line_discount_local_amount,0))
+          /(SUM(iff(old.is_tariff = 1 , 0,COALESCE(oa.product_subtotal_local_amount,old.product_subtotal_local_amount) - COALESCE(oa.order_line_discount_local_amount,0))
+                    ) OVER (PARTITION BY old.order_id))
+        ELSE 0
+      END AS order_allocation_ratio
+      ,COALESCE(old.order_total_payment_amount,0) order_total_payment_amount
+      ,iff(oa.vip_credit_id is not null,oa.ratio,0)                         as token_count
+      ,iff(oa.vip_credit_id is not null,oa.product_subtotal_local_amount,0) as token_local_amount
+      ,old.TAX_LOCAL_AMOUNT
+    FROM order_line_data old
+    LEFT JOIN discount_calculation dc ON old.order_line_id = dc.order_line_id
+    LEFT JOIN order_line_discount_and_product_amount oa ON old.order_line_id = oa.order_line_id
+    )
   )
 
   SELECT
