@@ -45,6 +45,13 @@ run_fact_order_line = SnowflakeOperator(
     snowflake_conn_id='snowflake_default',     # 配置的snowflake连接地址名字
     dag=dag,
 )
+
+run_fact_return_line = SnowflakeOperator(
+    task_id='fact_return_line',
+    sql='sql/fact_return_line.sql',  # 执行脚本的相对路径
+    snowflake_conn_id='snowflake_default',     # 配置的snowflake连接地址名字
+    dag=dag,
+)
 # wait_for_dim_bundle_component_history >> run_sql_file
 
-run_fact_order >> run_fact_order_line
+run_fact_order >> run_fact_order_line >> run_fact_return_line
