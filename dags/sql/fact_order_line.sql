@@ -1076,6 +1076,8 @@ l_p_1 as (
   ,order_total_payment_amount
   ,token_count
   ,token_local_amount
+  ,cash_credit_local_amount
+  ,non_cash_credit_local_amount
   from (
     SELECT
       old.order_line_id,
