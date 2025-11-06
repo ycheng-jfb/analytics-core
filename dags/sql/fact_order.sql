@@ -137,40 +137,50 @@ product_subtotal_logic AS (
     SELECT
         order_id,
         COALESCE(SUM(product_subtotal_local_amount),0) AS product_subtotal_local_amount,
+        COALESCE(SUM(case when vip_credit_id is not null then ratio else 0 end ),0) AS token_count,
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount>0
+                                                                   then ratio else 0 end ),0) AS cash_credit_count,        
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount=0
+                                                                   then ratio else 0 end ),0) AS non_cash_credit_count,
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount>0
+                                            then product_subtotal_local_amount else 0 end ),0) AS cash_credit_local_amount,        
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount=0
+                                            then product_subtotal_local_amount else 0 end ),0) AS non_cash_credit_local_amount,
         COALESCE(SUM(case when vip_credit_id is not null then product_subtotal_local_amount else 0 end ),0) AS credit_local_amount
     FROM (
-        with order_line_discount_and_product_amount  as (
-select
-      a.order_id
-    ,c.order_line_id
-    , COALESCE(d.code,d.title)
-    ,PARSE_JSON(a.price_set):presentment_money:amount::FLOAT * a.QUANTITY order_line_price
-    ,e."price" price
-    ,iff(e."id" is not null,0,c.AMOUNT_SET_PRESENTMENT_MONEY_AMOUNT) as order_line_discount_local_amount -- 非vip_credit的折扣金额取shopify的折扣金额
-    -- 分摊比例
-    ,(a.price * a.quantity) / sum(a.price * a.quantity) over(partition by a.order_id, COALESCE(d.code,d.title)) as ratio
-    -- 分摊后的 price
-    ,( (a.price * a.quantity) / sum(a.price * a.quantity) over(partition by a.order_id,  COALESCE(d.code,d.title)) ) * e."price" as product_subtotal_local_amount -- vip_credit的金额取credit的金额进行分摊
-    ,e."id" vip_credit_id
-from LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.order_line  a
-join LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.discount_allocation c
-    on a.id=c.order_line_id
-join LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.discount_application d
-    on a.order_id=d.order_id and d.index=c.discount_application_index
-       and d.target_type='line_item' and d.target_selection<>'all'
-left join LAKE_MMOS."mmos_membership_marketing_shoedazzle".USER_CREDIT_SHARD_ALL b
-    on  COALESCE(d.code,d.title)=b."promotion_code"
-left join LAKE_MMOS."mmos_membership_marketing_shoedazzle".VIP_CREDIT_BALANCE_DETAIL_SHARD_ALL e
-    on cast(b."token_id" as varchar) = e."id"
-)
+            with order_line_discount_and_product_amount  as (
+            select
+                  a.order_id
+                ,c.order_line_id
+                , COALESCE(d.code,d.title)
+                ,PARSE_JSON(a.price_set):presentment_money:amount::FLOAT * a.QUANTITY order_line_price
+                ,e."price" price
+                ,iff(e."id" is not null,0,c.AMOUNT_SET_PRESENTMENT_MONEY_AMOUNT) as order_line_discount_local_amount -- 非vip_credit的折扣金额取shopify的折扣金额
+                -- 分摊比例
+                ,(a.price * a.quantity) / sum(a.price * a.quantity) over(partition by a.order_id, COALESCE(d.code,d.title)) as ratio
+                -- 分摊后的 price
+                ,( (a.price * a.quantity) / sum(a.price * a.quantity) over(partition by a.order_id,  COALESCE(d.code,d.title)) ) * e."price" as product_subtotal_local_amount -- vip_credit的金额取credit的金额进行分摊
+                ,e."id" vip_credit_id
+            from LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.order_line  a
+            join LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.discount_allocation c
+                on a.id=c.order_line_id
+            join LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.discount_application d
+                on a.order_id=d.order_id and d.index=c.discount_application_index
+                   and d.target_type='line_item' and d.target_selection<>'all'
+            left join LAKE_MMOS."mmos_membership_marketing_shoedazzle".USER_CREDIT_SHARD_ALL b
+                on  COALESCE(d.code,d.title)=b."promotion_code"
+            left join LAKE_MMOS."mmos_membership_marketing_shoedazzle".VIP_CREDIT_BALANCE_DETAIL_SHARD_ALL e
+                on cast(b."token_id" as varchar) = e."id"
+            )
 
-SELECT
-  old.id,
-  old.order_id,
-  oa.vip_credit_id,
-  COALESCE(oa.product_subtotal_local_amount,PARSE_JSON(old.price_set):presentment_money:amount::FLOAT * old.QUANTITY) as product_subtotal_local_amount
-FROM LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.order_line old
-LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
+    SELECT
+      old.id,
+      old.order_id,
+      oa.vip_credit_id,
+      oa.ratio,
+      COALESCE(oa.product_subtotal_local_amount,PARSE_JSON(old.price_set):presentment_money:amount::FLOAT * old.QUANTITY) as product_subtotal_local_amount
+    FROM LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.order_line old
+    LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
     ) sub
     GROUP BY order_id
 )
@@ -225,7 +235,11 @@ LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
     max(CONVERT_TIMEZONE('America/Los_Angeles', o.PROCESSED_AT)) order_placed_local_datetime,
     max(PARSE_JSON(o.TOTAL_LINE_ITEMS_PRICE_SET):presentment_money:amount::FLOAT) AS shopify_total_line_items_price,
     max(tariff_discount_local_amout.discount) AS tariff_discount_local_amout,
-    max(ot.price) tariff_revenue_before_discount_local_amount
+    max(ot.price) tariff_revenue_before_discount_local_amount,
+    max(cash_credit_count) cash_credit_count,
+    max(non_cash_credit_count) non_cash_credit_count,
+    max(cash_credit_local_amount) cash_credit_local_amount,
+    max(non_cash_credit_local_amount) non_cash_credit_local_amount
 FROM LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD."ORDER" o
 left join LAKE_MMOS."mmos_membership_marketing_shoedazzle"."user_shard_all" uc on o.CUSTOMER_ID = uc."user_gid"
 left join LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.ORDER_LINE l on o.id = l.order_id
@@ -492,8 +506,8 @@ select
     orders.product_subtotal_local_amount,
     orders.tax_local_amount,
     null as delivery_fee_local_amount,
-    null as cash_credit_count,
-    null as cash_credit_local_amount,
+    orders.cash_credit_count as cash_credit_count,
+    orders.cash_credit_local_amount as cash_credit_local_amount,
     null as cash_membership_credit_local_amount,
     null as cash_membership_credit_count,
     null as cash_refund_credit_local_amount,
@@ -508,8 +522,8 @@ select
     null as cash_token_count,
     null as non_cash_token_local_amount,
     null as non_cash_token_count,
-    null as non_cash_credit_local_amount,
-    null as non_cash_credit_count,
+    orders.non_cash_credit_local_amount as non_cash_credit_local_amount,
+    orders.non_cash_credit_count as non_cash_credit_count,
     orders.shipping_revenue_before_discount_local_amount,
     orders.shipping_revenue_before_discount_local_amount - orders.shipping_discount_local_amount as shipping_revenue_local_amount,
     null as shipping_cost_local_amount,
@@ -705,6 +719,15 @@ product_subtotal_logic AS (
     SELECT
         order_id,
         COALESCE(SUM(product_subtotal_local_amount),0) AS product_subtotal_local_amount,
+        COALESCE(SUM(case when vip_credit_id is not null then ratio else 0 end ),0) AS token_count,
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount>0
+                                                                   then ratio else 0 end ),0) AS cash_credit_count,        
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount=0
+                                                                   then ratio else 0 end ),0) AS non_cash_credit_count,
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount>0
+                                            then product_subtotal_local_amount else 0 end ),0) AS cash_credit_local_amount,        
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount=0
+                                            then product_subtotal_local_amount else 0 end ),0) AS non_cash_credit_local_amount,
         COALESCE(SUM(case when vip_credit_id is not null then product_subtotal_local_amount else 0 end ),0) AS credit_local_amount
     FROM (
         with order_line_discount_and_product_amount  as (
@@ -736,6 +759,7 @@ SELECT
   old.id,
   old.order_id,
   oa.vip_credit_id,
+      oa.ratio,
   COALESCE(oa.product_subtotal_local_amount,PARSE_JSON(old.price_set):presentment_money:amount::FLOAT * old.QUANTITY) as product_subtotal_local_amount
 FROM LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.order_line old
 LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
@@ -793,7 +817,11 @@ LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
     max(CONVERT_TIMEZONE('America/Los_Angeles', o.PROCESSED_AT)) order_placed_local_datetime,
     max(PARSE_JSON(o.TOTAL_LINE_ITEMS_PRICE_SET):presentment_money:amount::FLOAT) AS shopify_total_line_items_price,
     max(tariff_discount_local_amout.discount) AS tariff_discount_local_amout,
-    max(ot.price) tariff_revenue_before_discount_local_amount
+    max(ot.price) tariff_revenue_before_discount_local_amount,
+    max(cash_credit_count) cash_credit_count,
+    max(non_cash_credit_count) non_cash_credit_count,
+    max(cash_credit_local_amount) cash_credit_local_amount,
+    max(non_cash_credit_local_amount) non_cash_credit_local_amount
 FROM LAKE_MMOS.SHOPIFY_JUSTFAB_PROD."ORDER" o
 left join LAKE_MMOS."mmos_membership_marketing_us"."user_shard_all" uc on o.CUSTOMER_ID = uc."user_gid"
 left join LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.ORDER_LINE l on o.id = l.order_id
@@ -1062,8 +1090,8 @@ select
     orders.product_subtotal_local_amount,
     orders.tax_local_amount,
     null as delivery_fee_local_amount,
-    null as cash_credit_count,
-    null as cash_credit_local_amount,
+    orders.cash_credit_count as cash_credit_count,
+    orders.cash_credit_local_amount as cash_credit_local_amount,
     null as cash_membership_credit_local_amount,
     null as cash_membership_credit_count,
     null as cash_refund_credit_local_amount,
@@ -1078,8 +1106,8 @@ select
     null as cash_token_count,
     null as non_cash_token_local_amount,
     null as non_cash_token_count,
-    null as non_cash_credit_local_amount,
-    null as non_cash_credit_count,
+    orders.non_cash_credit_local_amount as non_cash_credit_local_amount,
+    orders.non_cash_credit_count as non_cash_credit_count,
     orders.shipping_revenue_before_discount_local_amount,
     orders.shipping_revenue_before_discount_local_amount - orders.shipping_discount_local_amount as shipping_revenue_local_amount,
     null as shipping_cost_local_amount,
@@ -1276,6 +1304,15 @@ product_subtotal_logic AS (
     SELECT
         order_id,
         COALESCE(SUM(product_subtotal_local_amount),0) AS product_subtotal_local_amount,
+        COALESCE(SUM(case when vip_credit_id is not null then ratio else 0 end ),0) AS token_count,
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount>0
+                                                                   then ratio else 0 end ),0) AS cash_credit_count,        
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount=0
+                                                                   then ratio else 0 end ),0) AS non_cash_credit_count,
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount>0
+                                            then product_subtotal_local_amount else 0 end ),0) AS cash_credit_local_amount,        
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount=0
+                                            then product_subtotal_local_amount else 0 end ),0) AS non_cash_credit_local_amount,
         COALESCE(SUM(case when vip_credit_id is not null then product_subtotal_local_amount else 0 end ),0) AS credit_local_amount
     FROM (
         with order_line_discount_and_product_amount  as (
@@ -1307,6 +1344,7 @@ SELECT
   old.id,
   old.order_id,
   oa.vip_credit_id,
+      oa.ratio,
   COALESCE(oa.product_subtotal_local_amount,PARSE_JSON(old.price_set):presentment_money:amount::FLOAT * old.QUANTITY) as product_subtotal_local_amount
 FROM LAKE_MMOS.SHOPIFY_FABKIDS_PROD.order_line old
 LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
@@ -1364,7 +1402,11 @@ LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
     max(CONVERT_TIMEZONE('America/Los_Angeles', o.PROCESSED_AT)) order_placed_local_datetime,
     max(PARSE_JSON(o.TOTAL_LINE_ITEMS_PRICE_SET):presentment_money:amount::FLOAT) AS shopify_total_line_items_price,
     max(tariff_discount_local_amout.discount) AS tariff_discount_local_amout,
-    max(ot.price) tariff_revenue_before_discount_local_amount
+    max(ot.price) tariff_revenue_before_discount_local_amount,
+    max(cash_credit_count) cash_credit_count,
+    max(non_cash_credit_count) non_cash_credit_count,
+    max(cash_credit_local_amount) cash_credit_local_amount,
+    max(non_cash_credit_local_amount) non_cash_credit_local_amount
 FROM LAKE_MMOS.SHOPIFY_FABKIDS_PROD."ORDER" o
 left join LAKE_MMOS."mmos_membership_marketing_fabkids".USER_SHARD_ALL uc on o.CUSTOMER_ID = uc."user_gid"
 left join LAKE_MMOS.SHOPIFY_FABKIDS_PROD.ORDER_LINE l on o.id = l.order_id
@@ -1631,8 +1673,8 @@ select
     orders.product_subtotal_local_amount,
     orders.tax_local_amount,
     null as delivery_fee_local_amount,
-    null as cash_credit_count,
-    null as cash_credit_local_amount,
+    orders.cash_credit_count as cash_credit_count,
+    orders.cash_credit_local_amount as cash_credit_local_amount,
     null as cash_membership_credit_local_amount,
     null as cash_membership_credit_count,
     null as cash_refund_credit_local_amount,
@@ -1647,8 +1689,8 @@ select
     null as cash_token_count,
     null as non_cash_token_local_amount,
     null as non_cash_token_count,
-    null as non_cash_credit_local_amount,
-    null as non_cash_credit_count,
+    orders.non_cash_credit_local_amount as non_cash_credit_local_amount,
+    orders.non_cash_credit_count as non_cash_credit_count,
     orders.shipping_revenue_before_discount_local_amount,
     orders.shipping_revenue_before_discount_local_amount - orders.shipping_discount_local_amount as shipping_revenue_local_amount,
     null as shipping_cost_local_amount,
@@ -1843,6 +1885,15 @@ p4 as (
             SELECT
                 order_id,
                 COALESCE(SUM(product_subtotal_local_amount),0) AS product_subtotal_local_amount,
+        COALESCE(SUM(case when vip_credit_id is not null then ratio else 0 end ),0) AS token_count,
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount>0
+                                                                   then ratio else 0 end ),0) AS cash_credit_count,        
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount=0
+                                                                   then ratio else 0 end ),0) AS non_cash_credit_count,
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount>0
+                                            then product_subtotal_local_amount else 0 end ),0) AS cash_credit_local_amount,        
+        COALESCE(SUM(case when vip_credit_id is not null and product_subtotal_local_amount=0
+                                            then product_subtotal_local_amount else 0 end ),0) AS non_cash_credit_local_amount,
                 COALESCE(SUM(case when vip_credit_id is not null then product_subtotal_local_amount else 0 end ),0) AS credit_local_amount
             FROM (
                 with order_line_discount_and_product_amount  as (
@@ -1874,6 +1925,7 @@ p4 as (
         old.id,
         old.order_id,
         oa.vip_credit_id,
+      oa.ratio,
   COALESCE(oa.product_subtotal_local_amount,PARSE_JSON(old.price_set):presentment_money:amount::FLOAT * old.QUANTITY) as product_subtotal_local_amount
         FROM LAKE_MMOS.SHOPIFY_JFEU_PROD.order_line old
         LEFT JOIN order_line_discount_and_product_amount oa ON old.id = oa.order_line_id
@@ -1928,7 +1980,11 @@ p4 as (
             max(CONVERT_TIMEZONE('America/Los_Angeles', o.PROCESSED_AT)) order_placed_local_datetime,
             max(PARSE_JSON(o.TOTAL_LINE_ITEMS_PRICE_SET):presentment_money:amount::FLOAT) AS shopify_total_line_items_price,
             max(tariff_discount_local_amout.discount) AS tariff_discount_local_amout,
-            max(ot.price) tariff_revenue_before_discount_local_amount
+            max(ot.price) tariff_revenue_before_discount_local_amount,
+            max(cash_credit_count) cash_credit_count,
+            max(non_cash_credit_count) non_cash_credit_count,
+            max(cash_credit_local_amount) cash_credit_local_amount,
+            max(non_cash_credit_local_amount) non_cash_credit_local_amount
         FROM LAKE_MMOS.SHOPIFY_JFEU_PROD."ORDER" o
         left join LAKE_MMOS."mmos_membership_marketing_eu".USER_SHARD_ALL uc on o.CUSTOMER_ID = uc."user_gid"
         left join LAKE_MMOS.SHOPIFY_JFEU_PROD.ORDER_LINE l on o.id = l.order_id
@@ -2193,8 +2249,8 @@ p4 as (
         orders.product_subtotal_local_amount,
         orders.tax_local_amount,
         null as delivery_fee_local_amount,
-        null as cash_credit_count,
-        null as cash_credit_local_amount,
+        orders.cash_credit_count as cash_credit_count,
+        orders.cash_credit_local_amount as cash_credit_local_amount,
         null as cash_membership_credit_local_amount,
         null as cash_membership_credit_count,
         null as cash_refund_credit_local_amount,
@@ -2209,8 +2265,8 @@ p4 as (
         null as cash_token_count,
         null as non_cash_token_local_amount,
         null as non_cash_token_count,
-        null as non_cash_credit_local_amount,
-        null as non_cash_credit_count,
+        orders.non_cash_credit_local_amount as non_cash_credit_local_amount,
+        orders.non_cash_credit_count as non_cash_credit_count,
         orders.shipping_revenue_before_discount_local_amount,
         orders.shipping_revenue_before_discount_local_amount - orders.shipping_discount_local_amount as shipping_revenue_local_amount,
         null as shipping_cost_local_amount,

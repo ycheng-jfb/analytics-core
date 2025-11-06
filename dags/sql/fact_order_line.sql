@@ -156,6 +156,8 @@ l_p_1 as (
     ,COALESCE(old.order_total_payment_amount,0) order_total_payment_amount
     ,iff(oa.vip_credit_id is not null,oa.ratio,0)                         as token_count
     ,iff(oa.vip_credit_id is not null,oa.product_subtotal_local_amount,0) as token_local_amount
+    ,iff(oa.vip_credit_id is not null and oa.product_subtotal_local_amount>0,oa.product_subtotal_local_amount,0) as cash_credit_local_amount
+    ,iff(oa.vip_credit_id is not null and oa.product_subtotal_local_amount=0,oa.product_subtotal_local_amount,0) as non_cash_credit_local_amount
   FROM order_line_data old
   LEFT JOIN discount_calculation dc ON old.order_line_id = dc.order_line_id
   LEFT JOIN order_line_discount_and_product_amount oa ON old.order_line_id = oa.order_line_id
@@ -220,7 +222,7 @@ l_p_1 as (
     -- shipping_revenue_before_discount_local_amount - shipping_discount_local_amount
     COALESCE(ar.order_allocation_ratio * f.SHIPPING_REVENUE_BEFORE_DISCOUNT_LOCAL_AMOUNT,0) -
     COALESCE(ar.order_allocation_ratio * f.shipping_discount_local_amount,0) AS shipping_revenue_local_amount,
-    null as cash_credit_local_amount,
+    ar.cash_credit_local_amount as cash_credit_local_amount,
     null as cash_membership_credit_local_amount,
     null as cash_refund_credit_local_amount,
     null as cash_giftcard_credit_local_amount,
@@ -232,7 +234,7 @@ l_p_1 as (
     null as cash_token_local_amount,
     null as non_cash_token_count,
     null as non_cash_token_local_amount,
-    null as non_cash_credit_local_amount,
+    ar.non_cash_credit_local_amount as non_cash_credit_local_amount,
     null as estimated_landed_cost_local_amount,
     null as oracle_cost_local_amount,
     null as lpn_po_cost_local_amount,
@@ -470,6 +472,8 @@ l_p_1 as (
     ,COALESCE(old.order_total_payment_amount,0) order_total_payment_amount
     ,iff(oa.vip_credit_id is not null,oa.ratio,0)                         as token_count
     ,iff(oa.vip_credit_id is not null,oa.product_subtotal_local_amount,0) as token_local_amount
+    ,iff(oa.vip_credit_id is not null and oa.product_subtotal_local_amount>0,oa.product_subtotal_local_amount,0) as cash_credit_local_amount
+    ,iff(oa.vip_credit_id is not null and oa.product_subtotal_local_amount=0,oa.product_subtotal_local_amount,0) as non_cash_credit_local_amount
   FROM order_line_data old
   LEFT JOIN discount_calculation dc ON old.order_line_id = dc.order_line_id
   LEFT JOIN order_line_discount_and_product_amount oa ON old.order_line_id = oa.order_line_id
@@ -534,7 +538,7 @@ l_p_1 as (
     -- shipping_revenue_before_discount_local_amount - shipping_discount_local_amount
     COALESCE(ar.order_allocation_ratio * f.SHIPPING_REVENUE_BEFORE_DISCOUNT_LOCAL_AMOUNT,0) -
     COALESCE(ar.order_allocation_ratio * f.shipping_discount_local_amount,0) AS shipping_revenue_local_amount,
-    null as cash_credit_local_amount,
+    ar.cash_credit_local_amount as cash_credit_local_amount,
     null as cash_membership_credit_local_amount,
     null as cash_refund_credit_local_amount,
     null as cash_giftcard_credit_local_amount,
@@ -546,7 +550,7 @@ l_p_1 as (
     null as cash_token_local_amount,
     null as non_cash_token_count,
     null as non_cash_token_local_amount,
-    null as non_cash_credit_local_amount,
+    ar.non_cash_credit_local_amount as non_cash_credit_local_amount,
     null as estimated_landed_cost_local_amount,
     null as oracle_cost_local_amount,
     null as lpn_po_cost_local_amount,
@@ -784,6 +788,8 @@ l_p_1 as (
     ,COALESCE(old.order_total_payment_amount,0) order_total_payment_amount
     ,iff(oa.vip_credit_id is not null,oa.ratio,0)                         as token_count
     ,iff(oa.vip_credit_id is not null,oa.product_subtotal_local_amount,0) as token_local_amount
+    ,iff(oa.vip_credit_id is not null and oa.product_subtotal_local_amount>0,oa.product_subtotal_local_amount,0) as cash_credit_local_amount
+    ,iff(oa.vip_credit_id is not null and oa.product_subtotal_local_amount=0,oa.product_subtotal_local_amount,0) as non_cash_credit_local_amount
   FROM order_line_data old
   LEFT JOIN discount_calculation dc ON old.order_line_id = dc.order_line_id
   LEFT JOIN order_line_discount_and_product_amount oa ON old.order_line_id = oa.order_line_id
@@ -848,7 +854,7 @@ l_p_1 as (
     -- shipping_revenue_before_discount_local_amount - shipping_discount_local_amount
     COALESCE(ar.order_allocation_ratio * f.SHIPPING_REVENUE_BEFORE_DISCOUNT_LOCAL_AMOUNT,0) -
     COALESCE(ar.order_allocation_ratio * f.shipping_discount_local_amount,0) AS shipping_revenue_local_amount,
-    null as cash_credit_local_amount,
+    ar.cash_credit_local_amount as cash_credit_local_amount,
     null as cash_membership_credit_local_amount,
     null as cash_refund_credit_local_amount,
     null as cash_giftcard_credit_local_amount,
@@ -860,7 +866,7 @@ l_p_1 as (
     null as cash_token_local_amount,
     null as non_cash_token_count,
     null as non_cash_token_local_amount,
-    null as non_cash_credit_local_amount,
+    ar.non_cash_credit_local_amount as non_cash_credit_local_amount,
     null as estimated_landed_cost_local_amount,
     null as oracle_cost_local_amount,
     null as lpn_po_cost_local_amount,
@@ -1089,6 +1095,8 @@ l_p_1 as (
       ,COALESCE(old.order_total_payment_amount,0) order_total_payment_amount
       ,iff(oa.vip_credit_id is not null,oa.ratio,0)                         as token_count
       ,iff(oa.vip_credit_id is not null,oa.product_subtotal_local_amount,0) as token_local_amount
+    ,iff(oa.vip_credit_id is not null and oa.product_subtotal_local_amount>0,oa.product_subtotal_local_amount,0) as cash_credit_local_amount
+    ,iff(oa.vip_credit_id is not null and oa.product_subtotal_local_amount=0,oa.product_subtotal_local_amount,0) as non_cash_credit_local_amount
       ,old.TAX_LOCAL_AMOUNT
     FROM order_line_data old
     LEFT JOIN discount_calculation dc ON old.order_line_id = dc.order_line_id
@@ -1155,7 +1163,7 @@ l_p_1 as (
     -- shipping_revenue_before_discount_local_amount - shipping_discount_local_amount
     COALESCE(ar.order_allocation_ratio * f.SHIPPING_REVENUE_BEFORE_DISCOUNT_LOCAL_AMOUNT,0) -
     COALESCE(ar.order_allocation_ratio * f.shipping_discount_local_amount,0) AS shipping_revenue_local_amount,
-    null as cash_credit_local_amount,
+    ar.cash_credit_local_amount as cash_credit_local_amount,
     null as cash_membership_credit_local_amount,
     null as cash_refund_credit_local_amount,
     null as cash_giftcard_credit_local_amount,
@@ -1167,7 +1175,7 @@ l_p_1 as (
     null as cash_token_local_amount,
     null as non_cash_token_count,
     null as non_cash_token_local_amount,
-    null as non_cash_credit_local_amount,
+    ar.non_cash_credit_local_amount as non_cash_credit_local_amount,
     null as estimated_landed_cost_local_amount,
     null as oracle_cost_local_amount,
     null as lpn_po_cost_local_amount,
