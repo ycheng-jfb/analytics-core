@@ -2373,7 +2373,7 @@ p4 as (
     where t1.order_id is null
     and orders.order_local_datetime >= '2025-10-22'
 )
-
+ 
 select *, store_id as site_id from p1
 union all
 select *, store_id as site_id from p2
