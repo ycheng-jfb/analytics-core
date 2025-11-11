@@ -55,6 +55,15 @@ run_fact_activation = SnowflakeOperator(
     dag=dag,
 )
 
+run_fact_activation_loyalty_tier = SnowflakeOperator(
+    task_id='fact_activation_loyalty_tier',
+    sql='sql/fact_activation_loyalty_tier.sql',  # 执行脚本的相对路径
+    snowflake_conn_id='snowflake_default',     # 配置的snowflake连接地址名字
+    dag=dag,
+)
+
 run_fact_membership_event >> run_fact_registration
 
 run_fact_membership_event >> run_fact_activation
+
+run_fact_membership_event >> run_fact_activation_loyalty_tier
