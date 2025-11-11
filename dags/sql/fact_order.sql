@@ -541,7 +541,12 @@ select
     ) AS amount_to_pay,
         IFNULL(orders.payment_transaction_local_amount, 0)
         - IFNULL(orders.tax_local_amount, 0) AS cash_gross_revenue_local_amount,
-    null as product_gross_revenue_local_amount,
+    IFNULL(orders.subtotal_excl_tariff_local_amount, 0)
+        + IFNULL(orders.tariff_revenue_local_amount, 0)
+        - IFNULL(orders.product_discount_local_amount, 0)
+        + IFNULL(orders.shipping_revenue_before_discount_local_amount, 0)
+        - IFNULL(orders.shipping_discount_local_amount, 0)
+        - IFNULL(orders.non_cash_credit_local_amount, 0) as product_gross_revenue_local_amount,
     null as product_gross_revenue_excl_shipping_local_amount,
     null as product_margin_pre_return_local_amount,
     null as product_margin_pre_return_excl_shipping_local_amount,
@@ -1125,7 +1130,12 @@ select
     ) AS amount_to_pay,
         IFNULL(orders.payment_transaction_local_amount, 0)
         - IFNULL(orders.tax_local_amount, 0) AS cash_gross_revenue_local_amount,
-    null as product_gross_revenue_local_amount,
+    IFNULL(orders.subtotal_excl_tariff_local_amount, 0)
+        + IFNULL(orders.tariff_revenue_local_amount, 0)
+        - IFNULL(orders.product_discount_local_amount, 0)
+        + IFNULL(orders.shipping_revenue_before_discount_local_amount, 0)
+        - IFNULL(orders.shipping_discount_local_amount, 0)
+        - IFNULL(orders.non_cash_credit_local_amount, 0) as product_gross_revenue_local_amount,
     null as product_gross_revenue_excl_shipping_local_amount,
     null as product_margin_pre_return_local_amount,
     null as product_margin_pre_return_excl_shipping_local_amount,
@@ -1708,7 +1718,12 @@ select
     ) AS amount_to_pay,
         IFNULL(orders.payment_transaction_local_amount, 0)
         - IFNULL(orders.tax_local_amount, 0) AS cash_gross_revenue_local_amount,
-    null as product_gross_revenue_local_amount,
+    IFNULL(orders.subtotal_excl_tariff_local_amount, 0)
+        + IFNULL(orders.tariff_revenue_local_amount, 0)
+        - IFNULL(orders.product_discount_local_amount, 0)
+        + IFNULL(orders.shipping_revenue_before_discount_local_amount, 0)
+        - IFNULL(orders.shipping_discount_local_amount, 0)
+        - IFNULL(orders.non_cash_credit_local_amount, 0) as product_gross_revenue_local_amount,
     null as product_gross_revenue_excl_shipping_local_amount,
     null as product_margin_pre_return_local_amount,
     null as product_margin_pre_return_excl_shipping_local_amount,
@@ -2284,7 +2299,12 @@ p4 as (
         ) AS amount_to_pay,
             IFNULL(orders.payment_transaction_local_amount, 0)
             - IFNULL(orders.tax_local_amount, 0) AS cash_gross_revenue_local_amount,
-        null as product_gross_revenue_local_amount,
+        IFNULL(orders.subtotal_excl_tariff_local_amount, 0)
+            + IFNULL(orders.tariff_revenue_local_amount, 0)
+            - IFNULL(orders.product_discount_local_amount, 0)
+            + IFNULL(orders.shipping_revenue_before_discount_local_amount, 0)
+            - IFNULL(orders.shipping_discount_local_amount, 0)
+            - IFNULL(orders.non_cash_credit_local_amount, 0) as product_gross_revenue_local_amount,
         null as product_gross_revenue_excl_shipping_local_amount,
         null as product_margin_pre_return_local_amount,
         null as product_margin_pre_return_excl_shipping_local_amount,
