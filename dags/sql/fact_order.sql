@@ -63,7 +63,7 @@ with orders as (
 order_line_flag AS (
     SELECT
             l.order_id,
-            max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT) price
+            max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT * l.QUANTITY) price
         FROM LAKE_MMOS.SHOPIFY_SHOEDAZZLE_PROD.ORDER_LINE l
         left join metafield m on m.owner_id = l.product_id
         where m.OWNER_ID is not null
@@ -650,7 +650,7 @@ with orders as (
 order_line_flag AS (
     SELECT
             l.order_id,
-            max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT) price
+            max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT * l.QUANTITY) price
         FROM LAKE_MMOS.SHOPIFY_JUSTFAB_PROD.ORDER_LINE l
         left join metafield m on m.owner_id = l.product_id
         where m.OWNER_ID is not null
@@ -1240,7 +1240,7 @@ with orders as (
 order_line_flag AS (
     SELECT
             l.order_id,
-            max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT) price
+            max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT * l.QUANTITY) price
         FROM LAKE_MMOS.SHOPIFY_FABKIDS_PROD.ORDER_LINE l
         left join metafield m on m.owner_id = l.product_id
         where m.OWNER_ID is not null
@@ -1826,7 +1826,7 @@ p4 as (
         order_line_flag AS (
             SELECT
                     l.order_id,
-                    max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT) price
+                    max(PARSE_JSON(l.price_set):presentment_money:amount::FLOAT * l.QUANTITY) price
                 FROM LAKE_MMOS.SHOPIFY_JFEU_PROD.ORDER_LINE l
                 left join metafield m on m.owner_id = l.product_id
                 where m.OWNER_ID is not null
